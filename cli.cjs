@@ -451,8 +451,55 @@ async function startChat(apiKey, initialModel) {
   }
 }
 
+function printAsciiWelcome() {
+  try {
+    const os = require('os');
+    const username = (os.userInfo && os.userInfo().username) || process.env.USER || process.env.USERNAME || 'User';
+    const pkgPath = path.join(__dirname, 'package.json');
+    let version = 'v1.0';
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (pkg && pkg.version) version = 'v' + pkg.version;
+    } catch {}
+
+    // Recent activity: show most recent transcript file or none
+    let recent = 'No recent activity';
+    try {
+      if (fs.existsSync(TRANSCRIPTS_DIR)) {
+        const files = fs.readdirSync(TRANSCRIPTS_DIR)
+          .filter(f => !f.startsWith('.'))
+          .map(f => ({ f, t: fs.statSync(path.join(TRANSCRIPTS_DIR, f)).mtimeMs }))
+          .sort((a, b) => b.t - a.t);
+        if (files.length) {
+          recent = `Last: ${files[0].f}`;
+        }
+      }
+    } catch {}
+
+    const cwd = process.cwd();
+
+    const box = String.raw`╭─── Vibe-CLI ${version} ────────────────────────────────────────────────────────────────╮
+│                                   │ Tips for getting started                    │
+│          Welcome back ${username}!${' '.repeat(Math.max(0, 10 - String(username).length))} │ - Type /help to see all commands            │
+│                                   │ - Use /models to select a free model       │
+│   ▐▛███▜▌                          │ - /save [name] to save a transcript        │
+│  ▝▜█████▛▘ ← Initializing…         │ ─────────────────────────────────────────── │
+│    ▘▘ ▝▝   ← Boot Sequence OK      │ Recent activity                             │
+│                                   │ ${recent.padEnd(41)} │
+│                                   │                                              │
+│   Vibe AI · Free Model Access     │                                              │
+│       ${cwd.padEnd(42)} │
+╰───────────────────────────────────────────────────────────────────────────────────╯`;
+
+    console.log('\n' + pc.cyan(box) + '\n');
+  } catch (e) {
+    // Fallback: ignore banner errors
+  }
+}
+
 async function main() {
   try {
+    printAsciiWelcome();
     const apiKey = await getApiKey();
     let selectedModel = DEFAULT_MODEL_ID;
     try {
