@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const axios = require('axios');
+// Using native fetch instead of axios for pkg compatibility
 
 const OPENROUTER_BASE = 'https://openrouter.ai/api/v1';
 const DEFAULT_MODEL_ID = 'z-ai/glm-4.5-air:free';
@@ -15,12 +15,22 @@ const DEFAULT_MODEL_ID = 'z-ai/glm-4.5-air:free';
       { role: 'system', content: 'You are an assistant software engineer.' },
       { role: 'user', content: 'In one short sentence, say hello from the smoke test.' },
     ];
-    const res = await axios.post(
-      `${OPENROUTER_BASE}/chat/completions`,
-      { model: DEFAULT_MODEL_ID, messages },
-      { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'http://localhost', 'X-Title': 'vibe-cli' }, timeout: 30000 }
-    );
-    const content = res.data?.choices?.[0]?.message?.content || '';
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 30000);
+    const res = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'http://localhost', 'X-Title': 'vibe-cli' },
+      body: JSON.stringify({ model: DEFAULT_MODEL_ID, messages }),
+      signal: controller.signal,
+    });
+    clearTimeout(id);
+    const data = await res.json().catch(async () => ({ text: await res.text() }));
+    if (!res.ok) {
+      const err = new Error('HTTP error');
+      err.response = { status: res.status, data };
+      throw err;
+    }
+    const content = data?.choices?.[0]?.message?.content || '';
     console.log(String(content).slice(0, 200));
   } catch (e) {
     const status = e?.response?.status;

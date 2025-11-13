@@ -1,10 +1,21 @@
-const axios = require('axios');
+// Replaced axios with native fetch for pkg-compatibility
+
+
+function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 15000, ...rest } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(resource, { ...rest, signal: controller.signal })
+    .finally(() => clearTimeout(id));
+}
 
 async function webSearch(query) {
   if (!query || !query.trim()) return 'Empty query';
   try {
     const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1`;
-    const { data } = await axios.get(url, { timeout: 15000 });
+    const resp = await fetchWithTimeout(url, { timeout: 15000 });
+    const contentType = resp.headers.get('content-type') || '';
+    const data = contentType.includes('application/json') ? await resp.json() : await resp.text();
     const parts = [];
     if (data.AbstractText) parts.push(data.AbstractText);
     if (data.Heading) parts.push(`Heading: ${data.Heading}`);
@@ -30,9 +41,11 @@ async function webFetchDocs(page) {
   if (!ALLOWED_PAGES.has(p)) return 'Invalid docs page';
   try {
     const url = `${OPENROUTER_DOCS}/${p}`;
-    const { data } = await axios.get(url, { timeout: 20000 });
-    if (typeof data === 'string') return data.slice(0, 20000);
-    return JSON.stringify(data).slice(0, 20000);
+    const resp = await fetchWithTimeout(url, { timeout: 20000 });
+    const contentType = resp.headers.get('content-type') || '';
+    const body = contentType.includes('application/json') ? await resp.json() : await resp.text();
+    if (typeof body === 'string') return body.slice(0, 20000);
+    return JSON.stringify(body).slice(0, 20000);
   } catch (e) {
     return `Docs fetch error: ${e?.message || e}`;
   }
