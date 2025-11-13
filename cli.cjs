@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 const inquirerModule = require('inquirer');
 const inquirer = inquirerModule.default || inquirerModule;
-const axios = require('axios');
+// Replaced axios with native fetch to support pkg snapshot builds
+// Node 18+ provides global fetch
+
 const fs = require('fs');
 const path = require('path');
 const pc = require('picocolors');
@@ -10,6 +12,40 @@ const ora = oraModule.default || oraModule;
 const { exec } = require('child_process');
 const { webSearch, webFetchDocs } = require('./tools.cjs');
 const fg = require('fast-glob');
+
+// HTTP helpers using native fetch with timeout and axios-compatible errors
+function fetchWithTimeout(resource, options = {}) {
+  const { timeout = 30000, ...rest } = options;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(resource, { ...rest, signal: controller.signal })
+    .finally(() => clearTimeout(id));
+}
+
+async function httpGetJson(url, { headers = {}, timeout = 30000 } = {}) {
+  const res = await fetchWithTimeout(url, { headers, timeout, method: 'GET' });
+  const contentType = res.headers.get('content-type') || '';
+  const body = contentType.includes('application/json') ? await res.json() : await res.text();
+  if (!res.ok) {
+    throw { response: { status: res.status, data: body } };
+  }
+  return { data: body };
+}
+
+async function httpPostJson(url, body, { headers = {}, timeout = 30000 } = {}) {
+  const res = await fetchWithTimeout(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify(body),
+    timeout,
+  });
+  const contentType = res.headers.get('content-type') || '';
+  const data = contentType.includes('application/json') ? await res.json() : await res.text();
+  if (!res.ok) {
+    throw { response: { status: res.status, data } };
+  }
+  return { data };
+}
 
 const OPENROUTER_BASE = 'https://openrouter.ai/api/v1';
 const TRANSCRIPTS_DIR = path.join(process.cwd(), 'transcripts');
@@ -59,10 +95,8 @@ function isFreeModel(model) {
 }
 
 async function fetchModels(apiKey) {
-  const res = await axios.get(`${OPENROUTER_BASE}/models`, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
+  const res = await httpGetJson(`${OPENROUTER_BASE}/models`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
     timeout: 30000,
   });
   const models = res.data?.data || res.data || [];
@@ -417,13 +451,12 @@ async function startChat(apiKey, initialModel) {
     // Spinner for model call
     const spinner = ora('Thinking...').start();
     try {
-      const completion = await axios.post(
+      const completion = await httpPostJson(
         `${OPENROUTER_BASE}/chat/completions`,
         { model, messages },
         {
           headers: {
             Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
             'HTTP-Referer': 'http://localhost',
             'X-Title': 'vibe-cli',
           },
