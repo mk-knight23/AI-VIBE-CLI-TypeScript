@@ -1,7 +1,7 @@
 {
   "name": "vibe-cli",
   "private": false,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "CLI to chat with OpenRouter free models and Claude Code–style tooling.",
   "keywords": [
     "openrouter",

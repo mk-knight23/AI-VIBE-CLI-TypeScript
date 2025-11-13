@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.4 (2025-11-14)
+- V2 additions: explain piping, test runner detection, AI commit messages, TUI placeholder
+- Add npm publish workflow; docs and installer improvements
+
 ## v1.0.3 (2025-11-14)
 - Fix: GitHub Actions permission to publish releases (permissions: contents: write)
 

@@ -1,4 +1,4 @@
-# Vibe CLI by mk-knight23
+# Vibe Code CLI v2 by mk-knight23
 
 CLI to chat with OpenRouter free models with Claude Code–style productivity features.
 Hello
@@ -16,12 +16,12 @@ Install (Recommended: Prebuilt binaries)
 - macOS/Linux quick install (auto-detects latest version):
   - curl -fsSL https://raw.githubusercontent.com/mk-knight23/vibe-cli/main/install.sh | bash
 - Pin to a version:
-  - VERSION=v1.0.3 curl -fsSL https://raw.githubusercontent.com/mk-knight23/vibe-cli/main/install.sh | bash
+  - VERSION=v1.0.4 curl -fsSL https://raw.githubusercontent.com/mk-knight23/vibe-cli/main/install.sh | bash
 - Windows: download the latest Release asset `vibe-win-x64.exe`, add to PATH as `vibe`
 
 Install (Alternative: GitHub via npm)
-- Global (from GitHub): npm i -g github:mk-knight23/vibe-cli#v1.0.3
-- One-off run: npx github:mk-knight23/vibe-cli#v1.0.3
+- Global (from GitHub): npm i -g github:mk-knight23/vibe-cli#v1.0.4
+- One-off run: npx github:mk-knight23/vibe-cli#v1.0.4
 
 
 
