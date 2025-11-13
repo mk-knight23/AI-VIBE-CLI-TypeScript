@@ -8,6 +8,8 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [msgs, setMsgs] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [error, setError] = useState('');
   const [stream, setStream] = useState(true);
 
@@ -31,6 +33,11 @@ export default function Chat() {
   }, []);
 
   const choices = useMemo(() => (models || []).map(m => ({ id: m.id || m.slug || m.name, name: m.name || m.id })), [models]);
+  const filteredMsgs = useMemo(() => {
+    if (!search.trim()) return msgs;
+    const q = search.toLowerCase();
+    return msgs.filter(m => (m.content || '').toLowerCase().includes(q) || (m.role || '').toLowerCase().includes(q));
+  }, [msgs, search]);
 
   async function send() {
     if (!input.trim()) return;
@@ -85,55 +92,77 @@ export default function Chat() {
   }
 
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: 24, maxWidth: 900, margin: '0 auto' }}>
-      <h1>Vibe Chat (OpenRouter Free)</h1>
-      <p>This web UI chats via server-side API routes using your server OPENROUTER_API_KEY. Only free models are listed.</p>
+    <>
+      <div className="navbar">
+        <div className="navbar-inner">
+          <div className="brand">Vibe Chat</div>
+          <div className="spacer" />
+          <input className="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search messages..." />
+          <div className={"dropdown" + (menuOpen ? ' open' : '')}>
+            <button className="btn" onClick={() => setMenuOpen(v => !v)}>Menu ▾</button>
+            <div className="dropdown-menu" onMouseLeave={() => setMenuOpen(false)}>
+              <div className="dropdown-item" onClick={() => { setMsgs([]); setMenuOpen(false); }}>Clear conversation</div>
+              <div className="dropdown-item" onClick={() => { setStream(s => !s); setMenuOpen(false); }}>Toggle stream: {stream ? 'On' : 'Off'}</div>
+              <div className="dropdown-item" onClick={() => { const blob = new Blob([JSON.stringify(msgs, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'transcript.json'; a.click(); URL.revokeObjectURL(url); setMenuOpen(false); }}>Download transcript</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {error ? <p style={{ color: 'crimson' }}>Error: {error}</p> : null}
+      <main className="container">
+      <p className="helper">This web UI chats via server-side API routes using your server OPENROUTER_API_KEY. Only free models are listed.</p>
 
-      <section style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr' }}>
-        <label>
-          Model:
-          <select value={model} onChange={e => setModel(e.target.value)} style={{ marginLeft: 8 }}>
+      {error ? <p className="error">Error: {error}</p> : null}
+
+      <section className="toolbar">
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>Model</span>
+          <select className="model-select" value={model} onChange={e => setModel(e.target.value)}>
             {choices.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
         </label>
-        <label>
-          System prompt:
-          <textarea value={system} onChange={e => setSystem(e.target.value)} rows={3} style={{ width: '100%' }} />
+        <label style={{ flex: 1 }}>
+          <div style={{ marginBottom: 6 }}>System prompt</div>
+          <textarea className="textarea" value={system} onChange={e => setSystem(e.target.value)} rows={3} style={{ width: '100%' }} />
         </label>
       </section>
 
-      <section style={{ marginTop: 16, border: '1px solid #ddd', padding: 12, borderRadius: 6, background: '#fafafa' }}>
-        {msgs.length === 0 ? <p style={{ color: '#666' }}>No messages yet. Start the conversation below.</p> : null}
-        {msgs.map((m, i) => (
-          <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
-            <strong>{m.role === 'user' ? 'You' : m.role === 'assistant' ? 'Assistant' : 'System'}:</strong>
-            <div style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: m.role === 'assistant' ? marked.parse(m.content || '') : (m.content || '').replace(/&/g,'&amp;').replace(/</g,'&lt;') }} />
-          </div>
-        ))}
+      <section className="card" style={{ marginTop: 16 }}>
+        {msgs.length === 0 ? <p className="helper">No messages yet. Start the conversation below.</p> : null}
+        <div className="messages">
+          {filteredMsgs.map((m, i) => (
+            <div key={i} className={`message ${m.role}`}>
+              <div className="role">{m.role === 'user' ? 'You' : m.role === 'assistant' ? 'Assistant' : 'System'}</div>
+              <div className="content" dangerouslySetInnerHTML={{ __html: m.role === 'assistant' ? marked.parse(m.content || '') : (m.content || '').replace(/&/g,'&amp;').replace(/</g,'&lt;') }} />
+            </div>
+          ))}
+        </div>
       </section>
 
-      <section style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <input type="checkbox" checked={stream} onChange={e => setStream(e.target.checked)} />
-          Stream
-        </label>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a message..."
-          style={{ flex: 1, padding: 8 }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) send();
-          }}
-        />
-        <button onClick={send} disabled={busy} style={{ padding: '8px 16px' }}>
-          {busy ? 'Sending...' : 'Send'}
-        </button>
-      </section>
-    </main>
+      <div className="composer">
+        <div className="composer-inner">
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input type="checkbox" checked={stream} onChange={e => setStream(e.target.checked)} />
+            Stream
+          </label>
+          <input
+            className="input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type a message... (Cmd/Ctrl+Enter to send)"
+            style={{ flex: 1 }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) send();
+            }}
+          />
+          <button className="btn" onClick={send} disabled={busy}>
+            {busy ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+      </div>
+      </main>
+    </>
   );
 }

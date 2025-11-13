@@ -1,7 +1,7 @@
 # Vibe CLI
 
 CLI to chat with OpenRouter free models with Claude Code–style productivity features.
-
+Hello
 Features
 - Lists and uses OpenRouter free models only
 - Interactive commands: `/help`, `/models`, `/model`, `/system`, `/clear`, `/save [name]`, `/search <q>`, `/run <cmd>`, `/open <glob>`, `/files`, `/multiline`, `/exit`

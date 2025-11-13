@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ completion: r.data });
     }
 
-    // Streaming path
+    // Streaming path: parse SSE and forward only content text chunks
     res.writeHead(200, {
       'Content-Type': 'text/plain; charset=utf-8',
       'Transfer-Encoding': 'chunked',
@@ -34,11 +34,39 @@ export default async function handler(req, res) {
       { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'HTTP-Referer': req.headers['origin'] || 'http://localhost', 'X-Title': 'vibe-cli-web' }, responseType: 'stream', timeout: 0 }
     );
 
+    let buffer = '';
     upstream.data.on('data', (chunk) => {
-      res.write(chunk);
+      try {
+        buffer += chunk.toString();
+        const parts = buffer.split(/\r?\n/);
+        buffer = parts.pop() || '';
+        for (const line of parts) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed.startsWith('data:')) {
+            const payload = trimmed.slice(5).trim();
+            if (payload === '[DONE]') {
+              try { res.end(); } catch {}
+              return;
+            }
+            try {
+              const json = JSON.parse(payload);
+              const delta = json?.choices?.[0]?.delta?.content
+                ?? json?.choices?.[0]?.message?.content
+                ?? json?.content
+                ?? '';
+              if (delta) res.write(delta);
+            } catch (parseErr) {
+              // ignore JSON parse errors for non-json lines
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Stream parse error:', err?.message || err);
+      }
     });
     upstream.data.on('end', () => {
-      res.end();
+      try { res.end(); } catch {}
     });
     upstream.data.on('error', (err) => {
       console.error('Upstream stream error', err?.message || err);
