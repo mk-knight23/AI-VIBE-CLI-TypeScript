@@ -8,7 +8,7 @@ const pc = require('picocolors');
 const oraModule = require('ora');
 const ora = oraModule.default || oraModule;
 const { exec } = require('child_process');
-const { webSearch } = require('./tools.cjs');
+const { webSearch, webFetchDocs } = require('./tools.cjs');
 const fg = require('fast-glob');
 
 const OPENROUTER_BASE = 'https://openrouter.ai/api/v1';
@@ -16,7 +16,7 @@ const TRANSCRIPTS_DIR = path.join(process.cwd(), 'transcripts');
 
 // Defaults requested by user
 const DEFAULT_MODEL_ID = 'z-ai/glm-4.5-air:free';
-const DEFAULT_SYSTEM_PROMPT = 'You are an assistant software engineer with broad knowledge. Provide clear, accurate, and practical guidance.';
+const DEFAULT_SYSTEM_PROMPT = 'You are an interactive CLI assistant for software engineering. Be concise and direct. Only assist with defensive security tasks; refuse to create, modify, or improve code that may be used maliciously. Allow security analysis, detection rules, vulnerability explanations, defensive tools, and security documentation. Never guess URLs; only use user-provided or known programming docs URLs. Minimize output.';
 
 async function getApiKey() {
   const envKey = process.env.OPENROUTER_API_KEY;
@@ -99,6 +99,19 @@ function setupToolAccess() {
   };
 }
 
+function isDisallowedSecurityRequest(text) {
+  try {
+    const s = String(text || '').toLowerCase();
+    const bad = [
+      'ddos','ransomware','keylogger','malware','botnet','exploit','zero-day','zero day','backdoor','rootkit',
+      'phishing','sql injection payload','xss payload','bypass','privilege escalation','crack','keygen','create a virus','write code to hack'
+    ];
+    return bad.some(k => s.includes(k));
+  } catch {
+    return false;
+  }
+}
+
 function ensureDir(dir) {
   try {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -125,9 +138,16 @@ function printHelp() {
   console.log('  ' + pc.yellow('/clear') + '                Clear chat context');
   console.log('  ' + pc.yellow('/save [name]') + '         Save transcript to transcripts/');
   console.log('  ' + pc.yellow('/search <q>') + '          Web search and inject context');
+  console.log('  ' + pc.yellow('/docs <page>') + '          OpenRouter docs: quick-start | models | api-reference | sdks | guides | errors | authentication | rate-limits');
   console.log('  ' + pc.yellow('/run <cmd>') + '            Execute a shell command and inject output');
   console.log('  ' + pc.yellow('/open <glob>') + '          Read files by glob and inject their contents');
   console.log('  ' + pc.yellow('/files') + '                Show project files');
+  console.log('  ' + pc.yellow('/write <path>') + '         Create/overwrite a file via editor');
+  console.log('  ' + pc.yellow('/edit <path>') + '          Edit an existing file via editor');
+  console.log('  ' + pc.yellow('/append <path>') + '        Append to a file via editor');
+  console.log('  ' + pc.yellow('/move <src> <dst>') + '     Move/rename a file');
+  console.log('  ' + pc.yellow('/delete <path|glob>') + '   Delete file(s)');
+  console.log('  ' + pc.yellow('/feedback') + '            Report issues: https://github.com/user/vibe-cli/issues');
   console.log('  ' + pc.yellow('/multiline') + '           Toggle multiline editor mode');
   console.log('  ' + pc.yellow('/exit') + '                 Quit');
 }
@@ -139,7 +159,7 @@ async function startChat(apiKey, initialModel) {
 
   const tools = setupToolAccess();
   const messages = [
-    { role: 'system', content: 'You are a helpful assistant.' },
+    { role: 'system', content: 'You are an interactive CLI assistant for software engineering. Be concise and direct. Only assist with defensive security tasks; refuse to create, modify, or improve code that may be used maliciously. Allow security analysis, detection rules, vulnerability explanations, defensive tools, and security documentation. Never guess URLs; only use user-provided or known programming docs URLs. Minimize output.' },
   ];
   let systemIndex = 0;
   // Optional system prompt (defaults to user-specified default)
@@ -182,7 +202,8 @@ async function startChat(apiKey, initialModel) {
     const trimmed = (raw || '').trim();
     if (!trimmed) continue;
 
-    const lower = trimmed.toLowerCase();
+    const norm = trimmed.startsWith('/') ? trimmed : '/' + trimmed;
+    const lower = norm.toLowerCase();
 
     if (lower === '/help') {
       printHelp();
@@ -254,8 +275,21 @@ async function startChat(apiKey, initialModel) {
       continue;
     }
 
+    if (lower.startsWith('/docs ')) {
+      const page = norm.slice(6).trim();
+      if (!page) {
+        console.log('Please provide a docs page: quick-start | models | api-reference | sdks | guides | errors | authentication | rate-limits');
+        continue;
+      }
+      const content = await webFetchDocs(page);
+      const injected = `OpenRouter docs (${page}) snippet:\n${String(content).slice(0, 4000)}`;
+      messages.push({ role: 'system', content: injected });
+      console.log(pc.gray('(Docs snippet injected into context)'));
+      continue;
+    }
+
     if (lower.startsWith('/search ')) {
-      const query = trimmed.slice(8).trim();
+      const query = norm.slice(8).trim();
       if (!query) {
         console.log('Please provide a search query after /search');
         continue;
@@ -274,7 +308,7 @@ async function startChat(apiKey, initialModel) {
 
     // Execute commands like Claude Code CLI
     if (lower.startsWith('/run ')) {
-      const cmd = trimmed.slice(5);
+      const cmd = norm.slice(5);
       console.log(pc.gray(`Executing: ${cmd}`));
       const out = await new Promise((resolve) => {
         exec(cmd, { maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
@@ -289,7 +323,7 @@ async function startChat(apiKey, initialModel) {
     }
 
     if (lower.startsWith('/open ')) {
-      const pattern = trimmed.slice(6).trim() || '**/*';
+      const pattern = norm.slice(6).trim() || '**/*';
       const spinner = ora(`Reading files matching ${pattern}...`).start();
       const files = await fg(pattern, { onlyFiles: true, dot: false });
       spinner.stop();
@@ -321,7 +355,63 @@ async function startChat(apiKey, initialModel) {
       continue;
     }
 
+    if (lower.startsWith('/write ')) {
+      const target = norm.slice(7).trim();
+      if (!target) { console.log('Usage: /write <path>'); continue; }
+      const { body } = await inquirer.prompt([{ type: 'editor', name: 'body', message: `Write file ${target}:` }]);
+      ensureDir(path.dirname(target));
+      fs.writeFileSync(target, body || '', 'utf8');
+      console.log(pc.green(`Wrote ${target}`));
+      continue;
+    }
+
+    if (lower.startsWith('/edit ')) {
+      const target = norm.slice(6).trim();
+      if (!target) { console.log('Usage: /edit <path>'); continue; }
+      const existing = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '';
+      const { body } = await inquirer.prompt([{ type: 'editor', name: 'body', message: `Edit file ${target}:`, default: existing }]);
+      ensureDir(path.dirname(target));
+      fs.writeFileSync(target, body || '', 'utf8');
+      console.log(pc.green(`Saved ${target}`));
+      continue;
+    }
+
+    if (lower.startsWith('/append ')) {
+      const target = norm.slice(8).trim();
+      if (!target) { console.log('Usage: /append <path>'); continue; }
+      const { body } = await inquirer.prompt([{ type: 'editor', name: 'body', message: `Append to ${target}:` }]);
+      ensureDir(path.dirname(target));
+      fs.appendFileSync(target, body || '', 'utf8');
+      console.log(pc.green(`Appended to ${target}`));
+      continue;
+    }
+
+    if (lower.startsWith('/move ')) {
+      const parts = norm.split(/\s+/).slice(1);
+      if (parts.length < 2) { console.log('Usage: /move <src> <dst>'); continue; }
+      const [src, dst] = parts;
+      ensureDir(path.dirname(dst));
+      fs.renameSync(src, dst);
+      console.log(pc.green(`Moved ${src} -> ${dst}`));
+      continue;
+    }
+
+    if (lower.startsWith('/delete ')) {
+      const pat = norm.slice(8).trim();
+      if (!pat) { console.log('Usage: /delete <path|glob>'); continue; }
+      const matches = await fg(pat, { onlyFiles: true, dot: false });
+      if (!matches.length) { console.log('No files matched'); continue; }
+      for (const f of matches) {
+        try { fs.unlinkSync(f); console.log(pc.green(`Deleted ${f}`)); } catch (e) { console.log(pc.red(`Failed ${f}: ${e?.message||e}`)); }
+      }
+      continue;
+    }
+
     // Regular user message
+    if (isDisallowedSecurityRequest(trimmed)) {
+      console.log(pc.red('Refusing: only defensive security assistance is allowed. You can ask for analysis, detection rules, or defensive guidance.'));
+      continue;
+    }
     messages.push({ role: 'user', content: trimmed });
 
     // Spinner for model call

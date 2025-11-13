@@ -22,4 +22,20 @@ async function webSearch(query) {
   }
 }
 
-module.exports = { webSearch };
+const OPENROUTER_DOCS = 'https://openrouter.ai/docs';
+const ALLOWED_PAGES = new Set(['quick-start','models','api-reference','sdks','guides','errors','authentication','rate-limits']);
+
+async function webFetchDocs(page) {
+  const p = String(page || '').trim();
+  if (!ALLOWED_PAGES.has(p)) return 'Invalid docs page';
+  try {
+    const url = `${OPENROUTER_DOCS}/${p}`;
+    const { data } = await axios.get(url, { timeout: 20000 });
+    if (typeof data === 'string') return data.slice(0, 20000);
+    return JSON.stringify(data).slice(0, 20000);
+  } catch (e) {
+    return `Docs fetch error: ${e?.message || e}`;
+  }
+}
+
+module.exports = { webSearch, webFetchDocs };

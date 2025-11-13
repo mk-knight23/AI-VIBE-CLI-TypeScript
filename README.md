@@ -1,14 +1,16 @@
-# Vibe CLI
+# Vibe CLI by mk-knight23
 
 CLI to chat with OpenRouter free models with Claude Code–style productivity features.
 Hello
 Features
-- Lists and uses OpenRouter free models only
-- Interactive commands: `/help`, `/models`, `/model`, `/system`, `/clear`, `/save [name]`, `/search <q>`, `/run <cmd>`, `/open <glob>`, `/files`, `/multiline`, `/exit`
-- Web search tool (DuckDuckGo Instant Answer) injection
-- Execute shell commands and inject output
+- Uses OpenRouter free models only
+- Concise, defensive-security assistant
+- Commands work with or without leading slash
+- Web search (DuckDuckGo Instant Answer) and OpenRouter docs snippets
+- Run shell commands and inject output
+- Read, write, edit, append, move, and delete files
 - Inject file contents via glob with size caps
-- Transcript saving to `transcripts/`
+- Save transcripts to `transcripts/`
 
 Install (Option A: GitHub, no npm account)
 - Global (from GitHub): `npm i -g github:mk-knight23/vibe-cli`
@@ -16,7 +18,7 @@ Install (Option A: GitHub, no npm account)
 
 Install (Option B: Prebuilt binaries via Releases)
 - macOS/Linux quick install:
-  - `curl -fsSL https://raw.githubusercontent.com/your-username/vibe-cli/main/install.sh | bash`
+  - `curl -fsSL https://raw.githubusercontent.com/mk-knight23/vibe-cli/main/install.sh | bash`
 - Windows: download the latest Release asset `vibe-win-x64.exe` and run it
 
 
@@ -33,7 +35,26 @@ Smoke test
 - Run:
   - If installed globally: `vibe`
   - From source: `npm start`
-- Type `/help` inside the chat for a full command list
+- Type `help` inside the chat for a full command list
+
+Commands (examples)
+- help
+- models / model
+- system
+- clear
+- save chat1
+- search quick-start
+- docs api-reference
+- run node -v
+- open pages/**/*.js
+- files
+- write README2.md
+- edit README.md
+- append README.md
+- move README2.md docs/README2.md
+- delete docs/README2.md
+- multiline
+- exit
 
 Notes
 - Default model: `z-ai/glm-4.5-air:free`

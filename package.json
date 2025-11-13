@@ -1,7 +1,7 @@
 {
   "name": "vibe-cli",
   "private": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI to chat with OpenRouter free models and Claude Code–style tooling.",
   "keywords": [
     "openrouter",
@@ -12,10 +12,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourname/vibe-cli.git"
+    "url": "git+https://github.com/mk-knight23/vibe-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/yourname/vibe-cli/issues"
+    "url": "https://github.com/mk-knight23/vibe-cli/issues"
   },
   "homepage": "https://github.com/mk-knight23/vibe-cli#readme",
   "author": "mk-knight23 <noreply@users.noreply.github.com>",
