@@ -12,18 +12,26 @@ Features
 - Inject file contents via glob with size caps
 - Save transcripts to `transcripts/`
 
-Install (Option A: GitHub, no npm account)
-- Global (from GitHub): `npm i -g github:mk-knight23/vibe-cli`
-- One-off run: `npx github:mk-knight23/vibe-cli`
+Install (Recommended: Prebuilt binaries)
+- macOS/Linux quick install (auto-detects latest version):
+  - curl -fsSL https://raw.githubusercontent.com/mk-knight23/vibe-cli/main/install.sh | bash
+- Pin to a version:
+  - VERSION=v1.0.3 curl -fsSL https://raw.githubusercontent.com/mk-knight23/vibe-cli/main/install.sh | bash
+- Windows: download the latest Release asset `vibe-win-x64.exe`, add to PATH as `vibe`
 
-Install (Option B: Prebuilt binaries via Releases)
-- macOS/Linux quick install:
-  - `curl -fsSL https://raw.githubusercontent.com/mk-knight23/vibe-cli/main/install.sh | bash`
-- Windows: download the latest Release asset `vibe-win-x64.exe` and run it
+Install (Alternative: GitHub via npm)
+- Global (from GitHub): npm i -g github:mk-knight23/vibe-cli#v1.0.3
+- One-off run: npx github:mk-knight23/vibe-cli#v1.0.3
 
 
 
 Usage
+
+V2 quick start
+- Set OpenRouter key: vibe config set openrouter.apiKey sk-or-...
+- Default model (auto): z-ai/glm-4.5-air:free
+- Try: vibe chat "Hello from GLM-4.5-Air!"
+- Switch: vibe model use tng/deepseek-r1t2-chimera:free
 
 Smoke test
 - Ensure OPENROUTER_API_KEY is set, then: `npm run smoke`
@@ -37,34 +45,34 @@ Smoke test
   - From source: `npm start`
 - Type `help` inside the chat for a full command list
 
-Commands (examples)
-- help
-- models / model
-- system
-- clear
-- save chat1
-- search quick-start
-- docs api-reference
-- run node -v
-- open pages/**/*.js
-- files
-- write README2.md
-- edit README.md
-- append README.md
-- move README2.md docs/README2.md
-- delete docs/README2.md
-- multiline
-- exit
+V2 Commands
+- vibe plan "add login"
+- vibe fix
+- vibe test
+- vibe run --yolo
+- vibe agent start
+- vibe model list / use <model>
+- vibe theme set light
+- vibe cost
+- vibe resume
+- vibe view ui.png
+- vibe plugin install git
+- vibe config set openrouter.apiKey sk-or-...
 
 Notes
 - Default model: `z-ai/glm-4.5-air:free`
-- Only free models are selectable; if none are available the CLI will fallback to the default ID
+- Only free models are selectable; rate-limit rotation among top free models is automatic
+- Disable banner: set `VIBE_NO_BANNER=1`
 - The CLI never exposes your API key; it reads from environment or prompts you
 
 Troubleshooting
-- Ensure Node.js v14+ (v18+ recommended)
-- If you see ESM/CJS import errors, update Node and reinstall dependencies
-- If the editor prompts for `/system` or `/multiline` fail, configure `$EDITOR` or use single-line input
+- Ensure Node.js v18+
+- ENOTDIR during global install: remove stale global folder/file, then reinstall
+  - npm uninstall -g vibe-cli
+  - rm -f $(npm root -g)/vibe-cli
+  - npm i -g github:mk-knight23/vibe-cli#v1.0.3
+- If ESM/CJS import errors, update Node and reinstall
+- If editor prompts fail, configure $EDITOR or use single-line input
 
 Development
 - Link for local testing: `npm link` then run `vibe`

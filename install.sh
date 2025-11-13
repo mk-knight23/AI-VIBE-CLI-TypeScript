@@ -33,10 +33,25 @@ fi
 
 ASSET="${BIN_NAME}-${PLATFORM}-${ARCH}"
 URL="https://github.com/${REPO}/releases/download/${TAG}/${ASSET}"
-TARGET="/usr/local/bin/${BIN_NAME}"
+TARGET=${TARGET:-"/usr/local/bin/${BIN_NAME}"}
 
-echo "Downloading ${URL} -> ${TARGET}"
-sudo curl -fL "$URL" -o "$TARGET"
+# If download fails (e.g., arm64 mac only has x64), attempt fallback to x64
+set +e
+curl -fL "$URL" -o "/tmp/${BIN_NAME}" >/dev/null 2>&1
+RC=$?
+set -e
+if [ $RC -ne 0 ]; then
+  if [ "$PLATFORM" = "macOS" ] || [ "$PLATFORM" = "macos" ]; then
+    echo "Asset not found for ${PLATFORM}-${ARCH}; trying macos-x64 under Rosetta..."
+    URL="https://github.com/${REPO}/releases/download/${TAG}/${BIN_NAME}-macos-x64"
+    curl -fL "$URL" -o "/tmp/${BIN_NAME}"
+  else
+    echo "Failed to download ${URL}" >&2; exit 1
+  fi
+fi
+
+echo "Installing ${BIN_NAME} ${TAG} -> ${TARGET}"
+sudo mv "/tmp/${BIN_NAME}" "$TARGET"
 sudo chmod +x "$TARGET"
 
 echo "Installed ${BIN_NAME} to ${TARGET}"
