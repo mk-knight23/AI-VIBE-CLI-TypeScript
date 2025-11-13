@@ -8,7 +8,7 @@ const pc = require('picocolors');
 const simpleGit = require('simple-git');
 
 function printUsage() {
-  console.log(`Vibe Code CLI v2\nCommands:\n  vibe plan "task"\n  vibe fix\n  vibe run [--yolo]\n  vibe model list | use <id>\n  vibe theme set <dark|light>\n  vibe cost\n  vibe resume\n  vibe view <image>\n  vibe test\n  vibe commit\n  vibe agent start [--watch <paths>]\n  vibe plugin install <name>\n  vibe chat  (fallback to legacy chat)`);
+  console.log(`Vibe Code CLI v2\nCommands:\n  vibe plan "task"\n  vibe fix\n  vibe run [--yolo]\n  vibe model list | use <id>\n  vibe theme set <dark|light>\n  vibe cost\n  vibe resume\n  vibe view <image>\n  vibe test\n  vibe commit\n  vibe explain  (reads stdin: git status | vibe explain)\n  vibe agent start [--watch <paths>]\n  vibe plugin install <name>\n  vibe tui  (preview)\n  vibe chat`);
 }
 
 async function main(argv) {
@@ -100,7 +100,42 @@ async function main(argv) {
       break;
     }
     case 'test': {
-      console.log('TODO: detect Jest/Vitest/PyTest and run tests, then propose fixes');
+      // Detect test runner
+      const pkg = (()=>{ try { return require('../package.json'); } catch { return {}; } })();
+      const has = (bin) => require('fs').existsSync(require('path').join(process.cwd(), 'node_modules/.bin/', bin));
+      const { spawn } = require('child_process');
+      const run = (cmd, args) => new Promise((res)=>{ const p=spawn(cmd,args,{stdio:'inherit'}); p.on('close',c=>res(c)); });
+      (async ()=>{
+        if (has('jest') || (pkg.devDependencies && pkg.devDependencies.jest) || (pkg.dependencies && pkg.dependencies.jest)) {
+          process.exitCode = await run('npx', ['-y','jest']);
+        } else if (has('vitest') || (pkg.devDependencies && pkg.devDependencies.vitest)) {
+          process.exitCode = await run('npx', ['-y','vitest','run']);
+        } else if (has('mocha') || (pkg.devDependencies && pkg.devDependencies.mocha)) {
+          process.exitCode = await run('npx', ['-y','mocha']);
+        } else {
+          console.log('No known JS test runner detected.');
+          process.exitCode = 0;
+        }
+      })();
+      break;
+    }
+    case 'explain': {
+      // Pipe support: read from stdin if available
+      const { stdin } = process;
+      let data = '';
+      if (!stdin.isTTY) {
+        await new Promise((resolve) => {
+          stdin.setEncoding('utf8');
+          stdin.on('data', chunk => data += chunk);
+          stdin.on('end', resolve);
+        });
+      }
+      const text = data || args.join(' ');
+      if (!text) return console.log('Usage: <input> | vibe explain OR vibe explain "text"');
+      const messages = [ { role: 'user', content: 'Explain the following output succinctly and propose next steps:\n\n' + text } ];
+      chatCompletion({ model: 'z-ai/glm-4.5-air:free', messages }).then(r=>{
+        console.log(r.message?.content || '');
+      }).catch(e=>console.error('Explain error:', e.message));
       break;
     }
     case 'commit': {
@@ -110,8 +145,19 @@ async function main(argv) {
           console.log('Nothing to commit');
           return;
         }
-        const msg = 'chore: update via Vibe CLI';
         await git.add('.');
+        // Generate AI message from diff
+        let diff = '';
+        try { diff = await git.diff(['--staged']); } catch {}
+        let msg = 'chore: update via Vibe CLI';
+        try {
+          const prompt = [
+            { role: 'system', content: 'You are an expert software dev that writes concise, conventional commit messages.' },
+            { role: 'user', content: `Write a one-line conventional commit message for these staged changes. No trailing period.\n\n${diff.slice(0, 4000)}` }
+          ];
+          const r = await chatCompletion({ model: 'kwaipilot/kat-coder-pro-v1:free', messages: prompt });
+          msg = (r.message?.content || msg).split('\n')[0].trim();
+        } catch (e) {}
         await git.commit(msg);
         console.log(pc.green('Committed: ' + msg));
       }).catch(e => console.error('Git error:', e.message));

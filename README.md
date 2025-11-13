@@ -78,6 +78,10 @@ Development
 - Link for local testing: `npm link` then run `vibe`
 - Pack to preview publish contents: `npm pack`
 
+Publish to npm
+- Prepare NPM_TOKEN secret in GitHub repo settings
+- Tag a version (vX.Y.Z) and push tag; CI will publish to npm if NPM_TOKEN is present
+
 License
 MIT
 

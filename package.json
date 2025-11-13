@@ -45,6 +45,7 @@
     "release:check": "node -e \"console.log('Tag to release, e.g., v1.0.0')\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node cli.cjs",
+    "tui": "node src/tui/app.cjs",
     "dev": "next dev",
     "build": "next build"
   },
