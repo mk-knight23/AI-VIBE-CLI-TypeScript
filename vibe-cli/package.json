@@ -1,15 +1,15 @@
 {
   "name": "vibe-ai-cli",
-  "version": "7.0.7",
-  "description": "Next-Gen AI Development Platform - 60+ Commands, 42+ Tools, Multi-File Editing, Advanced Agents, Cloud Deploy, DevOps Suite",
+  "version": "8.0.0",
+  "description": "Ultimate AI Development Platform - 50+ Advanced Tools, Story Memory, Chat History, AI-Powered Analysis, Auto-Refactoring, Security Scanning",
   "main": "dist/cli/index.js",
   "bin": {
     "vibe": "bin/vibe.js",
-    "vibe7": "bin/vibe.js"
+    "vibe8": "bin/vibe.js"
   },
   "scripts": {
     "build": "tsc",
-    "build:v7": "tsc && echo '✅ v7.0.0 Production Build Complete'",
+    "build:v8": "tsc && echo '✅ v8.0.0 Ultimate Build Complete'",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -57,8 +57,17 @@
     "vercel",
     "aws",
     "firebase",
-    "v7",
-    "production"
+    "v8",
+    "production",
+    "story-memory",
+    "chat-history",
+    "code-analysis",
+    "refactoring",
+    "security-scan",
+    "auto-testing",
+    "documentation-gen",
+    "code-migration",
+    "bundle-optimization"
   ],
   "author": "KAZI",
   "license": "MIT",

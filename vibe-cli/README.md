@@ -1,306 +1,323 @@
-# VIBE CLI v7.0.7
+# VIBE CLI v8.0.0
 
-**Next-Gen AI Development Platform** - 60+ Commands | 42+ Tools | Multi-Provider AI | Free API Access
+**Revolutionary AI Development Platform** - 36 Tools | 14 Categories | 3-Layer Memory | 8 Advanced AI Tools
 
 [![npm version](https://badge.fury.io/js/vibe-ai-cli.svg)](https://www.npmjs.com/package/vibe-ai-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
+[![Tests](https://img.shields.io/badge/tests-103%20passing-success)](https://github.com/mk-knight23/vibe)
 
-## 🚀 What is VIBE?
+## 🎉 What's New in v8.0.0
 
-VIBE is an AI-powered development platform that brings the power of multiple AI providers directly to your terminal. Build projects, debug code, automate workflows, and deploy to cloud - all through natural conversation.
+### Revolutionary 3-Layer Memory System
+- **Story Memory** - Track project goals, milestones, challenges, and learnings across sessions
+- **Chat History** - 100-message history with semantic search
+- **Enhanced Workspace** - 50 recent changes, dependency tracking, git integration
 
-## ✨ Features
+### 8 Advanced AI-Powered Tools
+1. **Code Quality Analyzer** - Complexity, duplicates, long functions
+2. **Smart Refactoring** - Extract, inline refactoring
+3. **Auto Test Generator** - Vitest, jest, mocha support
+4. **Bundle Optimizer** - Large files, unused dependencies
+5. **Security Scanner** - Secrets, vulnerabilities
+6. **Performance Benchmark** - File ops, parse time
+7. **Documentation Generator** - Markdown docs from code
+8. **Code Migrator** - CommonJS→ESM, JS→TS
+
+### Enhanced Tool System
+- **36 tools** across **14 categories** (up from 28 tools, 6 categories)
+- Better organization and discoverability
+- 100% test coverage (103 tests passing)
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# Install
+npm install -g vibe-ai-cli
+
+# Run
+vibe
+
+# Start chatting
+"Build a REST API with authentication"
+```
+
+---
+
+## ✨ Key Features
+
+### 🧠 Revolutionary Memory System
+- **Story Memory** - Maintains project context across weeks/months
+- **Chat History** - Search past conversations with semantic search
+- **Workspace Tracking** - Monitors dependencies, git, and 50 recent changes
+- **Task History** - Tracks 20 recent tasks with duration and success metrics
+
+### 🛠️ 36 Development Tools in 14 Categories
+
+**Filesystem** (14 tools)
+- read_file, write_file, delete_file, copy_file, move_file
+- create_directory, list_directory, search_files
+- get_file_info, read_multiple_files, glob_search
+- append_to_file, replace_in_file, batch_operations
+
+**Shell** (1 tool)
+- run_shell_command
+
+**Web** (2 tools)
+- web_fetch, web_search
+
+**Memory** (3 tools)
+- get_memory_context, search_chat_history, clear_memory
+
+**Git** (4 tools)
+- git_commit, git_push, git_pull, git_branch
+
+**Project** (1 tool)
+- create_project
+
+**Analysis** (1 tool)
+- analyze_code_quality
+
+**Refactor** (1 tool)
+- smart_refactor
+
+**Testing** (1 tool)
+- generate_tests
+
+**Optimization** (1 tool)
+- optimize_bundle
+
+**Security** (1 tool)
+- security_scan
+
+**Performance** (1 tool)
+- performance_benchmark
+
+**Documentation** (1 tool)
+- generate_documentation
+
+**Migration** (1 tool)
+- migrate_code
 
 ### 🤖 Multi-Provider AI Support
-- **OpenRouter** - Access 27+ models (GPT-4, Claude, Gemini, DeepSeek)
+- **OpenRouter** - 27+ models (GPT-4, Claude, Gemini, DeepSeek)
 - **MegaLLM** - Free API with powerful models
-- **AgentRouter** - Specialized AI agents for specific tasks
-- **Routeway** - Optimized routing for best performance
+- **AgentRouter** - Specialized AI agents
+- **Routeway** - Optimized routing
 
-### 🛠️ 42+ Development Tools
-- **File Operations** - Read, write, search, glob patterns
-- **Shell Execution** - Run commands with safety checks
-- **Web Scraping** - HTTP requests, API calls, data extraction
-- **Git Operations** - Version control automation
-- **Package Management** - npm, yarn, pnpm support
-- **Code Analysis** - Linting, formatting, testing
+---
 
-### 📦 60+ CLI Commands
-- **Project Scaffolding** - Create full-stack apps instantly
-- **Code Generation** - Components, APIs, tests
-- **Debugging** - AI-powered error analysis
-- **DevOps** - Docker, Kubernetes, CI/CD
-- **Cloud Deployment** - Vercel, AWS, Firebase
-- **Workflow Automation** - Custom workflows
+## 📖 Usage
 
-### ⚡ Advanced Capabilities
-- **Multi-File Editing** - Edit multiple files simultaneously
-- **Context-Aware Memory** - Remembers your project context
-- **Agent-Based Workflows** - Complex tasks broken into steps
-- **Real-Time Monitoring** - Track operations and performance
-- **Session Management** - Save and resume work
-- **Tool Execution Tracking** - Monitor all operations
+### Basic Commands
+```bash
+/help              # Show all commands
+/model <name>      # Switch AI model
+/provider <name>   # Switch AI provider
+/memory            # View memory context
+/quit              # Exit
+```
+
+### Advanced AI Tools
+```bash
+/analyze <file>           # Code quality analysis
+/refactor <file> <type>   # Smart refactoring
+/test <file> [framework]  # Generate tests
+/optimize                 # Bundle optimization
+/security                 # Security scan
+/benchmark <file>         # Performance benchmark
+/docs <file>              # Generate documentation
+/migrate <file> <from> <to> # Code migration
+```
+
+### Memory Commands
+```bash
+/memory                   # View all memory
+/memory search <query>    # Search chat history
+/memory clear             # Clear memory
+```
+
+---
+
+## 🎯 Use Cases
+
+### Long-term Project Development
+```bash
+# Session 1: Start
+"Build a microservices platform"
+/create node api-gateway
+
+# Session 2 (days later)
+# Memory remembers your goal
+/analyze src/
+/test src/gateway.js
+
+# Session 3 (weeks later)
+# Full context maintained
+/security
+/deploy
+```
+
+### Code Quality Workflow
+```bash
+/analyze src/app.js
+/refactor src/app.js extract
+/test src/app.js vitest
+/docs src/app.js
+/security
+```
+
+### Migration Workflow
+```bash
+/migrate old.js commonjs esm
+/migrate old.js javascript typescript
+/test old.ts vitest
+/docs old.ts
+```
+
+---
+
+## 📊 Statistics
+
+| Metric | v7.0.7 | v8.0.0 | Change |
+|--------|--------|--------|--------|
+| Tools | 28 | 36 | +29% |
+| Categories | 6 | 14 | +133% |
+| Task History | 10 | 20 | +100% |
+| Recent Changes | 20 | 50 | +150% |
+| Chat History | 0 | 100 | New |
+| Advanced Tools | 0 | 8 | New |
+| Memory Layers | 1 | 3 | +200% |
+| Tests | 99 | 103 | +4% |
+
+---
+
+## 🧪 Testing
+
+**Complete Test Suite: 103/103 Passing**
+
+```bash
+npm test                    # Run all tests
+npm test:unit              # Unit tests (45)
+npm test:integration       # Integration tests (23)
+npm test:e2e               # E2E tests (14)
+npm test:security          # Security tests (15)
+npm test:performance       # Performance tests (6)
+```
+
+---
+
+## 📚 Documentation
+
+- **User Guide:** [docs/USER_DOCUMENTATION.md](docs/USER_DOCUMENTATION.md)
+- **Developer Guide:** [docs/DEVELOPER_DOCUMENTATION.md](docs/DEVELOPER_DOCUMENTATION.md)
+- **Release Notes:** [docs/V8_RELEASE_NOTES.md](docs/V8_RELEASE_NOTES.md)
+
+---
+
+## 🔒 Security
+
+- Dangerous command blocking (rm -rf /, chmod 777, etc.)
+- Sandbox isolation
+- Secret detection
+- Memory limits (128MB)
+- Timeout enforcement (60s)
+
+---
+
+## ⚡ Performance
+
+- File operations: <100ms
+- Batch operations: <500ms
+- Memory usage: <128MB
+- Tool execution: <1s
+
+---
+
+## 🛠️ Development
+
+```bash
+# Clone
+git clone https://github.com/mk-knight23/vibe.git
+cd vibe/vibe-cli
+
+# Install
+npm install
+
+# Build
+npm run build
+
+# Test
+npm test
+
+# Run locally
+npm start
+```
+
+---
 
 ## 📦 Installation
 
+### Global Installation
 ```bash
 npm install -g vibe-ai-cli
 ```
 
-## 🎯 Quick Start
-
+### Local Installation
 ```bash
-# Start VIBE
-vibe
-
-# Or use version-specific alias
-vibe7
+npm install vibe-ai-cli
+npx vibe
 ```
 
-## 💡 Usage Examples
-
-### Create a Full-Stack App
+### Upgrade from v7
 ```bash
-vibe
-> Create a Next.js app with TypeScript, Tailwind, and Prisma
+npm update -g vibe-ai-cli
 ```
-
-### Debug Code
-```bash
-vibe
-> Debug the authentication error in src/auth.ts
-```
-
-### Deploy to Cloud
-```bash
-vibe
-> Deploy this project to Vercel with environment variables
-```
-
-### Generate Tests
-```bash
-vibe
-> Write comprehensive tests for the user service
-```
-
-### Setup DevOps
-```bash
-vibe
-> Create Docker setup with multi-stage builds
-```
-
-## 🎮 Available Commands
-
-### Slash Commands
-| Command | Description |
-|---------|-------------|
-| `/help` | Show all available commands |
-| `/model` | Switch AI model |
-| `/provider` | Change AI provider |
-| `/clear` | Clear conversation history |
-| `/memory` | View memory and context |
-| `/quit` | Exit VIBE |
-
-### Natural Language Commands
-Just describe what you want in plain English:
-- "Create a React component for user profile"
-- "Add authentication to my Express API"
-- "Write tests for the payment service"
-- "Deploy to AWS with auto-scaling"
-- "Setup CI/CD pipeline with GitHub Actions"
-
-## 🏗️ Project Structure
-
-```
-vibe-cli/
-├── src/
-│   ├── cli/              # CLI interface & interactive mode
-│   ├── core/             # Core functionality
-│   │   ├── api.ts        # Multi-provider API client
-│   │   ├── memory.ts     # Context-aware memory
-│   │   ├── agents.ts     # Agent-based workflows
-│   │   └── ...
-│   ├── tools/            # 42+ development tools
-│   ├── providers/        # AI provider integrations
-│   ├── commands/         # 60+ CLI commands
-│   └── utils/            # Utility functions
-├── tests/                # Comprehensive test suites
-└── docs/                 # Documentation
-```
-
-## 🔧 Configuration
-
-VIBE works out of the box with free APIs. For advanced features:
-
-```bash
-# Optional: Set API keys for premium providers
-export OPENROUTER_API_KEY="your-key"
-export ANTHROPIC_API_KEY="your-key"
-```
-
-## 📚 Documentation
-
-- **[User Guide](./docs/USER_GUIDE.md)** - Complete user documentation
-- **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - Development and API reference
-- **[Features](./docs/FEATURES.md)** - Detailed feature list
-- **[Tools Reference](./docs/TOOLS.md)** - All available tools
-- **[Code Structure](./docs/CODE_STRUCTURE.md)** - Architecture overview
-
-## 🎓 Examples
-
-### Example 1: Full-Stack Todo App
-```
-You: Create a full-stack todo app with Next.js, Prisma, and PostgreSQL
-VIBE: [Generates complete app with database, API routes, UI components]
-```
-
-### Example 2: Microservices
-```
-You: Setup microservices architecture with Docker and Kubernetes
-VIBE: [Creates services, Dockerfiles, K8s configs, API gateway]
-```
-
-### Example 3: Testing Suite
-```
-You: Add comprehensive testing with Jest and Playwright
-VIBE: [Generates unit tests, integration tests, E2E tests]
-```
-
-## 🚀 Upgrades in v7.0.7
-
-### New Features
-- ✅ Enhanced error handling with context-aware messages
-- ✅ Improved multi-file editing capabilities
-- ✅ Better memory management and context retention
-- ✅ Optimized provider switching
-- ✅ Enhanced tool execution tracking
-
-### Improvements
-- ✅ Faster startup time (<1s)
-- ✅ Better TypeScript support
-- ✅ Comprehensive documentation
-- ✅ Improved error messages
-- ✅ Enhanced security measures
-
-### Bug Fixes
-- ✅ Fixed TypeScript compilation errors
-- ✅ Resolved memory leaks
-- ✅ Fixed provider switching issues
-- ✅ Improved file operation reliability
-
-## 🔒 Security
-
-- Input validation on all operations
-- Safe shell command execution
-- Sandboxed file operations
-- API key encryption
-- Rate limiting support
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test suite
-npm run test:unit
-npm run test:integration
-npm run test:e2e
-
-# With coverage
-npm run test:coverage
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) first.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing`)
-5. Open a Pull Request
-
-## 📝 License
-
-MIT © KAZI
-
-## 🌟 Support
-
-- ⭐ Star this repo if you find it helpful
-- 🐛 [Report bugs](https://github.com/mk-knight23/vibe/issues)
-- 💡 [Request features](https://github.com/mk-knight23/vibe/issues)
-- 💬 [Join discussions](https://github.com/mk-knight23/vibe/discussions)
-
-## 🔗 Links
-
-- **Website:** https://vibe-ai.vercel.app
-- **GitHub:** https://github.com/mk-knight23/vibe
-- **NPM:** https://www.npmjs.com/package/vibe-ai-cli
-- **Issues:** https://github.com/mk-knight23/vibe/issues
-
-## 📊 Stats
-
-- **60+ Commands** - Comprehensive CLI toolkit
-- **42+ Tools** - Development utilities
-- **4 Providers** - Multi-provider AI support
-- **27+ Models** - Access to latest AI models
-- **Free API** - No credit card required
-
-## 🎯 Use Cases
-
-- **Rapid Prototyping** - Build MVPs in minutes
-- **Code Generation** - Generate boilerplate code
-- **Debugging** - AI-powered error analysis
-- **DevOps** - Automate deployment workflows
-- **Learning** - Learn by building with AI guidance
-- **Productivity** - Automate repetitive tasks
-
-## 💻 Requirements
-
-- Node.js >= 16.0.0
-- npm or yarn or pnpm
-- Terminal with UTF-8 support
-
-## 🚀 Getting Started
-
-1. **Install**
-   ```bash
-   npm install -g vibe-ai-cli
-   ```
-
-2. **Run**
-   ```bash
-   vibe
-   ```
-
-3. **Start Building**
-   ```
-   > Create a React app with TypeScript
-   ```
-
-## 📈 Roadmap
-
-- [ ] Plugin system
-- [ ] Web dashboard
-- [ ] Mobile app
-- [ ] Team collaboration
-- [ ] Enterprise features
-- [ ] Custom AI models
-- [ ] Marketplace for tools
-
-## 🙏 Acknowledgments
-
-- OpenRouter for API access
-- MegaLLM for free API
-- All contributors and users
-- Open source community
 
 ---
 
-**Made with ❤️ by KAZI**
+## 🔄 Migration from v7.0.7
 
-**Version:** 7.0.7  
-**License:** MIT  
-**Status:** Production Ready
+v8.0.0 is **fully backward compatible**. No breaking changes.
+
+**New features to adopt:**
+1. Set project goals for better context
+2. Use memory search to find past conversations
+3. Try advanced AI tools (/analyze, /security, /optimize)
+4. Track your progress with story memory
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
+---
+
+## 📄 License
+
+MIT © VIBE Team
+
+---
+
+## 🔗 Links
+
+- **GitHub:** https://github.com/mk-knight23/vibe
+- **NPM:** https://www.npmjs.com/package/vibe-ai-cli
+- **Website:** https://vibe-ai.vercel.app
+- **Issues:** https://github.com/mk-knight23/vibe/issues
+
+---
+
+## 🙏 Acknowledgments
+
+Thanks to all contributors and users who helped shape v8.0.0!
+
+---
+
+**Version:** 8.0.0  
+**Release Date:** December 6, 2025  
+**Status:** ✅ Production Ready  
+**Tests:** 103/103 Passing

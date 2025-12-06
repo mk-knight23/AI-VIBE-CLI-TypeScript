@@ -8,6 +8,10 @@ interface WorkspaceMemory {
   fileSummaries: Record<string, string>;
   lastUpdated: string;
   recentChanges: string[];
+  dependencies: Record<string, string>;
+  scripts: Record<string, string>;
+  gitBranch: string;
+  gitRemote: string;
 }
 
 interface TaskMemory {
@@ -17,6 +21,24 @@ interface TaskMemory {
   errors: string[];
   suggestions: string[];
   timestamp: number;
+  duration: number;
+  success: boolean;
+}
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  tokens?: number;
+}
+
+interface StoryMemory {
+  projectGoal: string;
+  milestones: string[];
+  challenges: string[];
+  solutions: string[];
+  learnings: string[];
+  timeline: Array<{ date: string; event: string }>;
 }
 
 interface ConversationState {
@@ -27,13 +49,19 @@ interface ConversationState {
   pendingTasks: string[];
   workspaceMemory: WorkspaceMemory;
   taskHistory: TaskMemory[];
+  chatHistory: ChatMessage[];
+  storyMemory: StoryMemory;
+  userPreferences: Record<string, any>;
+  codePatterns: string[];
+  frequentCommands: Record<string, number>;
 }
 
 export class MemoryManager {
   private state: ConversationState;
   private memoryFile: string;
-  private maxTaskHistory = 10;
-  private maxChanges = 20;
+  private maxTaskHistory = 20;
+  private maxChanges = 50;
+  private maxChatHistory = 100;
 
   constructor(workspaceDir: string = process.cwd()) {
     this.memoryFile = path.join(workspaceDir, '.vibe', 'memory.json');
@@ -41,15 +69,7 @@ export class MemoryManager {
   }
 
   private loadState(): ConversationState {
-    try {
-      if (fs.existsSync(this.memoryFile)) {
-        return JSON.parse(fs.readFileSync(this.memoryFile, 'utf-8'));
-      }
-    } catch (error) {
-      // Ignore load errors
-    }
-
-    return {
+    const defaultState = {
       keyPoints: [],
       decisions: [],
       currentArchitecture: {},
@@ -60,10 +80,47 @@ export class MemoryManager {
         structure: '',
         fileSummaries: {},
         lastUpdated: '',
-        recentChanges: []
+        recentChanges: [],
+        dependencies: {},
+        scripts: {},
+        gitBranch: '',
+        gitRemote: ''
       },
-      taskHistory: []
+      taskHistory: [],
+      chatHistory: [],
+      storyMemory: {
+        projectGoal: '',
+        milestones: [],
+        challenges: [],
+        solutions: [],
+        learnings: [],
+        timeline: []
+      },
+      userPreferences: {},
+      codePatterns: [],
+      frequentCommands: {}
     };
+
+    try {
+      if (fs.existsSync(this.memoryFile)) {
+        const loaded = JSON.parse(fs.readFileSync(this.memoryFile, 'utf-8'));
+        // Merge with defaults to handle missing fields
+        return {
+          ...defaultState,
+          ...loaded,
+          storyMemory: {
+            ...defaultState.storyMemory,
+            ...(loaded.storyMemory || {})
+          },
+          workspaceMemory: {
+            ...defaultState.workspaceMemory,
+            ...(loaded.workspaceMemory || {})
+          }
+        };
+      }
+    } catch (error) {}
+
+    return defaultState;
   }
 
   private saveState(): void {
@@ -82,16 +139,15 @@ export class MemoryManager {
     try {
       const cwd = process.cwd();
       
-      // Get file list
-      const files = this.getFileList(cwd);
-      this.state.workspaceMemory.files = files;
-      
-      // Get directory structure
+      this.state.workspaceMemory.files = this.getFileList(cwd);
       this.state.workspaceMemory.structure = this.getDirectoryTree(cwd);
       
-      // Detect project type
+      // Detect project type and dependencies
       if (fs.existsSync(path.join(cwd, 'package.json'))) {
         const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
+        this.state.workspaceMemory.dependencies = { ...pkg.dependencies, ...pkg.devDependencies };
+        this.state.workspaceMemory.scripts = pkg.scripts || {};
+        
         if (pkg.dependencies?.react) this.state.projectType = 'React';
         else if (pkg.dependencies?.next) this.state.projectType = 'Next.js';
         else if (pkg.dependencies?.vue) this.state.projectType = 'Vue';
@@ -101,12 +157,18 @@ export class MemoryManager {
         this.state.projectType = 'Python';
       } else if (fs.existsSync(path.join(cwd, 'Cargo.toml'))) {
         this.state.projectType = 'Rust';
+      } else if (fs.existsSync(path.join(cwd, 'go.mod'))) {
+        this.state.projectType = 'Go';
       }
       
+      // Git info
+      try {
+        this.state.workspaceMemory.gitBranch = execSync('git branch --show-current 2>/dev/null', { encoding: 'utf-8' }).trim();
+        this.state.workspaceMemory.gitRemote = execSync('git remote get-url origin 2>/dev/null', { encoding: 'utf-8' }).trim();
+      } catch {}
+      
       this.saveState();
-    } catch (error) {
-      // Ignore errors
-    }
+    } catch (error) {}
   }
 
   private getFileList(dir: string): string[] {
@@ -174,12 +236,86 @@ export class MemoryManager {
       filesModified: [],
       errors: [],
       suggestions: [],
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      duration: 0,
+      success: true
     };
     
     this.state.taskHistory.unshift(task);
     this.state.taskHistory = this.state.taskHistory.slice(0, this.maxTaskHistory);
     this.saveState();
+  }
+
+  completeTask(success: boolean, duration: number): void {
+    if (this.state.taskHistory[0]) {
+      this.state.taskHistory[0].success = success;
+      this.state.taskHistory[0].duration = duration;
+      this.saveState();
+    }
+  }
+
+  addChatMessage(role: 'user' | 'assistant', content: string, tokens?: number): void {
+    this.state.chatHistory.push({
+      role,
+      content: content.substring(0, 500),
+      timestamp: Date.now(),
+      tokens
+    });
+    this.state.chatHistory = this.state.chatHistory.slice(-this.maxChatHistory);
+    this.saveState();
+  }
+
+  addMilestone(milestone: string): void {
+    if (!this.state.storyMemory.milestones.includes(milestone)) {
+      this.state.storyMemory.milestones.push(milestone);
+      this.state.storyMemory.timeline.push({
+        date: new Date().toISOString().split('T')[0],
+        event: milestone
+      });
+      this.saveState();
+    }
+  }
+
+  addChallenge(challenge: string, solution?: string): void {
+    this.state.storyMemory.challenges.push(challenge);
+    if (solution) this.state.storyMemory.solutions.push(solution);
+    this.saveState();
+  }
+
+  addLearning(learning: string): void {
+    if (!this.state.storyMemory.learnings.includes(learning)) {
+      this.state.storyMemory.learnings.push(learning);
+      this.saveState();
+    }
+  }
+
+  setProjectGoal(goal: string): void {
+    this.state.storyMemory.projectGoal = goal;
+    this.saveState();
+  }
+
+  trackCommand(command: string): void {
+    this.state.frequentCommands[command] = (this.state.frequentCommands[command] || 0) + 1;
+    this.saveState();
+  }
+
+  addCodePattern(pattern: string): void {
+    if (!this.state.codePatterns.includes(pattern)) {
+      this.state.codePatterns.push(pattern);
+      this.saveState();
+    }
+  }
+
+  setPreference(key: string, value: any): void {
+    this.state.userPreferences[key] = value;
+    this.saveState();
+  }
+
+  searchChatHistory(query: string): ChatMessage[] {
+    const lowerQuery = query.toLowerCase();
+    return this.state.chatHistory.filter(msg => 
+      msg.content.toLowerCase().includes(lowerQuery)
+    ).slice(-10);
   }
 
   addKeyPoint(point: string): void {
@@ -209,62 +345,72 @@ export class MemoryManager {
   getMemoryContext(): string {
     const parts: string[] = [];
     
-    // Project context
     parts.push(`# Project Context`);
     parts.push(`Type: ${this.state.projectType}`);
     parts.push(`Files: ${this.state.workspaceMemory.files.length} tracked`);
+    if (this.state.workspaceMemory.gitBranch) parts.push(`Branch: ${this.state.workspaceMemory.gitBranch}`);
+    if (this.state.workspaceMemory.lastUpdated) parts.push(`Last updated: ${this.state.workspaceMemory.lastUpdated}`);
     
-    if (this.state.workspaceMemory.lastUpdated) {
-      parts.push(`Last updated: ${this.state.workspaceMemory.lastUpdated}`);
+    if (this.state.storyMemory.projectGoal) {
+      parts.push(`\n# Project Goal`);
+      parts.push(this.state.storyMemory.projectGoal);
     }
     
-    // Recent changes
+    if (this.state.storyMemory.milestones.length > 0) {
+      parts.push(`\n# Milestones Achieved`);
+      this.state.storyMemory.milestones.slice(-5).forEach(m => parts.push(`✓ ${m}`));
+    }
+    
     if (this.state.workspaceMemory.recentChanges.length > 0) {
-      parts.push(`\n# Recent Changes (last ${Math.min(5, this.state.workspaceMemory.recentChanges.length)})`);
-      this.state.workspaceMemory.recentChanges.slice(0, 5).forEach(change => {
-        parts.push(`- ${change}`);
-      });
+      parts.push(`\n# Recent Changes`);
+      this.state.workspaceMemory.recentChanges.slice(0, 5).forEach(c => parts.push(`- ${c}`));
     }
     
-    // Key points
     if (this.state.keyPoints.length > 0) {
       parts.push(`\n# Key Points`);
-      this.state.keyPoints.slice(-5).forEach(point => {
-        parts.push(`- ${point}`);
-      });
+      this.state.keyPoints.slice(-5).forEach(p => parts.push(`- ${p}`));
     }
     
-    // Decisions
     if (this.state.decisions.length > 0) {
       parts.push(`\n# Decisions Made`);
-      this.state.decisions.slice(-3).forEach(decision => {
-        parts.push(`- ${decision}`);
-      });
+      this.state.decisions.slice(-3).forEach(d => parts.push(`- ${d}`));
     }
     
-    // Pending tasks
     if (this.state.pendingTasks.length > 0) {
       parts.push(`\n# Pending Tasks`);
-      this.state.pendingTasks.forEach(task => {
-        parts.push(`- ${task}`);
+      this.state.pendingTasks.forEach(t => parts.push(`- ${t}`));
+    }
+    
+    if (this.state.storyMemory.challenges.length > 0) {
+      parts.push(`\n# Recent Challenges & Solutions`);
+      this.state.storyMemory.challenges.slice(-3).forEach((c, i) => {
+        parts.push(`Challenge: ${c}`);
+        if (this.state.storyMemory.solutions[i]) parts.push(`Solution: ${this.state.storyMemory.solutions[i]}`);
       });
     }
     
-    // Recent task history
+    if (this.state.storyMemory.learnings.length > 0) {
+      parts.push(`\n# Key Learnings`);
+      this.state.storyMemory.learnings.slice(-5).forEach(l => parts.push(`- ${l}`));
+    }
+    
     if (this.state.taskHistory.length > 0) {
       parts.push(`\n# Recent Tasks`);
-      this.state.taskHistory.slice(0, 3).forEach(task => {
-        parts.push(`- ${task.description}`);
-        if (task.filesCreated.length > 0) {
-          parts.push(`  Created: ${task.filesCreated.join(', ')}`);
-        }
-        if (task.errors.length > 0) {
-          parts.push(`  Errors: ${task.errors.length}`);
-        }
+      this.state.taskHistory.slice(0, 3).forEach(t => {
+        const status = t.success ? '✓' : '✗';
+        parts.push(`${status} ${t.description} (${(t.duration / 1000).toFixed(1)}s)`);
+        if (t.filesCreated.length > 0) parts.push(`  Created: ${t.filesCreated.join(', ')}`);
+        if (t.errors.length > 0) parts.push(`  Errors: ${t.errors.length}`);
       });
     }
     
-    // Directory structure (abbreviated)
+    if (Object.keys(this.state.workspaceMemory.dependencies).length > 0) {
+      parts.push(`\n# Key Dependencies`);
+      Object.entries(this.state.workspaceMemory.dependencies).slice(0, 10).forEach(([k, v]) => {
+        parts.push(`- ${k}: ${v}`);
+      });
+    }
+    
     if (this.state.workspaceMemory.structure) {
       parts.push(`\n# Project Structure`);
       parts.push(this.state.workspaceMemory.structure.substring(0, 500));
@@ -301,9 +447,25 @@ export class MemoryManager {
         structure: '',
         fileSummaries: {},
         lastUpdated: '',
-        recentChanges: []
+        recentChanges: [],
+        dependencies: {},
+        scripts: {},
+        gitBranch: '',
+        gitRemote: ''
       },
-      taskHistory: []
+      taskHistory: [],
+      chatHistory: [],
+      storyMemory: {
+        projectGoal: '',
+        milestones: [],
+        challenges: [],
+        solutions: [],
+        learnings: [],
+        timeline: []
+      },
+      userPreferences: {},
+      codePatterns: [],
+      frequentCommands: {}
     };
     this.saveState();
   }

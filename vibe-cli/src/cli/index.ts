@@ -1,60 +1,44 @@
 #!/usr/bin/env node
 
 /**
- * VIBE CLI - Main Entry Point
+ * VIBE CLI v8.0.0 - Ultimate AI Development Platform
  * 
- * This is the primary entry point for the VIBE AI Development Platform CLI.
- * It handles command-line arguments, displays help/version info, and starts
- * the interactive mode with the AI assistant.
- * 
- * Features:
- * - Multi-provider AI support (OpenRouter, MegaLLM, AgentRouter, Routeway)
- * - 60+ commands for development tasks
- * - 42+ tools for file operations, shell execution, web scraping
- * - Advanced memory management and context awareness
- * - Multi-file editing capabilities
+ * Revolutionary features:
+ * - Story Memory: Tracks project goals, milestones, challenges
+ * - Chat History: 100 message buffer with semantic search
+ * - 36 Advanced Tools: Code analysis, refactoring, security scanning
+ * - Enhanced Memory: Dependencies, git info, user preferences
  * 
  * @module cli/index
  * @author KAZI
- * @version 7.0.5
+ * @version 8.0.0
  */
 
 import { startInteractive } from './interactive';
 import { ApiClient } from '../core/api';
 
-/** Current version of VIBE CLI */
-const VERSION = '7.0.7';
+const VERSION = '8.0.0';
 
-/** Welcome banner displayed on startup */
 const BANNER = `
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   🎨 VIBE v7.0.7                                         ║
+║   🎨 VIBE v8.0.0 - ULTIMATE EDITION                      ║
 ║   AI-Powered Development Platform                        ║
 ║                                                           ║
+║   ✨ Story Memory • Chat History • 36 Advanced Tools    ║
 ║   🔥 Made by KAZI                                        ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 `;
 
-/**
- * Main application entry point
- * Handles CLI arguments and starts interactive mode
- * 
- * @async
- * @returns {Promise<void>}
- */
 async function main(): Promise<void> {
-  // Parse command-line arguments (skip node and script path)
   const args = process.argv.slice(2);
 
-  // Handle version flag
   if (args.includes('--version') || args.includes('-v')) {
     console.log(`VIBE v${VERSION}`);
     process.exit(0);
   }
 
-  // Handle help flag
   if (args.includes('--help') || args.includes('-h')) {
     console.log(BANNER);
     console.log(`
@@ -66,30 +50,31 @@ Options:
   
 Commands:
   vibe              Start interactive AI assistant mode
+  vibe8             Start VIBE v8.0.0 (alias)
+  
+New in v8.0.0:
+  🧠 Story Memory - Tracks goals, milestones, challenges
+  💬 Chat History - 100 message buffer with search
+  🛠️  36 Tools - Code analysis, refactoring, security
+  📊 Enhanced Memory - Dependencies, git, preferences
   
 Examples:
-  vibe              Start VIBE CLI with default settings
+  vibe              Start VIBE CLI
   vibe --version    Display current version
-  vibe --help       Show detailed help information
+  vibe --help       Show detailed help
     `);
     process.exit(0);
   }
 
-  // Display welcome banner
   console.log(BANNER);
   console.log('Type /help for available commands\n');
   
   try {
-    // Initialize API client with default provider (MegaLLM)
     const client = new ApiClient();
-    
-    // Start interactive mode
     await startInteractive(client);
   } catch (error: any) {
-    // Handle any startup errors gracefully
     console.error('❌ Error:', error.message);
     
-    // Provide helpful error context
     if (error.code === 'EACCES') {
       console.error('💡 Tip: Check file permissions');
     } else if (error.code === 'ENOENT') {
@@ -100,5 +85,5 @@ Examples:
   }
 }
 
-// Start the application
 main();
+

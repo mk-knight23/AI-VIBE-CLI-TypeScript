@@ -4,6 +4,7 @@ import * as web from './web';
 import * as memory from './extras';
 import * as sandbox from './extras';
 import * as enhanced from './enhanced';
+import * as advanced from './advanced';
 
 export interface ToolDefinition {
   name: string;
@@ -12,9 +13,11 @@ export interface ToolDefinition {
   parameters: any;
   handler: (...args: any[]) => Promise<any>;
   requiresConfirmation?: boolean;
+  category?: string;
 }
 
 export const tools: ToolDefinition[] = [
+  // File Operations
   {
     name: 'list_directory',
     displayName: 'ReadFolder',
@@ -25,7 +28,8 @@ export const tools: ToolDefinition[] = [
       respect_git_ignore: { type: 'boolean', required: false }
     },
     handler: filesystem.listDirectory,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'filesystem'
   },
   {
     name: 'read_file',
@@ -37,7 +41,8 @@ export const tools: ToolDefinition[] = [
       limit: { type: 'number', required: false }
     },
     handler: filesystem.readFile,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'filesystem'
   },
   {
     name: 'write_file',
@@ -48,7 +53,8 @@ export const tools: ToolDefinition[] = [
       content: { type: 'string', required: true }
     },
     handler: filesystem.writeFile,
-    requiresConfirmation: true
+    requiresConfirmation: true,
+    category: 'filesystem'
   },
   {
     name: 'glob',
@@ -61,7 +67,8 @@ export const tools: ToolDefinition[] = [
       respect_git_ignore: { type: 'boolean', required: false }
     },
     handler: filesystem.globFiles,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'filesystem'
   },
   {
     name: 'search_file_content',
@@ -73,7 +80,8 @@ export const tools: ToolDefinition[] = [
       include: { type: 'string', required: false }
     },
     handler: filesystem.searchFileContent,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'filesystem'
   },
   {
     name: 'replace',
@@ -86,8 +94,11 @@ export const tools: ToolDefinition[] = [
       expected_replacements: { type: 'number', required: false }
     },
     handler: filesystem.replaceInFile,
-    requiresConfirmation: true
+    requiresConfirmation: true,
+    category: 'filesystem'
   },
+  
+  // Shell Operations
   {
     name: 'run_shell_command',
     displayName: 'Shell',
@@ -98,8 +109,11 @@ export const tools: ToolDefinition[] = [
       directory: { type: 'string', required: false }
     },
     handler: shell.runShellCommand,
-    requiresConfirmation: true
+    requiresConfirmation: true,
+    category: 'shell'
   },
+  
+  // Web Operations
   {
     name: 'web_fetch',
     displayName: 'WebFetch',
@@ -108,7 +122,8 @@ export const tools: ToolDefinition[] = [
       url: { type: 'string', required: true }
     },
     handler: web.webFetch,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'web'
   },
   {
     name: 'google_web_search',
@@ -119,8 +134,11 @@ export const tools: ToolDefinition[] = [
       num_results: { type: 'number', required: false }
     },
     handler: web.googleWebSearch,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'web'
   },
+  
+  // Memory Operations
   {
     name: 'save_memory',
     displayName: 'SaveMemory',
@@ -130,7 +148,8 @@ export const tools: ToolDefinition[] = [
       value: { type: 'any', required: true }
     },
     handler: memory.saveMemory,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'memory'
   },
   {
     name: 'write_todos',
@@ -140,15 +159,19 @@ export const tools: ToolDefinition[] = [
       todos: { type: 'array', required: true }
     },
     handler: memory.writeTodos,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'memory'
   },
+  
+  // Git Operations
   {
     name: 'git_status',
     displayName: 'GitStatus',
     description: 'Check git status (non-paginated)',
     parameters: {},
     handler: enhanced.gitStatus,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'git'
   },
   {
     name: 'git_diff',
@@ -158,7 +181,8 @@ export const tools: ToolDefinition[] = [
       file: { type: 'string', required: false }
     },
     handler: enhanced.gitDiff,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'git'
   },
   {
     name: 'git_log',
@@ -168,7 +192,8 @@ export const tools: ToolDefinition[] = [
       count: { type: 'number', required: false }
     },
     handler: enhanced.gitLog,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'git'
   },
   {
     name: 'git_blame',
@@ -180,8 +205,11 @@ export const tools: ToolDefinition[] = [
       lineEnd: { type: 'number', required: false }
     },
     handler: enhanced.gitBlame,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'git'
   },
+  
+  // Enhanced File Operations
   {
     name: 'rg_search',
     displayName: 'RipgrepSearch',
@@ -192,7 +220,8 @@ export const tools: ToolDefinition[] = [
       options: { type: 'object', required: false }
     },
     handler: enhanced.ripgrepSearch,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'filesystem'
   },
   {
     name: 'list_files_rg',
@@ -202,7 +231,8 @@ export const tools: ToolDefinition[] = [
       path: { type: 'string', required: false }
     },
     handler: enhanced.listFilesRg,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'filesystem'
   },
   {
     name: 'get_file_info',
@@ -212,7 +242,8 @@ export const tools: ToolDefinition[] = [
       file_path: { type: 'string', required: true }
     },
     handler: enhanced.getFileInfo,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'filesystem'
   },
   {
     name: 'create_directory',
@@ -223,7 +254,8 @@ export const tools: ToolDefinition[] = [
       recursive: { type: 'boolean', required: false }
     },
     handler: enhanced.createDirectory,
-    requiresConfirmation: true
+    requiresConfirmation: true,
+    category: 'filesystem'
   },
   {
     name: 'delete_file',
@@ -233,7 +265,8 @@ export const tools: ToolDefinition[] = [
       file_path: { type: 'string', required: true }
     },
     handler: enhanced.deleteFile,
-    requiresConfirmation: true
+    requiresConfirmation: true,
+    category: 'filesystem'
   },
   {
     name: 'move_file',
@@ -244,7 +277,8 @@ export const tools: ToolDefinition[] = [
       destination: { type: 'string', required: true }
     },
     handler: enhanced.moveFile,
-    requiresConfirmation: true
+    requiresConfirmation: true,
+    category: 'filesystem'
   },
   {
     name: 'copy_file',
@@ -255,7 +289,8 @@ export const tools: ToolDefinition[] = [
       destination: { type: 'string', required: true }
     },
     handler: enhanced.copyFile,
-    requiresConfirmation: true
+    requiresConfirmation: true,
+    category: 'filesystem'
   },
   {
     name: 'append_to_file',
@@ -266,8 +301,11 @@ export const tools: ToolDefinition[] = [
       content: { type: 'string', required: true }
     },
     handler: enhanced.appendToFile,
-    requiresConfirmation: true
+    requiresConfirmation: true,
+    category: 'filesystem'
   },
+  
+  // Project Operations
   {
     name: 'check_dependency',
     displayName: 'CheckDep',
@@ -276,7 +314,8 @@ export const tools: ToolDefinition[] = [
       package_name: { type: 'string', required: true }
     },
     handler: enhanced.checkDependency,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'project'
   },
   {
     name: 'get_project_info',
@@ -284,7 +323,8 @@ export const tools: ToolDefinition[] = [
     description: 'Get project metadata (framework, language, package manager)',
     parameters: {},
     handler: enhanced.getProjectInfo,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'project'
   },
   {
     name: 'run_tests',
@@ -294,7 +334,8 @@ export const tools: ToolDefinition[] = [
       test_command: { type: 'string', required: false }
     },
     handler: enhanced.runTests,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'project'
   },
   {
     name: 'run_lint',
@@ -304,7 +345,8 @@ export const tools: ToolDefinition[] = [
       lint_command: { type: 'string', required: false }
     },
     handler: enhanced.runLint,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'project'
   },
   {
     name: 'run_typecheck',
@@ -312,7 +354,102 @@ export const tools: ToolDefinition[] = [
     description: 'Run TypeScript type checking',
     parameters: {},
     handler: enhanced.runTypeCheck,
-    requiresConfirmation: false
+    requiresConfirmation: false,
+    category: 'project'
+  },
+  
+  // Advanced AI-Powered Tools
+  {
+    name: 'analyze_code_quality',
+    displayName: 'CodeQuality',
+    description: 'Analyze code quality metrics (complexity, duplicates, long functions)',
+    parameters: {
+      file_path: { type: 'string', required: true }
+    },
+    handler: advanced.analyzeCodeQuality,
+    requiresConfirmation: false,
+    category: 'analysis'
+  },
+  {
+    name: 'smart_refactor',
+    displayName: 'Refactor',
+    description: 'AI-powered code refactoring (extract, inline, rename)',
+    parameters: {
+      file_path: { type: 'string', required: true },
+      type: { type: 'string', required: true }
+    },
+    handler: advanced.smartRefactor,
+    requiresConfirmation: true,
+    category: 'refactor'
+  },
+  {
+    name: 'generate_tests',
+    displayName: 'GenTests',
+    description: 'Auto-generate test files for functions',
+    parameters: {
+      file_path: { type: 'string', required: true },
+      framework: { type: 'string', required: false }
+    },
+    handler: advanced.generateTests,
+    requiresConfirmation: true,
+    category: 'testing'
+  },
+  {
+    name: 'optimize_bundle',
+    displayName: 'OptimizeBundle',
+    description: 'Analyze and optimize bundle size',
+    parameters: {
+      project_path: { type: 'string', required: false }
+    },
+    handler: advanced.optimizeBundle,
+    requiresConfirmation: false,
+    category: 'optimization'
+  },
+  {
+    name: 'security_scan',
+    displayName: 'SecurityScan',
+    description: 'Scan for security vulnerabilities and secrets',
+    parameters: {
+      project_path: { type: 'string', required: false }
+    },
+    handler: advanced.securityScan,
+    requiresConfirmation: false,
+    category: 'security'
+  },
+  {
+    name: 'performance_benchmark',
+    displayName: 'Benchmark',
+    description: 'Benchmark file operations and parsing',
+    parameters: {
+      file_path: { type: 'string', required: true }
+    },
+    handler: advanced.performanceBenchmark,
+    requiresConfirmation: false,
+    category: 'performance'
+  },
+  {
+    name: 'generate_documentation',
+    displayName: 'GenDocs',
+    description: 'Auto-generate documentation from code',
+    parameters: {
+      file_path: { type: 'string', required: true }
+    },
+    handler: advanced.generateDocumentation,
+    requiresConfirmation: true,
+    category: 'documentation'
+  },
+  {
+    name: 'migrate_code',
+    displayName: 'Migrate',
+    description: 'Migrate code between formats (CommonJS→ESM, JS→TS)',
+    parameters: {
+      file_path: { type: 'string', required: true },
+      from: { type: 'string', required: true },
+      to: { type: 'string', required: true }
+    },
+    handler: advanced.migrateCode,
+    requiresConfirmation: true,
+    category: 'migration'
   }
 ];
 
@@ -328,8 +465,14 @@ export function getToolSchemas() {
     name: t.name,
     displayName: t.displayName,
     description: t.description,
-    parameters: t.parameters
+    parameters: t.parameters,
+    category: t.category
   }));
 }
 
-export { filesystem, shell, web, memory, sandbox, enhanced };
+export function getToolsByCategory(category: string) {
+  return tools.filter(t => t.category === category);
+}
+
+export { filesystem, shell, web, memory, sandbox, enhanced, advanced };
+
