@@ -1,6 +1,6 @@
 {
   "name": "vibe-ai-cli",
-  "version": "8.0.2",
+  "version": "8.0.3",
   "description": "Ultimate AI Development Platform - 50+ Advanced Tools, Story Memory, Chat History, AI-Powered Analysis, Auto-Refactoring, Security Scanning",
   "main": "dist/cli/index.js",
   "bin": {
@@ -81,7 +81,7 @@
   },
   "homepage": "https://github.com/mk-knight23/vibe#readme",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
@@ -93,26 +93,31 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "fast-glob": "^3.3.2",
-    "inquirer": "^11.1.0",
+    "inquirer": "^13.1.0",
     "node-fetch": "^3.3.2",
-    "ora": "^8.1.1",
+    "ora": "^9.0.0",
     "picocolors": "^1.1.1",
     "react-router-dom": "^7.10.1",
     "simple-git": "^3.27.0",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "@types/node": "^22.19.2",
-    "@vitest/coverage-v8": "^2.1.9",
+    "@types/node": "^25.0.2",
+    "@vitest/coverage-v8": "^4.0.15",
     "concurrently": "^9.2.1",
     "nodemon": "^3.1.11",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.9"
+    "vitest": "^4.0.15"
   },
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
+  "files": [
+    "dist/**/*",
+    "bin/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "commonjs",
-  "types": "./dist/cli/index.d.ts"
+  "types": "./dist/cli/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  }
 }
