@@ -765,5 +765,5 @@ Execute user requests efficiently in minimal steps. Users can always ask for mor
 
 Remember: Output is displayed on CLI. Keep responses appropriate for terminal. Be the calm, knowledgeable partner that helps developers get into flow.`;
 
-export const VERSION = '9.1.0-production-grade';
+export const VERSION = '10.0.0';
 export const DEFAULT_MODEL = 'qwen/qwen3-next-80b-a3b-instruct';

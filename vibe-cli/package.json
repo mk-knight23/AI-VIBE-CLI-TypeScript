@@ -1,11 +1,10 @@
 {
   "name": "vibe-ai-cli",
-  "version": "9.0.0",
-  "description": "Ultimate AI Development Platform v9.0 - Multi-Agent Orchestration, Extended Thinking, Semantic Memory, Team Collaboration, Advanced Security",
+  "version": "10.0.0",
+  "description": "The open source AI coding agent - 75+ providers, free models, LSP enabled, privacy-first",
   "main": "dist/cli/index.js",
   "bin": {
-    "vibe": "bin/vibe.js",
-    "vibe9": "bin/vibe.js"
+    "vibe": "bin/vibe.js"
   },
   "vibe-ecosystem": {
     "compatible_cli": "9.x",
@@ -13,6 +12,11 @@
     "compatible_web": "2.x",
     "minimum_node_version": "18.0.0",
     "breaking_changes": {
+      "10.0.0": [
+        "Alias /t now maps to /tangent (was /tools) - use /tl or /tools",
+        "Alias /scan removed from /analyze - use /az or /analyze",
+        "Command substitution ($() and ``) now requires approval"
+      ],
       "9.0.0": [
         "Memory format changed: store.json → store.db",
         "Provider API responses now include 'thinking' field",
@@ -23,6 +27,13 @@
     },
     "migration_guide": "https://docs.vibe-ai.dev/v9-migration",
     "new_features": {
+      "10.0.0": [
+        "Provider Registry - 20+ built-in providers, config-driven extensibility",
+        "Safe Agent System - Plan→Propose→Wait→Execute→Verify→Report flow",
+        "Rollback Stack - Undo mutating actions on failure or cancel",
+        "MCP Integration - Model Context Protocol server support",
+        "/mcp command - Manage MCP server connections"
+      ],
       "9.0.0": [
         "Multi-agent orchestration with 5 specialized roles",
         "Extended thinking support for complex reasoning",
@@ -46,9 +57,14 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "vitest run tests/e2e",
-    "test:security": "vitest run tests/security",
+    "test:security": "vitest run tests/security tests/agents",
     "test:performance": "vitest run tests/performance",
-    "test:all": "npm run test:unit && npm run test:integration && npm run test:security && npm run test:performance && npm run test:e2e",
+    "test:agents": "vitest run tests/agents",
+    "test:mcp": "vitest run tests/mcp",
+    "test:providers": "vitest run tests/providers",
+    "test:commands": "vitest run tests/commands",
+    "test:observability": "vitest run tests/observability",
+    "test:all": "vitest run",
     "test:acceptance": "node scripts/acceptance.js",
     "test:coverage": "vitest run --coverage",
     "start": "node bin/vibe.js",

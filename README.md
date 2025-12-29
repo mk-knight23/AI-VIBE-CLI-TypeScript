@@ -1,74 +1,94 @@
-#[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![CLI](https://img.shields.io/badge/CLI-v9.0.0-blue) ![Extension](https://img.shields.io/badge/Extension-v5.0.0-green) ![Web](https://img.shields.io/badge/Web-v2.0.0-orange) ![Tests](https://img.shields.io/badge/Tests-143%20passing-brightgreen) ![Security](https://img.shields.io/badge/Security-0%20vulnerabilities-brightgreen) ![Parity](https://img.shields.io/badge/CLI%20%E2%86%94%20Extension-100%25-success)
+# VIBE - The Open Source AI Coding Agent
 
-**One Ecosystem, Four Focused Products**
-
+[![npm version](https://badge.fury.io/js/vibe-ai-cli.svg)](https://www.npmjs.com/package/vibe-ai-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🌟 Products
+Free models included. Connect any model from any provider.
 
-### 1. [Vibe CLI](./vibe-cli) - Terminal AI Assistant
-- **Install:** `npm install -g vibe-ai-cli`
-- **Use:** `vibe` in terminal
-- **Features:** 35+ commands, memory system, git integration
-
-### 2. [Vibe VS Code](./vibe-code) - Extension
-- **Install:** VS Code Marketplace → "Vibe VS Code"
-- **Use:** Ctrl+Shift+V in VS Code
-- **Features:** CLI parity, 40+ models, autonomous coding
-
-### 3. [Vibe Web](./vibe-web) - Documentation Hub
-- **Visit:** https://vibe-ai.vercel.app
-- **Purpose:** Docs, installation guides, tutorials
-- **Deploy:** Static site (Vercel/Netlify)
-
-### 4. Vibe Chat - AI Website Builder
-- **Repository:** Separate repo (independent)
-- **Purpose:** AI-powered website generation
-- **Deploy:** Standalone web application
-
-## 🚀 Quick Start
+## Quick Install
 
 ```bash
-# CLI
+# npm
 npm install -g vibe-ai-cli
+
+# curl
+curl -fsSL https://vibe-ai.dev/install | bash
+```
+
+## What is VIBE?
+
+VIBE is an open source agent that helps you write code in your terminal, IDE, or desktop.
+
+- **LSP Enabled** - Automatically loads the right LSPs for the LLM
+- **Multi-Session** - Start multiple agents in parallel on the same project
+- **Share Links** - Share a link to any session for reference or debugging
+- **Any Model** - 75+ LLM providers, including local models
+- **Privacy First** - Your code stays local by default
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔧 LSP Auto-Detection | TypeScript, Python, Rust, Go, Java, Ruby, C++ |
+| 📦 75+ Providers | OpenAI, Anthropic, DeepSeek, Groq, Ollama, and more |
+| 🆓 Free Models | Start coding without an API key |
+| 🔒 Privacy First | No data stored by default |
+| 🔗 Share Links | Share sessions for collaboration |
+| 📋 Multi-Session | Run parallel agents |
+
+## Usage
+
+```bash
+# Start interactive mode
 vibe
 
-# VS Code Extension
-# Install from marketplace, press Ctrl+Shift+V
+# Connect a provider
+vibe connect openai
+vibe connect ollama
 
-# Documentation
-# Visit https://vibe-ai.vercel.app
+# List models
+vibe models
+vibe models --local
+vibe models --cheap
+
+# Manage sessions
+vibe sessions new
+vibe sessions list
+vibe sessions share
+
+# Privacy settings
+vibe privacy
+vibe privacy --local-only
 ```
 
-## 🏗️ Architecture
+## Ecosystem
 
-Each product is completely independent:
-- Own dependencies
-- Own deployment
-- Own lifecycle
-- Own documentation
+| Package | Description |
+|---------|-------------|
+| [vibe-cli](./vibe-cli) | Terminal AI assistant |
+| [vibe-code](./vibe-code) | VS Code extension |
+| [vibe-web](./vibe-web) | Web dashboard |
 
-## 📦 Publishing
+## Privacy
 
-- **CLI:** npm + GitHub Releases + Binaries
-- **VS Code:** Marketplace + Open VSX
-- **Web:** Vercel + Netlify + GitHub Pages
-- **Chat:** Separate repository
-
-## 🔧 Development
+VIBE does not store any of your code or context data by default. Enable storage explicitly:
 
 ```bash
-# CLI
-cd vibe-cli && npm install && npm start
-
-# VS Code Extension  
-cd vibe-code && npm install && npm run compile
-
-# Web Documentation
-cd vibe-web && npm install && npm run dev
+vibe privacy --allow-storage
 ```
 
-## 📄 License
+For fully local operation:
+
+```bash
+vibe privacy --local-only
+vibe connect ollama
+```
+
+## License
 
 MIT © VIBE Team
+
+---
+
+**GitHub**: https://github.com/mk-knight23/vibe
+**NPM**: https://www.npmjs.com/package/vibe-ai-cli

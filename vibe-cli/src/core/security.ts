@@ -55,6 +55,8 @@ const APPROVAL_REQUIRED = [
   /DROP\s+TABLE/i,
   /DELETE\s+FROM/i,
   /TRUNCATE/i,
+  /\$\([^)]+\)/,                 // Command substitution $(...)
+  /`[^`]+`/,                     // Backtick substitution `...`
 ];
 
 // ============================================
@@ -181,17 +183,8 @@ export function validateCommand(command: string): CommandValidation {
     }
   }
   
-  // Check allow list (always safe)
-  if (isAllowedCommand(command)) {
-    return {
-      allowed: true,
-      riskLevel: 'safe',
-      requiresApproval: false,
-      operationType: 'read'
-    };
-  }
-  
-  // Check approval-required patterns
+  // Check approval-required patterns BEFORE allow list
+  // (command substitution in safe commands is still dangerous)
   for (const pattern of APPROVAL_REQUIRED) {
     if (pattern.test(command)) {
       return {
@@ -202,6 +195,16 @@ export function validateCommand(command: string): CommandValidation {
         operationType: 'write'
       };
     }
+  }
+  
+  // Check allow list (always safe - only if no dangerous patterns)
+  if (isAllowedCommand(command)) {
+    return {
+      allowed: true,
+      riskLevel: 'safe',
+      requiresApproval: false,
+      operationType: 'read'
+    };
   }
   
   // Check for write operations

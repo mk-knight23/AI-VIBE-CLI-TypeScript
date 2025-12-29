@@ -133,3 +133,4 @@ export * from './openrouter';
 export * from './megallm';
 export * from './agentrouter';
 export * from './routeway';
+export * from './registry';

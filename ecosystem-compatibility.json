@@ -1,105 +1,59 @@
 {
   "vibe_ecosystem": {
     "current_versions": {
-      "cli": "9.0.0",
+      "cli": "9.1.0",
       "extension": "5.0.0", 
-      "web": "2.0.0",
-      "chat": "1.0.0"
+      "web": "2.0.0"
+    },
+    "tagline": "The Open Source AI Coding Agent",
+    "features": {
+      "providers": "75+",
+      "free_models": true,
+      "lsp_enabled": true,
+      "privacy_first": true,
+      "multi_session": true,
+      "share_links": true
     },
     "compatibility_matrix": {
-      "9.0.0": {
+      "9.1.0": {
         "cli": "9.x",
         "extension": "5.x",
         "web": "2.x",
-        "chat": "1.x",
         "node_minimum": "18.0.0",
         "vscode_minimum": "1.107.0"
-      },
-      "8.0.0": {
-        "cli": "8.x",
-        "extension": "4.x", 
-        "web": "1.x",
-        "chat": "0.x",
-        "node_minimum": "16.0.0",
-        "vscode_minimum": "1.100.0"
       }
     },
-    "breaking_changes": {
-      "9.0.0": {
-        "memory_format": "store.json → store.db (SQLite)",
-        "provider_api": "Added 'thinking' field to responses",
-        "web_search": "Moved to optional feature (disabled by default)",
-        "multi_agent": "Requires additional memory allocation",
-        "custom_instructions": "Now uses .vibe/ directory structure",
-        "team_features": "New authentication requirements"
-      }
+    "new_in_9.1": {
+      "provider_system": "75+ providers via unified registry",
+      "free_models": "Built-in free tier, no API key required",
+      "lsp_detection": "Auto-detect TypeScript, Python, Rust, Go, Java, Ruby, C++",
+      "multi_session": "Run parallel agents on same project",
+      "share_links": "Share sessions for collaboration",
+      "privacy_controls": "Local-only mode, no telemetry by default",
+      "smart_routing": "Automatic fallbacks and cost-aware routing"
     },
-    "migration_paths": {
-      "8.x_to_9.x": {
-        "automatic": ["memory conversion", "config migration"],
-        "manual": ["web search setup", "team configuration"],
-        "guide": "https://docs.vibe-ai.dev/v9-migration"
-      }
+    "cli_commands": {
+      "core": ["vibe", "vibe --help", "vibe --version"],
+      "providers": ["vibe connect", "vibe providers", "vibe models", "vibe doctor"],
+      "sessions": ["vibe sessions new", "vibe sessions list", "vibe sessions share"],
+      "privacy": ["vibe privacy", "vibe privacy --local-only"],
+      "lsp": ["vibe lsp", "vibe lsp status"]
     },
-    "feature_parity": {
-      "cli_vs_extension": "100%",
-      "shared_features": [
-        "Multi-agent orchestration",
-        "Extended thinking",
-        "Web search integration", 
-        "Semantic memory",
-        "Team collaboration",
-        "Security scanning",
-        "Test generation",
-        "Custom instructions"
-      ],
-      "cli_exclusive": [
-        "Binary distribution",
-        "System-wide installation",
-        "Shell integration"
-      ],
-      "extension_exclusive": [
-        "VS Code workspace integration",
-        "Editor context awareness",
-        "Inline code suggestions"
-      ]
+    "supported_providers": {
+      "cloud": ["openai", "anthropic", "deepseek", "xai", "groq", "together", "fireworks", "cerebras", "mistral", "moonshot", "minimax"],
+      "gateways": ["openrouter", "megallm", "agentrouter", "routeway"],
+      "local": ["ollama", "lmstudio", "llamacpp"]
     },
     "deployment_targets": {
       "cli": {
-        "npm": "npm install -g vibe-ai-cli@9.0.0",
-        "github_releases": "Binary downloads for all platforms",
-        "homebrew": "brew install vibe-ai-cli",
-        "chocolatey": "choco install vibe-ai-cli"
+        "npm": "npm install -g vibe-ai-cli",
+        "curl": "curl -fsSL https://vibe-ai.dev/install | bash"
       },
       "extension": {
-        "vscode_marketplace": "VS Code Marketplace",
-        "open_vsx": "Open VSX Registry",
-        "manual": "VSIX file installation"
+        "marketplace": "VS Code Marketplace"
       },
       "web": {
-        "vercel": "https://vibe-ai.vercel.app",
-        "netlify": "https://vibe-ai.netlify.app", 
-        "github_pages": "https://docs.vibe-ai.dev"
-      }
-    },
-    "quality_metrics": {
-      "cli": {
-        "tests": 143,
-        "coverage": "95%+",
-        "security_vulnerabilities": 0,
-        "performance": "Optimized"
-      },
-      "extension": {
-        "tests": "Comprehensive",
-        "vscode_compatibility": "1.107.0+",
-        "activation_time": "<500ms",
-        "memory_usage": "Minimal"
-      },
-      "web": {
-        "lighthouse_score": "95+",
-        "accessibility": "WCAG 2.1 AA",
-        "performance": "Optimized",
-        "seo": "Comprehensive"
+        "url": "https://vibe-ai.dev"
       }
     }
   }

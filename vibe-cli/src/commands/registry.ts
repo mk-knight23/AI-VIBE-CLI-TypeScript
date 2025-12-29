@@ -50,7 +50,7 @@ export const commands: Command[] = [
   },
   {
     name: 'tools',
-    aliases: ['t'],
+    aliases: ['tl'],
     category: 'basic',
     description: 'List all tools',
     usage: '/tools',
@@ -64,7 +64,7 @@ export const commands: Command[] = [
     aliases: ['m'],
     category: 'ai',
     description: 'Switch AI model',
-    usage: '/model',
+    usage: '/model [provider/model]',
     crossPlatform: true,
     handler: async () => 'model'
   },
@@ -73,15 +73,97 @@ export const commands: Command[] = [
     aliases: ['p'],
     category: 'ai',
     description: 'Switch provider',
-    usage: '/provider',
+    usage: '/provider [name]',
     crossPlatform: true,
     handler: async () => 'provider'
+  },
+  {
+    name: 'models',
+    category: 'ai',
+    description: 'List available models',
+    usage: '/models [--local|--cheap|--fast]',
+    crossPlatform: true,
+    handler: async () => 'models'
+  },
+  {
+    name: 'providers',
+    category: 'ai',
+    description: 'List providers',
+    usage: '/providers',
+    crossPlatform: true,
+    handler: async () => 'providers'
+  },
+  {
+    name: 'connect',
+    category: 'ai',
+    description: 'Add provider credentials',
+    usage: '/connect [provider]',
+    crossPlatform: true,
+    handler: async () => 'connect'
+  },
+  {
+    name: 'doctor',
+    category: 'ai',
+    description: 'Diagnose config issues',
+    usage: '/doctor',
+    crossPlatform: true,
+    handler: async () => 'doctor'
+  },
+  {
+    name: 'status',
+    aliases: ['st'],
+    category: 'ai',
+    description: 'Show system status and metrics',
+    usage: '/status [health|metrics|traces]',
+    crossPlatform: true,
+    handler: async () => 'status'
+  },
+  {
+    name: 'agent',
+    category: 'ai',
+    description: 'Switch to agent',
+    usage: '/agent <name>',
+    crossPlatform: true,
+    handler: async () => 'agent'
+  },
+  {
+    name: 'tangent',
+    aliases: ['t'],
+    category: 'ai',
+    description: 'Start tangent conversation',
+    usage: '/tangent',
+    crossPlatform: true,
+    handler: async () => 'tangent'
+  },
+  {
+    name: 'usage',
+    category: 'ai',
+    description: 'Show context usage',
+    usage: '/usage',
+    crossPlatform: true,
+    handler: async () => 'usage'
+  },
+  {
+    name: 'save',
+    category: 'ai',
+    description: 'Export conversation',
+    usage: '/save [file]',
+    crossPlatform: true,
+    handler: async () => 'save'
+  },
+  {
+    name: 'load',
+    category: 'ai',
+    description: 'Import conversation',
+    usage: '/load <file>',
+    crossPlatform: true,
+    handler: async () => 'load'
   },
 
   // PROJECT
   {
     name: 'analyze',
-    aliases: ['scan'],
+    aliases: ['az'],
     category: 'project',
     description: 'Analyze code quality',
     usage: '/analyze [path]',
@@ -113,6 +195,16 @@ export const commands: Command[] = [
     usage: '/scan [path]',
     crossPlatform: true,
     handler: async () => 'scan'
+  },
+
+  // MCP
+  {
+    name: 'mcp',
+    category: 'ai',
+    description: 'Manage MCP servers',
+    usage: '/mcp [init|connect|disconnect|tools|status]',
+    crossPlatform: true,
+    handler: async () => 'mcp'
   },
 
   // ADVANCED
@@ -167,13 +259,13 @@ export const commands: Command[] = [
     handler: async () => 'memory'
   },
   {
-    name: 'agent',
-    aliases: ['auto'],
+    name: 'auto',
+    aliases: ['autonomous'],
     category: 'advanced',
     description: 'Autonomous mode',
-    usage: '/agent',
+    usage: '/auto',
     crossPlatform: true,
-    handler: async () => 'agent'
+    handler: async () => 'auto'
   },
   {
     name: 'create',
