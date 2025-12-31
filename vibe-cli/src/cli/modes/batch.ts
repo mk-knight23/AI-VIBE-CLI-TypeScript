@@ -136,7 +136,7 @@ async function executeBatch(prompts: string[], options: BatchOptions): Promise<B
     results: []
   };
 
-  const client = new ApiClient(options.provider as any || 'megallm');
+  const client = new ApiClient();
   const model = options.model || DEFAULT_MODEL;
 
   if (options.parallel) {

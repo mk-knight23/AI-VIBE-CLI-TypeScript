@@ -11,6 +11,20 @@ import {
   getRiskIndicator 
 } from '../core/security';
 import { executeCustomCommand, getCustomCommandHelp } from '../commands/custom/executor';
+import { 
+  getInteractiveHelp, 
+  getModeHelp, 
+  getAgentHelp, 
+  getMcpHelp, 
+  getToolsHelp,
+  getProvidersHelp,
+  showCommandPalette,
+  showModePalette,
+  showAgentPalette,
+  showProviderPalette,
+  showSessionUI,
+  showBatchApprovalUI
+} from '../ui';
 
 export async function handleCommand(
   input: string,
@@ -47,6 +61,20 @@ export async function handleCommand(
       showHelp(args[0]);
       break;
     
+    case 'palette':
+      const paletteResult = await showCommandPalette();
+      if (paletteResult.action === 'quit') return 'quit';
+      if (paletteResult.action === 'clear') return 'clear';
+      if (paletteResult.action === 'model') return 'model';
+      if (paletteResult.action === 'provider') return 'provider';
+      if (paletteResult.action === 'mode') return `mode:${paletteResult.data}`;
+      if (paletteResult.action === 'agent') return `agent:${paletteResult.data}`;
+      if (paletteResult.action === 'execute' && paletteResult.data) {
+        // Recursively handle the command
+        return handleCommand(paletteResult.data, client, currentModel);
+      }
+      break;
+    
     case 'quit':
       console.log(pc.cyan('\n👋 Goodbye\n'));
       return 'quit';
@@ -56,14 +84,39 @@ export async function handleCommand(
       return 'clear';
     
     case 'version':
-      console.log(pc.cyan('\nVIBE CLI v9.0.0'));
-      console.log(pc.gray('36 Tools | 4 Providers | 27+ Models\n'));
+      console.log(pc.cyan('\nVIBE CLI v10.1.0'));
+      console.log(pc.gray(`${tools.length} Tools | 15+ Providers | 27+ Models\n`));
       break;
     
     case 'model':
       return 'model';
     
     case 'provider':
+      // Handle subcommands: /provider setup, /provider status, /provider list
+      if (args[0] === 'setup') {
+        const { showApiKeySetup } = await import('../ui/provider-setup');
+        const providerId = args[1];
+        if (providerId) {
+          await showApiKeySetup(providerId);
+        } else {
+          // Show provider selector then setup
+          const { showProviderSelector } = await import('../ui/provider-selector');
+          const result = await showProviderSelector();
+          if (result.providerId) {
+            await showApiKeySetup(result.providerId);
+          }
+        }
+        return;
+      }
+      if (args[0] === 'status') {
+        const { showProviderStatus } = await import('../ui/provider-setup');
+        await showProviderStatus(args[1] || 'openai');
+        return;
+      }
+      if (args[0] === 'list') {
+        console.log(getProvidersHelp());
+        return;
+      }
       return 'provider';
     
     case 'create':
@@ -130,7 +183,24 @@ export async function handleCommand(
       break;
     
     case 'agent':
-      await agentCommand(client, currentModel);
+    case 'agents':
+      if (args[0]) {
+        // Switch to specific agent
+        const { BUILTIN_AGENTS } = await import('../agents/builtin');
+        if (BUILTIN_AGENTS[args[0]]) {
+          console.log(pc.green(`✓ Switched to ${args[0]} agent`));
+          console.log(pc.gray(BUILTIN_AGENTS[args[0]].description));
+        } else {
+          console.log(pc.red(`Unknown agent: ${args[0]}`));
+          console.log(pc.gray('Available: ' + Object.keys(BUILTIN_AGENTS).join(', ')));
+        }
+      } else {
+        // Show agent palette
+        const result = await showAgentPalette();
+        if (result.data) {
+          console.log(pc.green(`✓ Switched to ${result.data} agent`));
+        }
+      }
       break;
     
     case 'scan':
@@ -155,6 +225,10 @@ export async function handleCommand(
 
     case 'mode':
       return handleModeCommand(args);
+
+    case 'mcp':
+      await handleMcpCommand(args);
+      break;
 
     case 'audit':
       await handleAuditCommand(args);
@@ -227,63 +301,34 @@ function colorDiff(diff: string): string {
 
 function showHelp(specificCommand?: string): void {
   if (specificCommand) {
-    const cmd = findCommand(specificCommand);
-    if (cmd) {
-      console.log(`\n${pc.bold(pc.cyan(cmd.name.toUpperCase()))}`);
-      console.log(pc.gray('─'.repeat(60)));
-      console.log(`${pc.bold('Description:')} ${cmd.description}`);
-      console.log(`${pc.bold('Usage:')} ${cmd.usage}`);
-      if (cmd.aliases?.length) {
-        console.log(`${pc.bold('Aliases:')} ${cmd.aliases.join(', ')}`);
-      }
-      console.log();
-    } else {
-      console.log(pc.red(`Command not found: ${specificCommand}`));
+    // Check for special help topics
+    if (specificCommand === 'mode' || specificCommand === 'modes') {
+      console.log(getModeHelp());
+      return;
     }
-    return;
+    if (specificCommand === 'agent' || specificCommand === 'agents') {
+      console.log(getAgentHelp());
+      return;
+    }
+    if (specificCommand === 'mcp') {
+      console.log(getMcpHelp());
+      return;
+    }
+    if (specificCommand === 'tools') {
+      console.log(getToolsHelp(tools));
+      return;
+    }
+    if (specificCommand === 'provider' || specificCommand === 'providers') {
+      console.log(getProvidersHelp());
+      return;
+    }
   }
-
-  console.log(`
-${pc.bold(pc.cyan('VIBE CLI v9.0.0'))}
-${pc.gray('36 Tools | 4 Providers | 27+ Models')}
-
-${pc.bold('BASIC')}
-${formatCommands(getCommandsByCategory('basic'))}
-
-${pc.bold('AI')}
-${formatCommands(getCommandsByCategory('ai'))}
-
-${pc.bold('PROJECT')}
-${formatCommands(getCommandsByCategory('project'))}
-
-${pc.bold('ADVANCED')}
-${formatCommands(getCommandsByCategory('advanced'))}
-
-${pc.gray('Type /help <command> for details')}
-  `);
-}
-
-function formatCommands(cmds: any[]): string {
-  return cmds.map(cmd => {
-    const aliases = cmd.aliases ? pc.gray(` (${cmd.aliases.join(', ')})`) : '';
-    return `  ${pc.cyan(`/${cmd.name}`)}${aliases} - ${pc.gray(cmd.description)}`;
-  }).join('\n');
+  
+  console.log(getInteractiveHelp(specificCommand));
 }
 
 function showAllTools(): void {
-  console.log(`\n${pc.bold(pc.cyan('AVAILABLE TOOLS (36)'))}\n`);
-  
-  const byCategory: Record<string, string[]> = {};
-  tools.forEach(t => {
-    if (!byCategory[t.category!]) byCategory[t.category!] = [];
-    byCategory[t.category!].push(`${t.displayName} - ${t.description}`);
-  });
-
-  Object.entries(byCategory).sort().forEach(([category, toolList]) => {
-    console.log(pc.bold(category.toUpperCase()));
-    toolList.forEach(tool => console.log(`  ${pc.gray(tool)}`));
-    console.log();
-  });
+  console.log(getToolsHelp(tools));
 }
 
 function showSecurityStatus(subcommand?: string): void {
@@ -795,6 +840,94 @@ async function handleCmdCommand(args: string[]): Promise<void> {
   } else {
     console.log(pc.red(result.error));
     console.log(pc.gray('\n' + getCustomCommandHelp()));
+  }
+  console.log();
+}
+
+
+// ============================================
+// MCP COMMAND HANDLER
+// ============================================
+
+async function handleMcpCommand(args: string[]): Promise<void> {
+  const { mcpManager, MCP_TEMPLATES } = await import('../mcp/manager');
+  const subcommand = args[0] || 'status';
+
+  console.log(`\n${pc.bold(pc.cyan('🔗 MCP (Model Context Protocol)'))}\n`);
+
+  if (subcommand === 'status') {
+    const servers = mcpManager.listServers();
+    if (servers.length === 0) {
+      console.log(pc.gray('No MCP servers connected'));
+      console.log(pc.gray('\nAvailable templates:'));
+      Object.keys(MCP_TEMPLATES).forEach(t => console.log(`  ${pc.cyan(t)}`));
+      console.log(pc.gray('\nConnect with: /mcp connect <name>'));
+    } else {
+      console.log(pc.bold('Connected Servers:'));
+      servers.forEach(s => {
+        console.log(`  ${pc.green('●')} ${s.name} (${s.transport})`);
+      });
+    }
+
+  } else if (subcommand === 'connect') {
+    const serverName = args[1];
+    if (!serverName) {
+      console.log(pc.yellow('Usage: /mcp connect <server-name>'));
+      console.log(pc.gray('\nAvailable templates:'));
+      Object.keys(MCP_TEMPLATES).forEach(t => console.log(`  ${pc.cyan(t)}`));
+      return;
+    }
+
+    const template = MCP_TEMPLATES[serverName];
+    if (template) {
+      try {
+        await mcpManager.connect(template);
+        console.log(pc.green(`✓ Connected to ${serverName}`));
+      } catch (err: any) {
+        console.log(pc.red(`✗ Failed to connect: ${err.message}`));
+      }
+    } else {
+      console.log(pc.red(`Unknown server: ${serverName}`));
+      console.log(pc.gray('Available: ' + Object.keys(MCP_TEMPLATES).join(', ')));
+    }
+
+  } else if (subcommand === 'disconnect') {
+    const serverName = args[1];
+    if (!serverName) {
+      mcpManager.disconnectAll();
+      console.log(pc.green('✓ Disconnected all servers'));
+    } else {
+      mcpManager.disconnect(serverName);
+      console.log(pc.green(`✓ Disconnected ${serverName}`));
+    }
+
+  } else if (subcommand === 'tools') {
+    const allTools = mcpManager.getAllTools();
+    if (allTools.length === 0) {
+      console.log(pc.gray('No MCP tools available'));
+      console.log(pc.gray('Connect a server first: /mcp connect <name>'));
+    } else {
+      console.log(pc.bold(`MCP Tools (${allTools.length}):`));
+      const byServer: Record<string, typeof allTools> = {};
+      allTools.forEach(t => {
+        if (!byServer[t.server]) byServer[t.server] = [];
+        byServer[t.server].push(t);
+      });
+      Object.entries(byServer).forEach(([server, serverTools]) => {
+        console.log(`\n  ${pc.cyan(server)}:`);
+        serverTools.forEach(t => {
+          console.log(`    ${t.tool.name} - ${pc.gray(t.tool.description || '')}`);
+        });
+      });
+    }
+
+  } else if (subcommand === 'init') {
+    mcpManager.saveConfig([], process.cwd());
+    console.log(pc.green('✓ Created .vibe/mcp.json'));
+    console.log(pc.gray('Add servers to the config file or use /mcp connect'));
+
+  } else {
+    console.log(pc.yellow('Usage: /mcp [status|connect|disconnect|tools|init]'));
   }
   console.log();
 }

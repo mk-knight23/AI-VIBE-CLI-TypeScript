@@ -1,51 +1,46 @@
 /**
- * Providers Command - List providers and status
+ * Providers Command - Show AI configuration status
+ * 
+ * Simplified: No provider switching, just shows config status
  */
 
-import { providerRegistry } from '../core/llm/provider-registry';
-import { credentialStore } from '../core/llm/credentials';
-import { createClient } from '../core/llm/llm-client';
+import { UniversalAI } from '../core/universal-ai';
+import { listAllProviders, hasApiKey } from '../providers/enhanced-registry';
+import pc from 'picocolors';
 
 export function providersCommand(): void {
-  const providers = providerRegistry.list();
-
-  console.log('\n📡 Providers:\n');
-
-  const cloud = providers.filter(p => p.type === 'cloud');
-  const gateways = providers.filter(p => p.type === 'gateway');
-  const local = providers.filter(p => p.type === 'local');
-
-  const printProvider = (p: typeof providers[0]) => {
-    const hasKey = credentialStore.getApiKey(p.id);
-    const status = hasKey ? '✅' : '⚪';
-    const envHint = p.env?.[0] ? ` (${p.env[0]})` : '';
-    console.log(`  ${status} ${p.id.padEnd(15)} ${p.name}${envHint}`);
-  };
-
-  console.log('Cloud:');
-  cloud.forEach(printProvider);
-
-  console.log('\nGateways:');
-  gateways.forEach(printProvider);
-
-  console.log('\nLocal:');
-  local.forEach(printProvider);
-
-  console.log('\n✅ = configured  ⚪ = not configured');
-  console.log('Run `vibe connect <provider>` to add credentials');
+  console.log('\n' + pc.bold('AI Configuration Status') + '\n');
+  
+  const providers = listAllProviders();
+  const models = UniversalAI.getModels();
+  
+  // Show configured status
+  console.log(pc.gray('Providers:'));
+  for (const provider of providers) {
+    const configured = hasApiKey(provider.id);
+    const icon = configured ? pc.green('✔') : pc.yellow('○');
+    const status = configured ? pc.green('configured') : pc.gray('not configured');
+    console.log(`  ${icon} ${provider.displayName.padEnd(15)} ${status}`);
+  }
+  
+  // Show available models by task
+  console.log('\n' + pc.gray('Models by task:'));
+  const tasks = ['chat', 'code', 'debug', 'agent'] as const;
+  for (const task of tasks) {
+    const taskModels = models.filter(m => m.task === task);
+    const freeModels = taskModels.filter(m => m.free);
+    console.log(`  ${task.padEnd(8)} ${freeModels.length} free, ${taskModels.length - freeModels.length} paid`);
+  }
+  
+  // Show config file location
+  console.log('\n' + pc.gray('Config: vibe.config.ai.json'));
+  console.log(pc.gray('Edit this file to add providers or models.'));
 }
 
-export async function checkProviderHealth(providerId: string): Promise<{
+export async function checkProviderHealth(_providerId: string): Promise<{
   ok: boolean;
   latency?: number;
   error?: string;
 }> {
-  const start = Date.now();
-  try {
-    const client = createClient(providerId);
-    const ok = await client.healthCheck();
-    return { ok, latency: Date.now() - start };
-  } catch (err) {
-    return { ok: false, error: (err as Error).message };
-  }
+  return { ok: UniversalAI.isConfigured() };
 }

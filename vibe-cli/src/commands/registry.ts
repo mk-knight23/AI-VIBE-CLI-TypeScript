@@ -22,6 +22,15 @@ export const commands: Command[] = [
     handler: async () => 'help'
   },
   {
+    name: 'palette',
+    aliases: ['k', 'commands'],
+    category: 'basic',
+    description: 'Open command palette',
+    usage: '/palette',
+    crossPlatform: true,
+    handler: async () => 'palette'
+  },
+  {
     name: 'quit',
     aliases: ['exit', 'q'],
     category: 'basic',

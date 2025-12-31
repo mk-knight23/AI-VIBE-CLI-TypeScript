@@ -98,11 +98,11 @@ async function executeAsk(options: AskOptions): Promise<AskResult> {
   };
 
   try {
-    const client = new ApiClient(options.provider as any || 'megallm');
+    const client = new ApiClient();
     const model = options.model || DEFAULT_MODEL;
     
     // Create session for this ask
-    const session = createSession(model, client.getProvider());
+    const session = createSession(model, 'universal');
     
     // Add system message
     addMessage(session.id, 'system', VIBE_SYSTEM_PROMPT, estimateTokens(VIBE_SYSTEM_PROMPT));

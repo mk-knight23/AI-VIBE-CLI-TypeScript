@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const TEST_PROJECT = path.join(process.cwd(), 'test-project');
+const TEST_PROJECT = path.join(process.env.VIBE_PROJECT_ROOT || process.cwd(), 'test-project');
 
 describe('E2E: Full Development Workflow', () => {
   beforeAll(() => {

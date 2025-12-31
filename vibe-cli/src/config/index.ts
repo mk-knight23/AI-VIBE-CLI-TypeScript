@@ -1,5 +1,2 @@
-/**
- * Config Module - Public exports
- */
-
-export * from './loader';
+export type { LoadedConfig } from './loader';
+export { findConfigFile, loadConfig, createDefaultConfig, saveConfig } from './loader';

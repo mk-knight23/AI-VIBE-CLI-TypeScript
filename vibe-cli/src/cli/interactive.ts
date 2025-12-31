@@ -11,6 +11,21 @@ import { VIBE_SYSTEM_PROMPT, VERSION, DEFAULT_MODEL } from './system-prompt';
 import { MemoryManager } from '../core/memory';
 import { TerminalRenderer, StateType } from '../utils/terminal-renderer';
 import { executeShellCommand, ShellExecutionOptions } from '../core/shell-executor';
+import { 
+  getInlineHint, 
+  getWelcomeHints,
+  formatStatusBar,
+  showCommandPalette,
+  showModePalette,
+  showModelPalette,
+  showProviderPalette,
+  showApprovalPrompt,
+  showNoProviderError,
+  showProviderError,
+  StatusBarState
+} from '../ui';
+import { getMode, setMode, getModeConfig, AgentMode } from '../core/modes';
+import { hasApiKey, getProviderInfo } from '../providers/enhanced-registry';
 
 const SYSTEM_PROMPT = VIBE_SYSTEM_PROMPT;
 const DANGEROUS_COMMANDS = ['rm -rf /', 'mkfs', 'killall', 'dd if=', 'format', ':(){:|:&};:'];
@@ -46,7 +61,6 @@ export async function startInteractive(client: ApiClient): Promise<void> {
   memory.updateWorkspaceMemory();
   
   const onboardingChoice = await runOnboarding();
-  client.setProvider('megallm');
   
   const messages: ConversationMessage[] = [{ role: 'system', content: SYSTEM_PROMPT }];
   let currentModel = DEFAULT_MODEL;
@@ -91,16 +105,6 @@ export async function startInteractive(client: ApiClient): Promise<void> {
       memory.startTask(input);
       memory.addChatMessage('user', input);
       
-      // Intelligent model selection
-      const { selectBestModel, shouldSwitchModel } = await import('../core/model-selector');
-      const profile = selectBestModel(input, client.getProvider());
-
-      if (shouldSwitchModel(profile, currentModel)) {
-        console.log(pc.gray(`Switching to ${profile.model} (${profile.reasoning})`));
-        client.setProvider(profile.provider as any);
-        currentModel = profile.model;
-      }
-
       lastResponse = await processUserInput(client, messages, currentModel, input, memory);
       
     } catch (error: any) {
@@ -118,14 +122,27 @@ export async function startInteractive(client: ApiClient): Promise<void> {
 function showWelcomeBanner(): void {
   const renderer = new TerminalRenderer();
   console.clear();
-  renderer.header('🎨 VIBE CLI v9.0.0 - ULTIMATE EDITION');
+  renderer.header('🎨 VIBE CLI v10.1.0 - ULTIMATE EDITION');
   console.log(pc.gray('   Revolutionary AI Development Platform'));
-  console.log(pc.gray('   Story Memory • Chat History • 36 Advanced Tools'));
+  console.log(pc.gray(`   ${tools.length} Tools • Multi-Agent • MCP • Steering • Hooks`));
   console.log(pc.gray('   Streaming Output • Trust Signals • Multi-Step Execution'));
   console.log();
   console.log(pc.yellow('   🔥 Made by KAZI • Production Ready'));
   renderer.divider();
-  console.log();
+  console.log(getWelcomeHints());
+}
+
+function showCurrentStatus(providerId: string, model: string): void {
+  const provider = getProviderInfo(providerId);
+  const configured = provider && (!provider.requiresApiKey || hasApiKey(providerId));
+  
+  const providerIcon = configured ? pc.green('●') : pc.yellow('○');
+  const providerName = provider?.displayName || providerId;
+  const mode = getMode();
+  
+  console.log(pc.gray('─'.repeat(50)));
+  console.log(`${providerIcon} ${providerName} | ${pc.cyan(model)} | ${pc.magenta(mode)}`);
+  console.log(pc.gray('─'.repeat(50)));
 }
 
 async function runOnboarding(): Promise<string> {
@@ -134,16 +151,54 @@ async function runOnboarding(): Promise<string> {
     name: 'choice',
     message: '✨ How would you like to begin?',
     choices: [
+      { name: '💬 Start chatting', value: 'chat' },
       { name: '📦 Create new project', value: 'new-project' },
       { name: '📂 Continue existing', value: 'continue' },
       { name: '🔍 Analyze folder', value: 'analyze' },
       { name: '🤖 Switch model', value: 'model' },
-      { name: '💬 Start chatting', value: 'chat' }
+      { name: '📖 Quick tour', value: 'tour' }
     ],
     default: 'chat'
   }]);
+  
+  if (choice === 'tour') {
+    await showQuickTour();
+    return 'chat';
+  }
+  
   console.log();
   return choice;
+}
+
+async function showQuickTour(): Promise<void> {
+  console.log();
+  console.log(pc.bold(pc.cyan('🎯 VIBE Quick Tour')));
+  console.log(pc.gray('─'.repeat(50)));
+  
+  const steps = [
+    { title: 'Command Palette', desc: 'Type /palette or /k to search all commands', key: 'Ctrl+K' },
+    { title: 'Modes', desc: 'Type /mode to switch behavior (ask/debug/architect)', key: '/mode' },
+    { title: 'Agents', desc: 'Type /agent to use specialized agents', key: '/agent' },
+    { title: 'Tools', desc: 'Type /tools to see 36+ available tools', key: '/tools' },
+    { title: 'MCP', desc: 'Type /mcp to connect external tool servers', key: '/mcp' },
+    { title: 'Sessions', desc: 'Type /session to manage conversations', key: '/session' },
+    { title: 'Context', desc: 'Use @file:path to include files', key: '@file' },
+    { title: 'Shell', desc: 'Use !command to run shell commands', key: '!cmd' },
+  ];
+  
+  for (const step of steps) {
+    console.log(`\n  ${pc.yellow(step.key.padEnd(12))} ${pc.bold(step.title)}`);
+    console.log(`  ${' '.repeat(12)} ${pc.gray(step.desc)}`);
+  }
+  
+  console.log(pc.gray('\n─'.repeat(50)));
+  console.log(pc.gray('Type /help anytime for full command list'));
+  
+  await inquirer.prompt([{
+    type: 'input',
+    name: 'continue',
+    message: pc.gray('Press Enter to start chatting...')
+  }]);
 }
 
 async function gatherProjectInfo(): Promise<any> {
@@ -199,15 +254,24 @@ function buildProjectPrompt(info: any): string {
 }
 
 async function getInputWithSuggestions(): Promise<string> {
+  // Show mode indicator in prompt
+  const mode = getMode();
+  const modeIndicator = mode !== 'auto' ? pc.gray(`[${mode}] `) : '';
+  
   const { input } = await inquirer.prompt<{ input: string }>({
     type: 'input',
     name: 'input',
-    message: pc.cyan('You:')
+    message: `${modeIndicator}${pc.cyan('You:')}`
   });
   
   if (input === '/') {
     showCommandHints();
     return await getInputWithSuggestions();
+  }
+  
+  // Show random hint occasionally (10% chance)
+  if (Math.random() < 0.1 && input.trim()) {
+    console.log(getInlineHint());
   }
   
   return input;
@@ -216,45 +280,24 @@ async function getInputWithSuggestions(): Promise<string> {
 function showCommandHints(): void {
   console.log();
   console.log(pc.gray('Available commands:'));
-  console.log(pc.yellow('  /help   /create   /model   /agent   /deploy   /scan   /debug'));
-  console.log(pc.yellow('  /quit   /clear    /provider   /tools   /analyze'));
+  console.log(pc.yellow('  /help   /model   /mode   /agent   /tools   /mcp'));
+  console.log(pc.yellow('  /session   /context   /approve   /diff   /audit'));
+  console.log(pc.yellow('  /quit   /clear   /palette (Ctrl+K)'));
   console.log();
 }
 
 async function selectModel(client: ApiClient, currentModel: string): Promise<string> {
-  const spinner = createSpinner('Fetching models...');
+  const { showModelSelector } = await import('../ui/provider-selector');
+  const providerId = client.getProvider();
   
-  try {
-    const models = await client.fetchModels();
-    spinner.succeed('Models loaded');
-    
-    if (models.length === 0) {
-      showWarning('No models available');
-      return currentModel;
-    }
-    
-    const choices = models.map((m: any) => ({
-      name: `${m.id || m.name} ${pc.gray(`(${m.contextLength || 'N/A'} tokens)`)}`,
-      value: (m.id || m.name) as string
-    }));
-    
-    const { model } = await inquirer.prompt<{ model: string }>([{
-      type: 'list',
-      name: 'model',
-      message: '🤖 Select model:',
-      choices,
-      default: currentModel,
-      pageSize: 15
-    }]);
-    
-    showSuccess(`Switched to ${model}`);
-    return model;
-    
-  } catch (error: any) {
-    spinner.fail('Failed to fetch models');
-    showError('Model Fetch Failed', error.message, 'Try /provider to switch');
-    return currentModel;
+  const result = await showModelSelector(providerId, currentModel);
+  
+  if (result.modelId) {
+    showSuccess(`Switched to ${result.modelId}`);
+    return result.modelId;
   }
+  
+  return currentModel;
 }
 
 async function handleSlashCommand(
@@ -267,6 +310,7 @@ async function handleSlashCommand(
 ): Promise<{ action: string; data?: any }> {
   
   const command = input.slice(1).split(' ')[0];
+  const args = input.slice(1).split(' ').slice(1);
   
   switch (command) {
     case 'quit':
@@ -279,6 +323,51 @@ async function handleSlashCommand(
     case 'help':
       showHelp();
       return { action: 'none' };
+    
+    case 'palette':
+    case 'k':
+      const paletteResult = await showCommandPalette();
+      if (paletteResult.action === 'quit') return { action: 'quit' };
+      if (paletteResult.action === 'clear') return { action: 'clear' };
+      if (paletteResult.action === 'model') {
+        const models = await client.fetchModels();
+        const modelResult = await showModelPalette(models, currentModel);
+        if (modelResult.data) {
+          return { action: 'model-changed', data: modelResult.data };
+        }
+      }
+      if (paletteResult.action === 'provider') {
+        const providerResult = await showProviderPalette(client.getProvider());
+        if (providerResult.data) {
+          client.setProvider(providerResult.data);
+          showSuccess(`Switched to ${providerResult.data}`);
+        }
+      }
+      if (paletteResult.action === 'mode' && paletteResult.data) {
+        const config = setMode(paletteResult.data as AgentMode);
+        showSuccess(`Switched to ${config.name} mode`);
+        console.log(pc.gray(config.description));
+      }
+      return { action: 'none' };
+      
+    case 'mode':
+      if (args[0]) {
+        try {
+          const config = setMode(args[0] as AgentMode);
+          showSuccess(`Switched to ${config.name} mode`);
+          console.log(pc.gray(config.description));
+        } catch (e: any) {
+          showError('Invalid Mode', e.message);
+        }
+      } else {
+        const modeResult = await showModePalette();
+        if (modeResult.data) {
+          const config = setMode(modeResult.data as AgentMode);
+          showSuccess(`Switched to ${config.name} mode`);
+          console.log(pc.gray(config.description));
+        }
+      }
+      return { action: 'none' };
       
     case 'model':
       const newModel = await selectModel(client, currentModel);
@@ -289,7 +378,10 @@ async function handleSlashCommand(
       return { action: 'none' };
       
     case 'provider':
-      await switchProvider(client);
+      const providerResult = await switchProvider(client);
+      if (providerResult.changed) {
+        return { action: 'provider-changed', data: providerResult.provider };
+      }
       return { action: 'none' };
       
     case 'create':
@@ -298,25 +390,38 @@ async function handleSlashCommand(
       
     default:
       const handled = await handleCommand(input, client, currentModel);
-      return { action: handled === 'quit' ? 'quit' : 'none' };
+      if (handled === 'quit') return { action: 'quit' };
+      if (handled === 'clear') return { action: 'clear' };
+      if (typeof handled === 'string' && handled.startsWith('mode:')) {
+        const modeName = handled.split(':')[1];
+        const config = setMode(modeName as AgentMode);
+        showSuccess(`Switched to ${config.name} mode`);
+      }
+      return { action: 'none' };
   }
 }
 
-async function switchProvider(client: ApiClient): Promise<void> {
-  const { provider } = await inquirer.prompt<{ provider: string }>([{
-    type: 'list',
-    name: 'provider',
-    message: '🔌 Select provider:',
-    choices: [
-      { name: 'MegaLLM (Recommended)', value: 'megallm' },
-      { name: 'OpenRouter', value: 'openrouter' },
-      { name: 'AgentRouter', value: 'agentrouter' },
-      { name: 'Routeway', value: 'routeway' }
-    ]
-  }]);
+async function switchProvider(client: ApiClient): Promise<{ changed: boolean; provider?: string }> {
+  const { showProviderSelector } = await import('../ui/provider-selector');
+  const { showApiKeySetup } = await import('../ui/provider-setup');
   
-  client.setProvider(provider as any);
-  showSuccess(`Switched to ${provider}`);
+  const result = await showProviderSelector(client.getProvider());
+  
+  if (!result.providerId) {
+    return { changed: false };
+  }
+  
+  // Handle API key setup if needed
+  if (result.needsSetup) {
+    const success = await showApiKeySetup(result.providerId);
+    if (!success) {
+      return { changed: false };
+    }
+  }
+  
+  client.setProvider(result.providerId as any);
+  showSuccess(`Switched to ${result.providerId}`);
+  return { changed: true, provider: result.providerId };
 }
 
 export async function processUserInput(
@@ -608,14 +713,18 @@ export async function processUserInput(
     await sleep(500); // Brief verification delay
     renderer.setState('done', 'Complete');
 
-    // Show operation summary
+    // Show operation summary with status
     const duration = ((Date.now() - stats.startTime) / 1000).toFixed(2);
+    const mode = getMode();
+    
     renderer.header('Operation Summary');
     console.log(`📁 Files created: ${stats.filesCreated}`);
     console.log(`🔧 Commands executed: ${stats.shellCommands}`);
     console.log(`🛠️  Tools used: ${stats.toolsExecuted}`);
     console.log(`❌ Errors: ${stats.errors}`);
     console.log(`⏱️  Duration: ${duration}s`);
+    console.log(pc.gray(`─`.repeat(40)));
+    console.log(pc.gray(`Model: ${currentModel} | Mode: ${mode} | /help for commands`));
     renderer.divider();
 
     return reply;
@@ -624,8 +733,9 @@ export async function processUserInput(
     renderer.setState('error', error.message);
     stats.errors++;
     memory.onError(error.message);
-    renderer.status(`Request failed: ${error.message}`, 'error');
-    renderer.status('Try /provider to switch providers', 'info');
+    
+    // Use friendly error display
+    showProviderError(error);
     return '';
   }
 }

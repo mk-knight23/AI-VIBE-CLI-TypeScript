@@ -56,6 +56,8 @@ import { askMode } from './modes/ask';
 import { batchMode } from './modes/batch';
 import { cmdMode } from '../commands/custom/executor';
 
+import { getGlobalHelp, getWelcomeHints } from '../ui/help';
+
 const VERSION = '10.1.0';
 
 function parseOptions(args: string[]): Record<string, unknown> {
@@ -103,84 +105,18 @@ async function main(): Promise<void> {
 
   // Help
   if (args.includes('--help') || args.includes('-h')) {
-    console.log(BANNER);
-    console.log(`
-Usage: vibe [command] [options]
-
-Modes:
-  vibe                Start interactive AI assistant
-  vibe ask "..."      Non-interactive one-shot prompt
-  vibe cmd <name>     Execute custom command
-  vibe batch <file>   Process multiple prompts from file
-
-Ask Mode Options:
-  --allow-tools, -t   Enable tool execution (default: OFF)
-  --dangerously-skip-permissions
-                      YOLO mode - bypass all permission checks
-  --json              Output as JSON
-  --quiet, -q         Suppress progress output
-
-Core Commands:
-  vibe connect        Add provider credentials
-  vibe providers      List available providers
-  vibe models         List available models
-  vibe doctor         Diagnose configuration
-
-Agent Commands:
-  vibe agents         List available agents
-  vibe plan <goal>    Run planner agent
-  vibe research <t>   Run researcher agent
-  vibe analyze <t>    Run analyst agent
-  vibe build <task>   Run builder agent
-  vibe review <t>     Run reviewer agent
-  vibe audit          Run security auditor
-
-Workflow Commands:
-  vibe workflow       List workflows
-  vibe workflow run   Execute workflow
-  vibe memory         Manage project memory
-  vibe output         Format/export data
-  vibe rules          Manage project rules
-  vibe pipeline       Run specialized pipelines
-
-Session Commands:
-  vibe sessions       Manage multiple sessions
-  vibe sessions new   Create new session
-  vibe sessions share Create share link
-
-Settings:
-  vibe privacy        Privacy settings
-  vibe lsp            Language server status
-
-Model Filters:
-  --local    Local models only
-  --cheap    Low-cost models
-  --fast     Fast models
-  --free     Free tier models
-
-Batch Options:
-  --parallel    Process prompts in parallel
-  --output dir  Write results to directory
-  --format fmt  Output format (json, markdown, text)
-
-Keyboard Shortcuts (in chat):
-  ctrl+t     Start tangent conversation
-  ctrl+j     Multi-line input
-  ctrl+k     Fuzzy search
-  !cmd       Execute shell command
-
-Context Mentions:
-  @workspace Include project context
-  @file:path Include specific file
-  @folder:p  Include folder structure
-
-Free models included - no API key required!
-    `);
+    console.log(getGlobalHelp());
     process.exit(0);
   }
 
   // Subcommands
   switch (command) {
+    // Setup wizard
+    case 'setup':
+      const { runQuickSetup } = await import('../ui/setup-wizard');
+      await runQuickSetup();
+      process.exit(0);
+
     // New modes
     case 'ask':
       await askMode(args.slice(1));
@@ -285,6 +221,12 @@ Free models included - no API key required!
   // Default: interactive mode
   console.log(BANNER);
   
+  // Check for first-run setup
+  const { shouldShowSetupWizard, runSetupWizard } = await import('../ui/setup-wizard');
+  if (shouldShowSetupWizard()) {
+    await runSetupWizard();
+  }
+  
   // Show project context
   const languages = detectProjectLanguages();
   const steering = loadSteering();
@@ -300,7 +242,7 @@ Free models included - no API key required!
     console.log(status.join(' • '));
   }
   
-  console.log('\n/help commands • ctrl+t tangent • @workspace context\n');
+  console.log('\n' + getWelcomeHints());
   console.log('🤖 You are chatting with Auto\n');
   
   try {

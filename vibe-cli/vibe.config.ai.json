@@ -1,0 +1,43 @@
+{
+  "runtime": {
+    "mode": "free-first",
+    "timeout_ms": 45000,
+    "retry": 2,
+    "fallback": true
+  },
+  "providers": [
+    {
+      "id": "openrouter",
+      "base_url": "https://openrouter.ai/api/v1",
+      "auth": { "type": "bearer", "env": "OPENROUTER_API_KEY" },
+      "priority": 1,
+      "models": [
+        { "id": "z-ai/glm-4.5-air:free", "task": "chat", "free": true },
+        { "id": "qwen/qwen3-coder:free", "task": "code", "free": true },
+        { "id": "deepseek/deepseek-r1-0528:free", "task": "agent", "free": true },
+        { "id": "deepseek/deepseek-r1-0528:free", "task": "debug", "free": true }
+      ]
+    },
+    {
+      "id": "anthropic",
+      "base_url": "https://api.anthropic.com/v1",
+      "auth": { "type": "bearer", "env": "ANTHROPIC_API_KEY" },
+      "priority": 2,
+      "models": [
+        { "id": "claude-sonnet-4-20250514", "task": "chat", "free": false },
+        { "id": "claude-sonnet-4-20250514", "task": "code", "free": false },
+        { "id": "claude-sonnet-4-20250514", "task": "agent", "free": false }
+      ]
+    },
+    {
+      "id": "openai",
+      "base_url": "https://api.openai.com/v1",
+      "auth": { "type": "bearer", "env": "OPENAI_API_KEY" },
+      "priority": 3,
+      "models": [
+        { "id": "gpt-4o", "task": "chat", "free": false },
+        { "id": "gpt-4o", "task": "code", "free": false }
+      ]
+    }
+  ]
+}

@@ -62,8 +62,8 @@ You are managed by an autonomous process in a git-backed workspace. You can read
 
 VIBE is a multi-product AI development ecosystem with:
 - **4 Products**: CLI (core), VS Code Extension (UI shell), Web (docs), Chat (separate SaaS)
-- **4 AI Providers**: OpenRouter, MegaLLM, AgentRouter, Routeway
-- **27+ Models** with free API access
+- **Universal AI Runtime**: Single config-driven provider system
+- **Free-First Models**: Automatically uses free models when available
 - **36 Tools** across 14 categories
 - **8 Advanced AI-Powered Tools**
 - **Cloud Deployment**: AWS, Vercel, Firebase
