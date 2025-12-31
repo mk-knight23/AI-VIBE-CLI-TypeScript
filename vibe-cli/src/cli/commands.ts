@@ -179,7 +179,7 @@ const commands: ProgramCommand[] = [
     name: 'workflow',
     description: 'Manage and run workflows',
     action: async (...args: string[]) => {
-      await workflowCommand(args);
+      await workflowCommand(args[0], args[1], {});
     }
   },
   // REMOVED: Template command - AI-ONLY generation required

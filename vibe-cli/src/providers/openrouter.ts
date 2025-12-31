@@ -1,5 +1,5 @@
 import { loadConfig } from '../core/config';
-import { DEFAULT_KEYS, PROVIDERS, fetchWithTimeout, Provider, ProviderResponse, OrchestrationRequest, OrchestrationResult } from './index';
+import { DEFAULT_KEYS, fetchWithTimeout, Provider, ProviderResponse, OrchestrationRequest, OrchestrationResult } from './index';
 import { ModelDefinition } from '../ai/model-router';
 
 // Updated 2025 model catalog with new models
@@ -121,7 +121,7 @@ export async function openRouterChat(
     };
   }
 
-  const res = await fetchWithTimeout(`${PROVIDERS.openrouter.baseUrl}/chat/completions`, {
+  const res = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
@@ -184,7 +184,7 @@ export async function executeOrchestration(request: OrchestrationRequest): Promi
 // Create provider object
 export const openRouterProvider: Provider = {
   name: 'OpenRouter',
-  baseUrl: PROVIDERS.openrouter.baseUrl,
+  baseUrl: 'https://openrouter.ai/api/v1',
   getApiKey: getOpenRouterKey,
   fetchModels: fetchOpenRouterModels,
   chat: openRouterChat,

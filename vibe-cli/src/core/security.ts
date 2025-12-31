@@ -298,16 +298,48 @@ export function containsSecrets(text: string): boolean {
 // AUDIT LOGGING
 // ============================================
 
+export interface AuditStats {
+  totalCalls: number;
+  byTool: Record<string, number>;
+  byRisk: Record<RiskLevel, number>;
+  approved: number;
+  denied: number;
+  blocked: number;
+}
+
 export class AuditLogger {
   private logPath: string;
   private enabled: boolean;
+  private sessionStats: AuditStats;
   
   constructor(workspaceDir: string = process.cwd()) {
     this.logPath = path.join(workspaceDir, '.vibe', 'audit.log');
     this.enabled = process.env.VIBE_AUDIT !== 'false';
+    this.sessionStats = this.initStats();
+  }
+
+  private initStats(): AuditStats {
+    return {
+      totalCalls: 0,
+      byTool: {},
+      byRisk: { safe: 0, low: 0, medium: 0, high: 0, blocked: 0 },
+      approved: 0,
+      denied: 0,
+      blocked: 0
+    };
   }
   
   log(entry: Omit<AuditEntry, 'timestamp'>): void {
+    // Update session stats
+    this.sessionStats.totalCalls++;
+    if (entry.action) {
+      this.sessionStats.byTool[entry.action] = (this.sessionStats.byTool[entry.action] || 0) + 1;
+    }
+    this.sessionStats.byRisk[entry.riskLevel]++;
+    if (entry.approved) this.sessionStats.approved++;
+    else if (entry.result === 'blocked') this.sessionStats.blocked++;
+    else this.sessionStats.denied++;
+
     if (!this.enabled) return;
     
     const fullEntry: AuditEntry = {
@@ -332,6 +364,14 @@ export class AuditLogger {
       // Silently fail - don't break execution for audit logging
     }
   }
+
+  getStats(): AuditStats {
+    return { ...this.sessionStats };
+  }
+
+  resetStats(): void {
+    this.sessionStats = this.initStats();
+  }
   
   getRecent(count: number = 50): AuditEntry[] {
     try {
@@ -348,16 +388,46 @@ export class AuditLogger {
       return [];
     }
   }
+
+  getByTool(toolName: string, count: number = 20): AuditEntry[] {
+    return this.getRecent(500).filter(e => e.action === toolName).slice(0, count);
+  }
+
+  getByRisk(level: RiskLevel, count: number = 20): AuditEntry[] {
+    return this.getRecent(500).filter(e => e.riskLevel === level).slice(0, count);
+  }
+
+  exportLog(format: 'json' | 'csv' = 'json'): string {
+    const entries = this.getRecent(1000);
+    if (format === 'csv') {
+      const header = 'timestamp,action,command,riskLevel,approved,result\n';
+      const rows = entries.map(e => 
+        `${e.timestamp},${e.action},${(e.command || '').replace(/,/g, ';')},${e.riskLevel},${e.approved},${e.result || ''}`
+      ).join('\n');
+      return header + rows;
+    }
+    return JSON.stringify(entries, null, 2);
+  }
   
   clear(): void {
     try {
       if (fs.existsSync(this.logPath)) {
         fs.unlinkSync(this.logPath);
       }
+      this.resetStats();
     } catch {
       // Ignore
     }
   }
+}
+
+// Singleton audit logger
+let _auditLogger: AuditLogger | null = null;
+export function getAuditLogger(): AuditLogger {
+  if (!_auditLogger) {
+    _auditLogger = new AuditLogger();
+  }
+  return _auditLogger;
 }
 
 // ============================================

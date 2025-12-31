@@ -10,6 +10,7 @@ import {
   AuditLogger,
   getRiskIndicator 
 } from '../core/security';
+import { executeCustomCommand, getCustomCommandHelp } from '../commands/custom/executor';
 
 export async function handleCommand(
   input: string,
@@ -135,6 +136,37 @@ export async function handleCommand(
     case 'scan':
       await runProjectScan(args[0] || '.');
       break;
+
+    case 'session':
+      await handleSessionCommand(args);
+      break;
+
+    case 'diff':
+      await handleDiffCommand(args);
+      break;
+
+    case 'bug':
+      await handleBugCommand();
+      break;
+
+    case 'context':
+      await handleContextCommand(args);
+      break;
+
+    case 'mode':
+      return handleModeCommand(args);
+
+    case 'audit':
+      await handleAuditCommand(args);
+      break;
+
+    case 'approve':
+      await handleApproveCommand(args);
+      break;
+
+    case 'cmd':
+      await handleCmdCommand(args);
+      break;
     
     default:
       console.log(pc.yellow(`Command not implemented: ${command.name}`));
@@ -181,6 +213,16 @@ async function runProjectScan(projectPath: string): Promise<void> {
       }
     }
   }
+}
+
+function colorDiff(diff: string): string {
+  return diff.split('\n').map(line => {
+    if (line.startsWith('+++') || line.startsWith('---')) return pc.bold(line);
+    if (line.startsWith('+')) return pc.green(line);
+    if (line.startsWith('-')) return pc.red(line);
+    if (line.startsWith('@@')) return pc.cyan(line);
+    return line;
+  }).join('\n');
 }
 
 function showHelp(specificCommand?: string): void {
@@ -306,5 +348,453 @@ function showSecurityStatus(subcommand?: string): void {
   console.log(pc.bold('Environment:'));
   console.log(`  VIBE_DRY_RUN=${dryRun ? 'true' : 'false'} - ${dryRun ? 'Write ops blocked' : 'Normal mode'}`);
   console.log(`  VIBE_AUDIT=${process.env.VIBE_AUDIT !== 'false' ? 'true' : 'false'} - Audit logging`);
+  console.log();
+}
+
+// ============================================
+// NEW SLASH COMMAND HANDLERS (v10.1)
+// ============================================
+
+async function handleSessionCommand(args: string[]): Promise<void> {
+  const { listSessions, createSession, getSession } = await import('../storage/sessions');
+  const subcommand = args[0];
+
+  console.log(`\n${pc.bold(pc.cyan('📋 SESSIONS'))}\n`);
+
+  if (!subcommand || subcommand === 'list') {
+    const sessions = listSessions(10);
+    if (sessions.length === 0) {
+      console.log(pc.gray('No sessions found'));
+    } else {
+      sessions.forEach((s, i) => {
+        const date = new Date(s.updatedAt).toLocaleString();
+        const tokens = s.tokenCount ? `${s.tokenCount} tokens` : 'empty';
+        const current = i === 0 ? pc.green(' (current)') : '';
+        console.log(`  ${pc.cyan(s.id.slice(0, 12))}${current} - ${pc.gray(date)} - ${tokens}`);
+      });
+    }
+  } else if (subcommand === 'new') {
+    const session = createSession();
+    console.log(pc.green(`✓ Created session: ${session.id}`));
+  } else {
+    console.log(pc.yellow('Usage: /session [list|new|switch <id>|delete <id>]'));
+  }
+  console.log();
+}
+
+async function handleDiffCommand(args: string[]): Promise<void> {
+  const subcommand = args[0] || 'show';
+  const { 
+    getPendingChanges, 
+    listCheckpoints, 
+    createCheckpoint, 
+    revertCheckpoint,
+    getDiffSummary,
+    getFullDiff,
+    getFileDiff
+  } = await import('../core/checkpoints');
+
+  console.log(`\n${pc.bold(pc.cyan('📝 DIFF'))}\n`);
+
+  if (subcommand === 'show') {
+    const filePath = args[1];
+    
+    if (filePath) {
+      // Show diff for specific file
+      const diff = getFileDiff('current', filePath);
+      if (diff) {
+        console.log(colorDiff(diff));
+      } else {
+        console.log(pc.gray(`No changes for: ${filePath}`));
+      }
+    } else {
+      // Show summary of pending changes
+      const pending = getDiffSummary('current');
+      console.log(pc.bold('Pending Changes:'));
+      console.log(pending);
+      
+      // Also show git diff
+      try {
+        const { exec } = await import('child_process');
+        const { promisify } = await import('util');
+        const execAsync = promisify(exec);
+        const { stdout } = await execAsync('git diff --stat 2>/dev/null');
+        if (stdout.trim()) {
+          console.log(pc.bold('\nGit Working Directory:'));
+          console.log(stdout);
+        }
+      } catch {}
+    }
+    
+  } else if (subcommand === 'full') {
+    // Show full unified diff
+    const diff = getFullDiff('current');
+    console.log(colorDiff(diff));
+    
+  } else if (subcommand === 'checkpoint' || subcommand === 'save') {
+    const name = args[1];
+    const checkpoint = createCheckpoint('current', name);
+    if (checkpoint) {
+      console.log(pc.green(`✓ Created checkpoint: ${checkpoint.id}`));
+      console.log(pc.gray(`  ${checkpoint.changes.length} file(s) saved`));
+    } else {
+      console.log(pc.yellow('No pending changes to checkpoint'));
+    }
+    
+  } else if (subcommand === 'list') {
+    const checkpoints = listCheckpoints('current');
+    if (checkpoints.length === 0) {
+      console.log(pc.gray('No checkpoints found'));
+    } else {
+      checkpoints.forEach(cp => {
+        const date = new Date(cp.createdAt).toLocaleString();
+        const name = cp.name ? ` (${cp.name})` : '';
+        console.log(`  ${pc.cyan(cp.id.slice(0, 12))}${name} - ${cp.changes.length} files - ${pc.gray(date)}`);
+      });
+    }
+    
+  } else if (subcommand === 'revert') {
+    const checkpointId = args[1];
+    if (!checkpointId) {
+      console.log(pc.yellow('Usage: /diff revert <checkpoint-id>'));
+      return;
+    }
+    
+    // Find checkpoint by prefix
+    const checkpoints = listCheckpoints('current');
+    const match = checkpoints.find(cp => cp.id.startsWith(checkpointId));
+    
+    if (!match) {
+      console.log(pc.red(`Checkpoint not found: ${checkpointId}`));
+      return;
+    }
+    
+    const { reverted, errors } = revertCheckpoint(match.id);
+    if (reverted.length > 0) {
+      console.log(pc.green('✓ Reverted:'));
+      reverted.forEach(r => console.log(`  ${r}`));
+    }
+    if (errors.length > 0) {
+      console.log(pc.red('✗ Errors:'));
+      errors.forEach(e => console.log(`  ${e}`));
+    }
+    
+  } else {
+    console.log(pc.yellow('Usage: /diff [show|checkpoint|list|revert <id>]'));
+  }
+  console.log();
+}
+
+async function handleBugCommand(): Promise<void> {
+  const os = await import('os');
+  const pkg = await import('../../package.json');
+
+  console.log(`\n${pc.bold(pc.cyan('🐛 BUG REPORT TEMPLATE'))}\n`);
+  console.log(pc.gray('Copy this template to create a GitHub issue:\n'));
+
+  const template = `## Bug Report
+
+### Environment
+- VIBE CLI Version: ${pkg.version}
+- Node.js: ${process.version}
+- OS: ${os.platform()} ${os.release()}
+- Shell: ${process.env.SHELL || 'unknown'}
+
+### Description
+[Describe the bug]
+
+### Steps to Reproduce
+1. 
+2. 
+3. 
+
+### Expected Behavior
+[What should happen]
+
+### Actual Behavior
+[What actually happens]
+
+### Logs
+\`\`\`
+[Paste relevant logs here]
+\`\`\`
+
+### Additional Context
+[Any other information]
+`;
+
+  console.log(template);
+  console.log(pc.cyan('Submit at: https://github.com/mk-knight23/vibe/issues/new\n'));
+}
+
+async function handleContextCommand(args: string[]): Promise<void> {
+  const subcommand = args[0] || 'show';
+
+  console.log(`\n${pc.bold(pc.cyan('📚 CONTEXT'))}\n`);
+
+  if (subcommand === 'show') {
+    // Show active steering (enhanced)
+    const { loadAllSteering } = await import('../core/steering');
+    const { global, workspace, merged } = loadAllSteering();
+    
+    console.log(pc.bold('Steering:'));
+    if (global) {
+      console.log(`  ${pc.blue('Global:')} ~/.vibe/steering/`);
+    }
+    if (workspace.length > 0) {
+      console.log(`  ${pc.green('Workspace:')} ${workspace.length} file(s)`);
+      workspace.forEach(w => {
+        const name = w.path.split('/').pop();
+        console.log(`    • ${name}`);
+      });
+    }
+    if (merged.rules.length === 0 && merged.context.length === 0) {
+      console.log(`  ${pc.gray('None configured')}`);
+    } else {
+      console.log(`  ${pc.cyan('Rules:')} ${merged.rules.length}`);
+      console.log(`  ${pc.cyan('Context:')} ${merged.context.length} section(s)`);
+      console.log(`  ${pc.cyan('Hooks:')} ${merged.hooks.length}`);
+    }
+
+    // Show rules
+    const fs = await import('fs');
+    const path = await import('path');
+    const rulesDir = path.join(process.cwd(), '.vibe', 'rules');
+    console.log(pc.bold('\nRules:'));
+    if (fs.existsSync(rulesDir)) {
+      const rules = fs.readdirSync(rulesDir).filter(f => f.endsWith('.md'));
+      if (rules.length > 0) {
+        rules.forEach(r => console.log(`  ${pc.green('✓')} ${r}`));
+      } else {
+        console.log(`  ${pc.gray('None')}`);
+      }
+    } else {
+      console.log(`  ${pc.gray('None')}`);
+    }
+
+    // Show MCP servers
+    const { mcpClient } = await import('../mcp/client');
+    const servers = mcpClient.listServers();
+    console.log(pc.bold('\nMCP Servers:'));
+    if (servers.length > 0) {
+      servers.forEach(s => console.log(`  ${pc.green('✓')} ${s}`));
+    } else {
+      console.log(`  ${pc.gray('None connected')}`);
+    }
+
+    // Show current mode
+    const { getMode, getModeConfig } = await import('../core/modes');
+    const mode = getMode();
+    const modeConfig = getModeConfig();
+    console.log(pc.bold('\nMode:'));
+    console.log(`  ${pc.cyan(modeConfig.name)} - ${pc.gray(modeConfig.description)}`);
+
+  } else if (subcommand === 'steering') {
+    // Show detailed steering
+    const { loadAllSteering } = await import('../core/steering');
+    const { merged } = loadAllSteering();
+    
+    if (merged.rules.length > 0) {
+      console.log(pc.bold('Rules:'));
+      merged.rules.forEach(r => console.log(`  • ${r}`));
+    }
+    if (merged.context.length > 0) {
+      console.log(pc.bold('\nContext:'));
+      merged.context.forEach(c => console.log(`  ${c.slice(0, 100)}...`));
+    }
+    if (merged.hooks.length > 0) {
+      console.log(pc.bold('\nHooks:'));
+      merged.hooks.forEach(h => console.log(`  ${h.event}: ${h.action}`));
+    }
+
+  } else if (subcommand === 'clear') {
+    console.log(pc.yellow('Context cleared for this session'));
+  } else {
+    console.log(pc.yellow('Usage: /context [show|steering|clear]'));
+  }
+  console.log();
+}
+
+function handleModeCommand(args: string[]): string | void {
+  const { MODE_CONFIGS, setMode, getMode, getModeConfig, getModeSummary } = require('../core/modes');
+  const mode = args[0];
+  const validModes = Object.keys(MODE_CONFIGS);
+
+  console.log(`\n${pc.bold(pc.cyan('🎯 MODE'))}\n`);
+
+  if (!mode) {
+    const current = getMode();
+    const config = getModeConfig();
+    
+    console.log(pc.bold(`Current: ${config.name}`));
+    console.log(pc.gray(config.description));
+    console.log();
+    console.log(pc.bold('Available modes:'));
+    Object.entries(MODE_CONFIGS).forEach(([key, cfg]: [string, any]) => {
+      const indicator = key === current ? pc.green('→') : ' ';
+      const tools = cfg.toolsEnabled ? pc.green('tools') : pc.yellow('no-tools');
+      console.log(`  ${indicator} ${pc.cyan(key.padEnd(12))} ${tools.padEnd(15)} ${pc.gray(cfg.description)}`);
+    });
+    console.log();
+    console.log(pc.gray('Usage: /mode <name>'));
+    return;
+  }
+
+  if (!validModes.includes(mode)) {
+    console.log(pc.red(`Invalid mode: ${mode}`));
+    console.log(pc.gray(`Valid modes: ${validModes.join(', ')}`));
+    return;
+  }
+
+  const config = setMode(mode);
+  console.log(pc.green(`✓ Switched to ${config.name} mode`));
+  console.log(pc.gray(config.description));
+  console.log();
+  console.log(getModeSummary());
+  console.log();
+  return `mode:${mode}`;
+}
+
+async function handleAuditCommand(args: string[]): Promise<void> {
+  const { getAuditLogger, getRiskIndicator } = await import('../core/security');
+  const logger = getAuditLogger();
+  const subcommand = args[0] || 'recent';
+
+  console.log(`\n${pc.bold(pc.cyan('📋 AUDIT LOG'))}\n`);
+
+  if (subcommand === 'stats') {
+    const stats = logger.getStats();
+    console.log(pc.bold('Session Statistics:'));
+    console.log(`  Total calls: ${stats.totalCalls}`);
+    console.log(`  Approved: ${pc.green(String(stats.approved))}`);
+    console.log(`  Denied: ${pc.yellow(String(stats.denied))}`);
+    console.log(`  Blocked: ${pc.red(String(stats.blocked))}`);
+    console.log();
+    console.log(pc.bold('By Risk Level:'));
+    console.log(`  ${getRiskIndicator('safe')} Safe: ${stats.byRisk.safe}`);
+    console.log(`  ${getRiskIndicator('low')} Low: ${stats.byRisk.low}`);
+    console.log(`  ${getRiskIndicator('medium')} Medium: ${stats.byRisk.medium}`);
+    console.log(`  ${getRiskIndicator('high')} High: ${stats.byRisk.high}`);
+    console.log(`  ${getRiskIndicator('blocked')} Blocked: ${stats.byRisk.blocked}`);
+    
+    if (Object.keys(stats.byTool).length > 0) {
+      console.log();
+      console.log(pc.bold('Top Tools:'));
+      Object.entries(stats.byTool)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .forEach(([tool, count]) => {
+          console.log(`  ${tool}: ${count}`);
+        });
+    }
+
+  } else if (subcommand === 'recent') {
+    const count = parseInt(args[1]) || 10;
+    const entries = logger.getRecent(count);
+    
+    if (entries.length === 0) {
+      console.log(pc.gray('No audit entries'));
+    } else {
+      entries.forEach(entry => {
+        const indicator = getRiskIndicator(entry.riskLevel);
+        const time = new Date(entry.timestamp).toLocaleTimeString();
+        const status = entry.approved ? pc.green('✓') : pc.red('✗');
+        console.log(`  ${indicator} [${time}] ${status} ${entry.action} ${entry.command || ''}`);
+      });
+    }
+
+  } else if (subcommand === 'export') {
+    const format = args[1] === 'csv' ? 'csv' : 'json';
+    const output = logger.exportLog(format);
+    console.log(output);
+
+  } else if (subcommand === 'clear') {
+    logger.clear();
+    console.log(pc.green('✓ Audit log cleared'));
+
+  } else {
+    console.log(pc.yellow('Usage: /audit [stats|recent [n]|export [json|csv]|clear]'));
+  }
+  console.log();
+}
+
+async function handleApproveCommand(args: string[]): Promise<void> {
+  const { 
+    getPendingApprovals, 
+    approveOperation, 
+    approveAll, 
+    denyOperation, 
+    denyAll,
+    formatPendingApprovals 
+  } = await import('../permissions');
+  
+  const sessionId = 'current'; // TODO: get actual session ID
+  const subcommand = args[0] || 'list';
+
+  console.log(`\n${pc.bold(pc.cyan('✅ APPROVALS'))}\n`);
+
+  if (subcommand === 'list') {
+    console.log(formatPendingApprovals(sessionId));
+
+  } else if (subcommand === 'all') {
+    const count = approveAll(sessionId, args[1] === '--session');
+    if (count > 0) {
+      console.log(pc.green(`✓ Approved ${count} operation(s)`));
+    } else {
+      console.log(pc.gray('No pending approvals'));
+    }
+
+  } else if (subcommand === 'deny') {
+    if (args[1] === 'all') {
+      const count = denyAll(sessionId);
+      console.log(pc.yellow(`✗ Denied ${count} operation(s)`));
+    } else {
+      const pending = getPendingApprovals(sessionId);
+      const idx = parseInt(args[1]) - 1;
+      if (idx >= 0 && idx < pending.length) {
+        denyOperation(sessionId, pending[idx].id, args[2] === '--session');
+        console.log(pc.yellow(`✗ Denied: ${pending[idx].tool}`));
+      } else {
+        console.log(pc.red('Invalid operation number'));
+      }
+    }
+
+  } else {
+    // Try to approve by number
+    const num = parseInt(subcommand);
+    if (!isNaN(num)) {
+      const pending = getPendingApprovals(sessionId);
+      const idx = num - 1;
+      if (idx >= 0 && idx < pending.length) {
+        approveOperation(sessionId, pending[idx].id, args[1] === '--session');
+        console.log(pc.green(`✓ Approved: ${pending[idx].tool}`));
+      } else {
+        console.log(pc.red('Invalid operation number'));
+      }
+    } else {
+      console.log(pc.yellow('Usage: /approve [list|all|<n>|deny <n|all>]'));
+      console.log(pc.gray('  Add --session to grant/deny for entire session'));
+    }
+  }
+  console.log();
+}
+
+async function handleCmdCommand(args: string[]): Promise<void> {
+  const input = `/cmd ${args.join(' ')}`.trim();
+  const result = executeCustomCommand(input);
+  
+  console.log(`\n${pc.bold(pc.cyan('📦 CUSTOM COMMANDS'))}\n`);
+  
+  if (result.success) {
+    if (result.message) {
+      console.log(result.message);
+    } else if (result.prompt) {
+      console.log(pc.green('Expanded prompt:'));
+      console.log(pc.gray(result.prompt));
+    }
+  } else {
+    console.log(pc.red(result.error));
+    console.log(pc.gray('\n' + getCustomCommandHelp()));
+  }
   console.log();
 }

@@ -1,13 +1,13 @@
 {
   "name": "@mk-knight23/vibe-ai-cli",
-  "version": "10.0.0",
+  "version": "10.1.0",
   "description": "The open source AI coding agent - 75+ providers, free models, LSP enabled, privacy-first",
   "main": "dist/cli/index.js",
   "bin": {
     "vibe": "bin/vibe.js"
   },
   "vibe-ecosystem": {
-    "compatible_cli": "9.x",
+    "compatible_cli": "10.x",
     "compatible_extension": "5.x",
     "compatible_web": "2.x",
     "minimum_node_version": "18.0.0",
@@ -15,7 +15,8 @@
       "10.0.0": [
         "Alias /t now maps to /tangent (was /tools) - use /tl or /tools",
         "Alias /scan removed from /analyze - use /az or /analyze",
-        "Command substitution ($() and ``) now requires approval"
+        "Command substitution ($() and ``) now requires approval",
+        "Memory storage migrated from JSON to SQLite (store.db)"
       ],
       "9.0.0": [
         "Memory format changed: store.json → store.db",
@@ -25,14 +26,55 @@
         "Custom instructions now use .vibe/ directory structure"
       ]
     },
-    "migration_guide": "https://docs.vibe-ai.dev/v9-migration",
+    "migration_guide": "https://docs.vibe-ai.dev/v10-migration",
     "new_features": {
+      "10.1.0": [
+        "Safe defaults - Tools OFF in headless mode unless --allow-tools",
+        "YOLO mode - --dangerously-skip-permissions bypasses all checks",
+        "Slash command /session - Manage sessions from interactive mode",
+        "Slash command /diff - View and manage file changes with checkpoints",
+        "Slash command /bug - Generate bug report template",
+        "Slash command /context - View active steering, rules, MCP",
+        "Slash command /mode - Switch agent modes (ask/debug/architect)",
+        "Checkpoint system - Track, save, and revert file changes",
+        "Enhanced audit - /audit stats, recent, export with filtering",
+        "Batch approvals - /approve all, deny, per-operation control",
+        "Provider fallback - Auto-failover with rate limit handling",
+        "Provider health - Track provider status and availability",
+        "Mode system - Ask/Debug/Architect/Orchestrator presets",
+        "Auto mode detection - Detect mode from user input",
+        "Enhanced steering - Directory-based, global, Kiro-compatible",
+        "Steering hooks - onFileWrite, onSessionStart events",
+        "Unified MCP manager - stdio + SSE transport support",
+        "MCP streaming - streamToolCall for SSE servers",
+        "MCP templates - filesystem, git, fetch, memory presets",
+        "Enhanced custom commands - /cmd list, new, delete, show",
+        "Command aliases - Multiple names for same command",
+        "Command categories - Group commands by category",
+        "Batch mode - Process multiple prompts from file (vibe batch)",
+        "Project rules - AI behavior rules in .vibe/rules/*.md",
+        "Project memory - Long-term knowledge persistence",
+        "SSE MCP transport - HTTP/SSE support for MCP servers",
+        "Export system - JSON, Markdown, HTML, CSV export",
+        "Workflow checkpoints - Approval gates in workflows",
+        "Parallel workflow steps - Concurrent agent execution",
+        "Research pipeline - Multi-source research with synthesis",
+        "Analysis pipeline - Data comparison, extraction, matrices",
+        "Report pipeline - Structured document generation",
+        "Automation pipeline - DevOps, CI/CD, infrastructure tasks"
+      ],
       "10.0.0": [
         "Provider Registry - 20+ built-in providers, config-driven extensibility",
         "Safe Agent System - Plan→Propose→Wait→Execute→Verify→Report flow",
         "Rollback Stack - Undo mutating actions on failure or cancel",
         "MCP Integration - Model Context Protocol server support",
-        "/mcp command - Manage MCP server connections"
+        "/mcp command - Manage MCP server connections",
+        "Non-interactive mode - vibe ask for one-shot prompts",
+        "Custom commands - Markdown-based command definitions",
+        "Auto-compact - Token-based session summarization",
+        "4-level permissions - ask/allow_once/allow_session/deny",
+        "SQLite storage - Sessions, messages, permissions persistence",
+        "LSP diagnostics - Read-only access to TypeScript/ESLint errors"
       ],
       "9.0.0": [
         "Multi-agent orchestration with 5 specialized roles",
@@ -134,6 +176,7 @@
     "@types/express": "^5.0.6",
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.13.2",
+    "better-sqlite3": "^11.6.0",
     "chalk": "^5.3.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -145,10 +188,10 @@
     "picocolors": "^1.1.1",
     "react-router-dom": "^7.10.1",
     "simple-git": "^3.27.0",
-    "sqlite3": "^5.1.7",
     "uuid": "^11.0.3"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^25.0.2",
     "@types/uuid": "^10.0.0",
     "@vitest/coverage-v8": "^4.0.15",

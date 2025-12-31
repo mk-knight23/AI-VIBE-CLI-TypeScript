@@ -765,5 +765,31 @@ Execute user requests efficiently in minimal steps. Users can always ask for mor
 
 Remember: Output is displayed on CLI. Keep responses appropriate for terminal. Be the calm, knowledgeable partner that helps developers get into flow.`;
 
-export const VERSION = '10.0.0';
+export const VERSION = '10.1.0';
 export const DEFAULT_MODEL = 'qwen/qwen3-next-80b-a3b-instruct';
+
+/**
+ * Build full system prompt with rules and memory
+ */
+export function buildSystemPrompt(options: {
+  rulesScope?: string;
+  projectMemory?: string;
+} = {}): string {
+  let prompt = VIBE_SYSTEM_PROMPT;
+
+  // Inject project rules if available
+  try {
+    const { getRulesPrompt } = require('../rules');
+    const rulesPrompt = getRulesPrompt(options.rulesScope);
+    if (rulesPrompt) {
+      prompt += `\n\n${rulesPrompt}`;
+    }
+  } catch {}
+
+  // Inject project memory if provided
+  if (options.projectMemory) {
+    prompt += `\n\n${options.projectMemory}`;
+  }
+
+  return prompt;
+}

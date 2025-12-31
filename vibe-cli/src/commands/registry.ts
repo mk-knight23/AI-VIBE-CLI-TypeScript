@@ -88,8 +88,8 @@ export const commands: Command[] = [
   {
     name: 'providers',
     category: 'ai',
-    description: 'List providers',
-    usage: '/providers',
+    description: 'List providers with health status',
+    usage: '/providers [health]',
     crossPlatform: true,
     handler: async () => 'providers'
   },
@@ -207,6 +207,78 @@ export const commands: Command[] = [
     handler: async () => 'mcp'
   },
 
+  // SESSION
+  {
+    name: 'session',
+    aliases: ['sess'],
+    category: 'ai',
+    description: 'Manage sessions',
+    usage: '/session [new|list|switch|rename|delete]',
+    crossPlatform: true,
+    handler: async () => 'session'
+  },
+
+  // DIFF
+  {
+    name: 'diff',
+    category: 'project',
+    description: 'Show/checkpoint/revert file changes',
+    usage: '/diff [show [file]|full|checkpoint|list|revert <id>]',
+    crossPlatform: true,
+    handler: async () => 'diff'
+  },
+
+  // BUG REPORT
+  {
+    name: 'bug',
+    category: 'basic',
+    description: 'Generate bug report template',
+    usage: '/bug',
+    crossPlatform: true,
+    handler: async () => 'bug'
+  },
+
+  // CONTEXT
+  {
+    name: 'context',
+    aliases: ['ctx'],
+    category: 'ai',
+    description: 'Show active context (steering, rules, memory)',
+    usage: '/context [show|steering|clear]',
+    crossPlatform: true,
+    handler: async () => 'context'
+  },
+
+  // MODE
+  {
+    name: 'mode',
+    category: 'ai',
+    description: 'Switch mode (ask/debug/architect/orchestrator)',
+    usage: '/mode [ask|debug|architect|orchestrator]',
+    crossPlatform: true,
+    handler: async () => 'mode'
+  },
+
+  // AUDIT
+  {
+    name: 'audit',
+    category: 'advanced',
+    description: 'View tool execution audit log',
+    usage: '/audit [stats|recent|export|clear]',
+    crossPlatform: true,
+    handler: async () => 'audit'
+  },
+
+  // APPROVE
+  {
+    name: 'approve',
+    category: 'advanced',
+    description: 'Manage pending tool approvals',
+    usage: '/approve [list|all|<n>|deny <n>]',
+    crossPlatform: true,
+    handler: async () => 'approve'
+  },
+
   // ADVANCED
   {
     name: 'refactor',
@@ -275,6 +347,14 @@ export const commands: Command[] = [
     usage: '/create',
     crossPlatform: true,
     handler: async () => 'create'
+  },
+  {
+    name: 'cmd',
+    category: 'advanced',
+    description: 'Run custom commands',
+    usage: '/cmd <name|list|new|delete|show> [args...]',
+    crossPlatform: true,
+    handler: async () => 'cmd'
   }
 ];
 

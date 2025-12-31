@@ -19,8 +19,8 @@ describe('Tools Integration v8.0.0', () => {
   });
 
   describe('Tool Registry', () => {
-    it('should have 36 tools', () => {
-      expect(tools.length).toBe(36);
+    it('should have 37 tools', () => {
+      expect(tools.length).toBe(37);
     });
 
     it('should have all required properties', () => {
@@ -54,7 +54,7 @@ describe('Tools Integration v8.0.0', () => {
       
       expect(filesystemTools.length).toBe(14);
       expect(gitTools.length).toBe(4);
-      expect(analysisTools.length).toBe(1);
+      expect(analysisTools.length).toBe(2);
     });
 
     it('should have all expected categories', () => {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * VIBE CLI v9.1.0 - The Open Source AI Coding Agent
+ * VIBE CLI v10.0.0 - The Open Source AI Coding Agent
  * 
  * Prompt to code to deployment in your terminal.
  * 
@@ -14,10 +14,20 @@
  * - Hooks automation
  * - Tangent conversations
  * - Privacy-first
+ * - Non-interactive mode (vibe ask)
+ * - Custom commands (vibe cmd)
+ * - Auto-compact sessions
+ * - 4-level permissions
+ * - Batch processing (vibe batch)
+ * - Project rules (vibe rules)
+ * - Project memory
  * 
  * @author KAZI
- * @version 9.1.0
+ * @version 10.0.0
  */
+
+// Initialize shutdown handlers early
+import '../utils/shutdown';
 
 import { startInteractive } from './interactive';
 import { ApiClient } from '../core/api';
@@ -31,13 +41,40 @@ import { sessionsCommand } from '../commands/sessions';
 import { agentsCommand } from '../commands/agents';
 import { steeringCommand } from '../commands/steering';
 import { hooksCommand } from '../commands/hooks';
+import { workflowCommand } from '../commands/workflow';
+import { memoryCommand } from '../commands/memory';
+import { outputCommand } from '../commands/output';
+import { rulesCommand } from '../commands/rules';
+import { pipelineCommand } from '../commands/pipeline';
+import { planCommand, researchCommand, analyzeCommand, buildCommand, reviewCommand, auditCommand } from '../commands/quick-agents';
 import { loadConfig } from '../config/loader';
 import { detectProjectLanguages } from '../core/lsp-detect';
 import { privacyManager } from '../core/privacy';
 import { loadSteering } from '../core/steering';
 import { listAgents } from '../core/custom-agents';
+import { askMode } from './modes/ask';
+import { batchMode } from './modes/batch';
+import { cmdMode } from '../commands/custom/executor';
 
-const VERSION = '10.0.0';
+const VERSION = '10.1.0';
+
+function parseOptions(args: string[]): Record<string, unknown> {
+  const options: Record<string, unknown> = {};
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg.startsWith('--')) {
+      const key = arg.slice(2);
+      const next = args[i + 1];
+      if (next && !next.startsWith('--')) {
+        options[key] = next;
+        i++;
+      } else {
+        options[key] = true;
+      }
+    }
+  }
+  return options;
+}
 
 const BANNER = `
 ╔═══════════════════════════════════════════════════════════╗
@@ -70,8 +107,20 @@ async function main(): Promise<void> {
     console.log(`
 Usage: vibe [command] [options]
 
-Core Commands:
+Modes:
   vibe                Start interactive AI assistant
+  vibe ask "..."      Non-interactive one-shot prompt
+  vibe cmd <name>     Execute custom command
+  vibe batch <file>   Process multiple prompts from file
+
+Ask Mode Options:
+  --allow-tools, -t   Enable tool execution (default: OFF)
+  --dangerously-skip-permissions
+                      YOLO mode - bypass all permission checks
+  --json              Output as JSON
+  --quiet, -q         Suppress progress output
+
+Core Commands:
   vibe connect        Add provider credentials
   vibe providers      List available providers
   vibe models         List available models
@@ -79,9 +128,20 @@ Core Commands:
 
 Agent Commands:
   vibe agents         List available agents
-  vibe agents info    Show agent details
-  vibe steering       Project steering configuration
-  vibe hooks          Automation hooks
+  vibe plan <goal>    Run planner agent
+  vibe research <t>   Run researcher agent
+  vibe analyze <t>    Run analyst agent
+  vibe build <task>   Run builder agent
+  vibe review <t>     Run reviewer agent
+  vibe audit          Run security auditor
+
+Workflow Commands:
+  vibe workflow       List workflows
+  vibe workflow run   Execute workflow
+  vibe memory         Manage project memory
+  vibe output         Format/export data
+  vibe rules          Manage project rules
+  vibe pipeline       Run specialized pipelines
 
 Session Commands:
   vibe sessions       Manage multiple sessions
@@ -97,6 +157,11 @@ Model Filters:
   --cheap    Low-cost models
   --fast     Fast models
   --free     Free tier models
+
+Batch Options:
+  --parallel    Process prompts in parallel
+  --output dir  Write results to directory
+  --format fmt  Output format (json, markdown, text)
 
 Keyboard Shortcuts (in chat):
   ctrl+t     Start tangent conversation
@@ -116,6 +181,20 @@ Free models included - no API key required!
 
   // Subcommands
   switch (command) {
+    // New modes
+    case 'ask':
+      await askMode(args.slice(1));
+      process.exit(0);
+
+    case 'cmd':
+      await cmdMode(args.slice(1));
+      process.exit(0);
+
+    case 'batch':
+      await batchMode(args.slice(1));
+      process.exit(0);
+
+    // Existing commands
     case 'connect':
       await connectCommand(args[1]);
       process.exit(0);
@@ -154,6 +233,52 @@ Free models included - no API key required!
 
     case 'hooks':
       hooksCommand(args[1], ...args.slice(2));
+      process.exit(0);
+
+    case 'rules':
+      rulesCommand(args[1], ...args.slice(2));
+      process.exit(0);
+
+    case 'pipeline':
+      await pipelineCommand(args[1], ...args.slice(2));
+      process.exit(0);
+
+    // Quick agent commands
+    case 'plan':
+      await planCommand(args.slice(1));
+      process.exit(0);
+
+    case 'research':
+      await researchCommand(args.slice(1));
+      process.exit(0);
+
+    case 'analyze':
+      await analyzeCommand(args.slice(1));
+      process.exit(0);
+
+    case 'build':
+      await buildCommand(args.slice(1));
+      process.exit(0);
+
+    case 'review':
+      await reviewCommand(args.slice(1));
+      process.exit(0);
+
+    case 'audit':
+      await auditCommand(args.slice(1));
+      process.exit(0);
+
+    // Workflow and memory commands
+    case 'workflow':
+      await workflowCommand(args[1], args[2], parseOptions(args.slice(3)));
+      process.exit(0);
+
+    case 'memory':
+      memoryCommand(args[1], args[2], args[3]);
+      process.exit(0);
+
+    case 'output':
+      outputCommand(args[1], args[2], parseOptions(args.slice(3)));
       process.exit(0);
   }
 

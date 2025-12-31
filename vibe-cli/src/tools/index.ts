@@ -380,7 +380,7 @@ export const tools: ToolDefinition[] = [
     },
     handler: advanced.smartRefactor,
     requiresConfirmation: true,
-    category: 'refactor'
+    category: 'analysis'
   },
   {
     name: 'generate_tests',
@@ -392,7 +392,7 @@ export const tools: ToolDefinition[] = [
     },
     handler: advanced.generateTests,
     requiresConfirmation: true,
-    category: 'testing'
+    category: 'analysis'
   },
   {
     name: 'optimize_bundle',
@@ -403,7 +403,7 @@ export const tools: ToolDefinition[] = [
     },
     handler: advanced.optimizeBundle,
     requiresConfirmation: false,
-    category: 'optimization'
+    category: 'analysis'
   },
   {
     name: 'security_scan',
@@ -414,7 +414,7 @@ export const tools: ToolDefinition[] = [
     },
     handler: advanced.securityScan,
     requiresConfirmation: false,
-    category: 'security'
+    category: 'analysis'
   },
   {
     name: 'performance_benchmark',
@@ -425,7 +425,7 @@ export const tools: ToolDefinition[] = [
     },
     handler: advanced.performanceBenchmark,
     requiresConfirmation: false,
-    category: 'performance'
+    category: 'analysis'
   },
   {
     name: 'generate_documentation',
@@ -436,7 +436,7 @@ export const tools: ToolDefinition[] = [
     },
     handler: advanced.generateDocumentation,
     requiresConfirmation: true,
-    category: 'documentation'
+    category: 'analysis'
   },
   {
     name: 'migrate_code',
@@ -449,7 +449,24 @@ export const tools: ToolDefinition[] = [
     },
     handler: advanced.migrateCode,
     requiresConfirmation: true,
-    category: 'migration'
+    category: 'analysis'
+  },
+
+  // LSP Diagnostics
+  {
+    name: 'get_diagnostics',
+    displayName: 'Diagnostics',
+    description: 'Get LSP diagnostics (TypeScript errors, ESLint warnings)',
+    parameters: {
+      project_path: { type: 'string', required: false }
+    },
+    handler: async (params: { project_path?: string }) => {
+      const { getDiagnostics, formatDiagnostics } = await import('../lsp');
+      const result = await getDiagnostics(params.project_path);
+      return formatDiagnostics(result);
+    },
+    requiresConfirmation: false,
+    category: 'analysis'
   }
 ];
 
@@ -457,7 +474,14 @@ export async function executeTool(toolName: string, params: any): Promise<any> {
   const tool = tools.find(t => t.name === toolName);
   if (!tool) throw new Error(`Tool not found: ${toolName}`);
   
-  return await tool.handler(...Object.values(params));
+  const { withTimeout, TIMEOUTS } = await import('../utils/timeout');
+  const timeout = toolName === 'run_shell_command' ? TIMEOUTS.SHELL_CMD : TIMEOUTS.TOOL_EXEC;
+  
+  return await withTimeout(
+    tool.handler(...Object.values(params)),
+    timeout,
+    `Tool: ${tool.displayName}`
+  );
 }
 
 export function getToolSchemas() {

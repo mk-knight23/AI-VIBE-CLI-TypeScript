@@ -1,8 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import fg from 'fast-glob';
+import { trackChange, updateChangeContent } from '../core/checkpoints';
 
 const rootDir = process.cwd();
+
+// Session ID for tracking (set by caller)
+let currentSessionId: string | undefined;
+
+export function setTrackingSession(sessionId: string | undefined): void {
+  currentSessionId = sessionId;
+}
 
 export async function listDirectory(dirPath: string, ignore: string[] = [], respectGitIgnore = true): Promise<string> {
   const absPath = path.resolve(rootDir, dirPath);
@@ -58,7 +66,18 @@ export async function writeFile(filePath: string, content: string): Promise<stri
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   
   const exists = fs.existsSync(absPath);
+  
+  // Track change before writing
+  if (currentSessionId) {
+    trackChange(currentSessionId, filePath, exists ? 'modify' : 'create');
+  }
+  
   fs.writeFileSync(absPath, content, 'utf-8');
+  
+  // Update with new content
+  if (currentSessionId) {
+    updateChangeContent(currentSessionId, filePath, content);
+  }
   
   return exists ? `Successfully overwrote file: ${absPath}` : `Successfully created file: ${absPath}`;
 }
@@ -111,11 +130,23 @@ export async function replaceInFile(filePath: string, oldString: string, newStri
   const absPath = path.resolve(rootDir, filePath);
 
   if (!oldString && !fs.existsSync(absPath)) {
+    // Track as create
+    if (currentSessionId) {
+      trackChange(currentSessionId, filePath, 'create');
+    }
     fs.writeFileSync(absPath, newString, 'utf-8');
+    if (currentSessionId) {
+      updateChangeContent(currentSessionId, filePath, newString);
+    }
     return `Created new file: ${absPath}`;
   }
 
   if (!fs.existsSync(absPath)) throw new Error(`File not found: ${absPath}`);
+
+  // Track as modify
+  if (currentSessionId) {
+    trackChange(currentSessionId, filePath, 'modify');
+  }
 
   let content = fs.readFileSync(absPath, 'utf-8');
   const count = (content.match(new RegExp(oldString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
@@ -126,6 +157,10 @@ export async function replaceInFile(filePath: string, oldString: string, newStri
 
   content = content.replace(oldString, newString);
   fs.writeFileSync(absPath, content, 'utf-8');
+  
+  if (currentSessionId) {
+    updateChangeContent(currentSessionId, filePath, content);
+  }
 
   return `Successfully modified file: ${absPath} (${expectedReplacements} replacements)`;
 }
