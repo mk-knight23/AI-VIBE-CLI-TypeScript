@@ -1,130 +1,247 @@
-# VIBE CLI v10.2.0
+# VIBE CLI v12
 
-The open source AI coding agent. Prompt to code to deployment in your terminal.
+<p align="center">
+  <strong>The AI Engineer That Feels Like a Teammate</strong>
+</p>
 
-[![npm version](https://badge.fury.io/js/vibe-ai-cli.svg)](https://www.npmjs.com/package/vibe-ai-cli)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-philosophy">Philosophy</a> •
+  <a href="#-features">Features</a> •
+  <a href="docs/user/README.md">User Guide</a> •
+  <a href="docs/developer/README.md">Developer Guide</a>
+</p>
 
-## Install
+---
+
+## What is VIBE?
+
+VIBE CLI v12 is an **interactive AI developer tool** that feels like Claude Code + Warp + Devin + Cursor — but simpler, safer, and deterministic.
+
+**One command. One UI. Zero memorization.**
+
+Instead of learning complex CLI syntax:
 
 ```bash
-npm install -g vibe-ai-cli
+# Old way - memorization required
+vibe --mode batch --model gpt-4 --agent planner --approval manual
+vibe run workflow --name deploy --env production --approve
+vibe exec --agent code --task "fix the bug" --provider anthropic
 ```
 
-## Quick Start
+You just type what you want:
+
+```
+> vibe
+vibe> "build auth for the API"
+vibe> "fix the failing tests"
+vibe> "deploy to gcp"
+vibe> "undo that"
+vibe> "remember this decision"
+```
+
+## Why v12?
+
+VIBE CLI v12 represents a complete architectural redesign:
+
+| Before | v12 |
+|--------|-----|
+| 75+ LLM providers | 5 best-in-class (OpenAI, Anthropic, Google, xAI, Local) |
+| Multiple commands & subcommands | **Single** `vibe` command |
+| Mode switching | Intent-driven natural language |
+| 60+ scattered tools | **8 unified primitives** |
+| Manual safety checks | Approval-first, safe-by-default |
+| Complex setup | Zero-config TUI |
+
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
-# Interactive mode
-vibe
+# From source
+cd vibe-cli
+npm install
+npm run build
 
-# One-shot prompt
-vibe ask "create a React component for a todo list"
+# Link globally
+npm link
 
-# Batch processing
-vibe batch prompts.txt --parallel --output results
+# Or run directly
+node bin/vibe.js
 ```
 
-## AI Configuration
+### First Run
 
-VIBE uses a **universal AI runtime** - one config file controls all AI behavior.
+```bash
+$ vibe
 
-### Configuration File
+  ╔═══════════════════════════════════════════════════════════╗
+  ║  VIBE CLI v12                                             ║
+  ║  Your AI Development Teammate                             ║
+  ╠═══════════════════════════════════════════════════════════╣
+  ║                                                           ║
+  ║  Project: my-awesome-project                              ║
+  ║  Model: Claude Sonnet 4 (Balanced)                        ║
+  ║  Memory: 12 decisions remembered                          ║
+  ║                                                           ║
+  ╠═══════════════════════════════════════════════════════════╣
+  ║  What would you like to do?                              ║
+  ║                                                           ║
+  ║  > _                                                     ║
+  ║                                                           ║
+  ╚═══════════════════════════════════════════════════════════╝
+```
 
-Create `vibe.config.ai.json` in your project root:
+## 🎯 Philosophy
+
+### One Command, Infinite Possibilities
+
+VIBE v12 removes all user-facing commands. There is only `vibe`, which launches an interactive terminal UI (TUI).
+
+**Every feature is intent-driven and implicit.**
+
+| User Types | VIBE Understands | VIBE Does |
+|------------|------------------|-----------|
+| `"build auth"` | `BUILD` intent → Auth capability | Creates auth module |
+| `"fix tests"` | `FIX` intent → Tests capability | Runs & fixes tests |
+| `"deploy to gcp"` | `DEPLOY` intent → Infra capability | Deploys to GCP |
+| `"undo that"` | `UNDO` intent → Determinism | Restores checkpoint |
+| `"remember this"` | `MEMORY` intent → Memory | Stores in project memory |
+
+### Approval-First, Safe-by-Default
+
+VIBE never makes destructive changes without approval:
+
+```
+vibe> "delete all logs"
+
+⚠️  This will delete 47 log files across 3 directories.
+
+Options:
+  [A]pprove  [R]eview files  [C]ancel
+
+>
+```
+
+### MCP-First Architecture
+
+VIBE uses the Model Context Protocol for all context:
+
+- **File System**: Structured project tree with exclusions
+- **Git**: Commit history, status, diffs
+- **OpenAPI**: Endpoint discovery and schema mapping
+- **Tests**: Framework detection and coverage
+- **Memory**: Persistent decisions and patterns
+
+## 🛠 Features
+
+### 8 Primitives Architecture
+
+All VIBE functionality maps to 8 primitives:
+
+| Primitive | Purpose | Example |
+|-----------|---------|---------|
+| **COMPLETION** | LLM calls with smart routing | `"explain this code"` |
+| **PLANNING** | Create execution plans | `"plan the auth implementation"` |
+| **MULTI-EDIT** | Atomic multi-file changes | `"rename this function everywhere"` |
+| **EXECUTION** | Run commands & scripts | `"run the build"` |
+| **APPROVAL** | Gate dangerous operations | `"delete production data"` |
+| **MEMORY** | Persist decisions & patterns | `"remember this approach"` |
+| **ORCHESTRATION** | State machine workflow | `"deploy with rollback"` |
+| **DETERMINISM** | Checkpoints & rollback | `"undo the last change"` |
+
+### Intent Router
+
+VIBE's intent classifier maps natural language to primitives:
+
+1. **Classify**: Analyze user input
+2. **Map**: Connect to internal capabilities
+3. **Clarify**: Ask questions if confidence < 60%
+4. **Execute**: Run through primitives
+
+### LLM Strategy
+
+VIBE selects the **best model per task**:
+
+| Task Type | Model Tier | Examples |
+|-----------|------------|----------|
+| Quick fixes | `fast` | gpt-4o-mini |
+| General coding | `balanced` | gpt-4o, claude-sonnet-4 |
+| Complex reasoning | `reasoning` | claude-opus-4 |
+| Maximum quality | `max` | gpt-4o, o1 |
+
+## 📁 Project Structure
+
+```
+vibe-cli/
+├── bin/
+│   └── vibe.js              # Entry point
+├── src/v12/
+│   ├── index.ts             # Main exports
+│   ├── intent/              # Intent router
+│   ├── tui/                 # Interactive UI
+│   ├── providers/           # LLM routing
+│   ├── agents/              # Planner, executor, etc.
+│   ├── tools/               # Multi-edit, executor
+│   ├── approvals/           # Approval gates
+│   ├── memory/              # Persistence
+│   ├── orchestration/       # State machine
+│   ├── mcp/                 # Context providers
+│   └── context/             # Shared context
+├── docs/
+│   ├── user/                # User documentation
+│   ├── developer/           # Developer guide
+│   ├── features/            # Feature reference
+│   └── architecture/        # System design
+└── .github/
+    └── workflows/           # CI/CD
+```
+
+## 🔧 Configuration
+
+VIBE uses `.vibe/config.json`:
 
 ```json
 {
-  "runtime": {
-    "mode": "free-first",
-    "timeout_ms": 45000,
-    "retry": 2,
-    "fallback": true
+  "model": {
+    "defaultTier": "balanced",
+    "providers": ["openai", "anthropic"],
+    "fallbackOrder": ["anthropic", "openai"]
   },
-  "providers": [
-    {
-      "id": "openrouter",
-      "base_url": "https://openrouter.ai/api/v1",
-      "auth": { "type": "bearer", "env": "OPENROUTER_API_KEY" },
-      "priority": 1,
-      "models": [
-        { "id": "z-ai/glm-4.5-air:free", "task": "chat", "free": true },
-        { "id": "qwen/qwen3-coder:free", "task": "code", "free": true },
-        { "id": "deepseek/deepseek-r1-0528:free", "task": "agent", "free": true }
-      ]
-    }
-  ]
+  "approval": {
+    "defaultPolicy": "prompt",
+    "autoApprovePatterns": ["tests/**", "docs/**"]
+  },
+  "memory": {
+    "persistDecisions": true,
+    "maxContextTokens": 128000
+  }
 }
 ```
 
-### Configuration Options
+## 📚 Documentation
 
-| Field | Description |
-|-------|-------------|
-| `runtime.mode` | `free-first` (default), `paid-first`, or `any` |
-| `runtime.timeout_ms` | Request timeout in milliseconds |
-| `runtime.retry` | Number of retries on failure |
-| `runtime.fallback` | Try next provider on failure |
-| `providers[].priority` | Lower = higher priority |
-| `models[].task` | `chat`, `code`, `debug`, `agent`, or `vision` |
-| `models[].free` | Whether model is free tier |
+- **[User Guide](docs/user/README.md)**: How to work with VIBE
+- **[Developer Guide](docs/developer/README.md)**: Architecture & extending
+- **[Features](docs/features/README.md)**: Complete feature list
+- **[Architecture](docs/architecture/README.md)**: System design & diagrams
 
-### Environment Variables
+## 🤝 Contributing
 
-Set your API key:
+VIBE CLI v12 welcomes contributions:
 
-```bash
-export OPENROUTER_API_KEY="sk-or-..."
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make changes (add to primitives, not new commands)
+4. Run tests: `npm test`
+5. Submit PR
 
-### Adding Providers
+## 📄 License
 
-Edit `vibe.config.ai.json` to add providers. Example with Ollama:
+MIT License - see [LICENSE](LICENSE) for details.
 
-```json
-{
-  "id": "ollama",
-  "base_url": "http://localhost:11434/v1",
-  "auth": { "type": "none" },
-  "priority": 2,
-  "models": [
-    { "id": "llama3.2", "task": "chat", "free": true }
-  ]
-}
-```
+---
 
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| **Universal AI** | Single config for all providers |
-| **Free-First** | Automatically uses free models |
-| **37 Tools** | File ops, shell, git, web, analysis |
-| **10 Agents** | Researcher, Analyst, Planner, Builder |
-| **Batch Mode** | Process multiple prompts |
-| **Project Rules** | AI behavior rules in .vibe/rules/ |
-| **MCP Support** | stdio + SSE transports |
-
-## Commands
-
-```
-vibe                    Interactive mode
-vibe ask "..."          One-shot prompt
-vibe batch <file>       Batch processing
-vibe models             List available models
-vibe status             Show AI configuration status
-```
-
-## Interactive Commands
-
-```
-/help                   Show help
-/model                  Switch model
-/mode                   Switch mode (ask/debug/architect)
-/tools                  List available tools
-/clear                  Clear conversation
-/quit                   Exit
-```
-
-## License
-
-MIT © VIBE Team
+<p align="center">
+  Built with ❤️ by the VIBE Team
+</p>
