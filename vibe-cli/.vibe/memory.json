@@ -7,107 +7,47 @@
   "workspaceMemory": {
     "files": [
       ".env.example",
-      ".npmignore",
-      ".npmrc",
-      ".vibe/commands/explain.md",
-      ".vibe/commands/review.md",
+      ".github/workflows/ci.yml",
+      ".github/workflows/release.yml",
       ".vibe/memory.json",
       ".vibe/store.db",
       ".vibe/workflows/code-review.yaml",
       ".vibe/workflows/security-audit.yaml",
-      "CHANGELOG.md",
       "README.md",
       "bin/vibe.js",
-      "docs/AI_OS_ARCHITECTURE.md",
-      "docs/UI_UPGRADE_SUMMARY.md",
+      "docs/SECURITY_ROTATION.md",
+      "docs/architecture/README.md",
+      "docs/developer/README.md",
+      "docs/features/README.md",
+      "docs/user/README.md",
       "package-lock.json",
       "package.json",
-      "src/agents/builtin.ts",
-      "src/agents/executor.ts",
       "src/agents/index.ts",
-      "src/agents/registry.ts",
-      "src/agents/types.ts",
-      "src/cli/command-handler.ts",
-      "src/cli/index.ts",
-      "src/cli/interactive.ts",
-      "src/cli/modes/ask.ts",
-      "src/cli/modes/batch.ts",
+      "src/agents/planner.ts",
+      "src/approvals/index.ts",
+      "src/cli/args.ts",
       "src/cli/system-prompt.ts",
-      "src/commands/agents.ts",
-      "src/commands/connect.ts",
-      "src/commands/custom/executor.ts",
-      "src/commands/custom/parser.ts",
-      "src/commands/doctor.ts",
-      "src/commands/hooks.ts",
-      "src/commands/lsp.ts",
-      "src/commands/memory.ts",
-      "src/commands/misc.ts",
-      "src/commands/models.ts",
-      "src/commands/output.ts",
-      "src/commands/pipeline.ts",
-      "src/commands/privacy.ts",
-      "src/commands/providers.ts",
-      "src/commands/quick-agents.ts",
-      "src/commands/registry.ts",
-      "src/commands/rules.ts",
-      "src/commands/sessions.ts",
-      "src/commands/steering.ts",
-      "src/commands/workflow.ts",
-      "src/compact/index.ts",
-      "src/config/index.ts",
-      "src/config/loader.ts",
-      "src/config/schema.json",
-      "src/core/agents.ts",
-      "src/core/api.ts",
-      "src/core/checkpoints.ts",
-      "src/core/config.ts",
-      "src/core/custom-agents.ts",
-      "src/core/health.ts",
-      "src/core/hooks.ts",
-      "src/core/llm/credentials.ts",
-      "src/core/llm/index.ts",
-      "src/core/llm/llm-client.ts",
-      "src/core/llm/llm-router.ts",
-      "src/core/llm/model-registry.ts",
-      "src/core/llm/provider-registry.ts",
-      "src/core/llm/types.ts",
-      "src/core/lsp-detect.ts",
-      "src/core/memory.ts",
-      "src/core/modes.ts",
-      "src/core/multi-file-editor.ts",
-      "src/core/privacy.ts",
-      "src/core/runtime-context.ts",
-      "src/core/security.ts",
-      "src/core/sessions-v2.ts",
-      "src/core/shell-executor.ts",
-      "src/core/steering.ts",
-      "src/core/universal-ai.ts",
-      "src/lsp/diagnostics.ts",
-      "src/lsp/index.ts",
-      "src/mcp/client.ts",
+      "src/context/index.ts",
+      "src/core/cli.ts",
+      "src/core/index.ts",
+      "src/index.ts",
+      "src/intent/router.ts",
+      "src/mcp/context-provider.ts",
       "src/mcp/index.ts",
-      "src/mcp/manager.ts",
-      "src/mcp/sse-client.ts",
-      "src/memory/project-memory.ts",
-      "src/output/export.ts",
-      "src/output/formatters.ts",
-      "src/output/index.ts",
-      "src/permissions/index.ts",
-      "src/pipelines/analysis.ts",
-      "src/pipelines/automation.ts",
-      "src/pipelines/index.ts",
-      "src/pipelines/report.ts",
-      "src/pipelines/research.ts",
-      "src/providers/enhanced-registry.ts",
-      "src/providers/index.ts",
-      "src/rules/index.ts",
-      "src/storage/database.ts",
-      "src/storage/index.ts",
-      "src/storage/messages.ts",
-      "src/storage/sessions.ts",
-      "src/tools/advanced.ts"
+      "src/memory/index.ts",
+      "src/orchestration/index.ts",
+      "src/orchestration/workflow.ts",
+      "src/providers/completion.ts",
+      "src/providers/registry.ts",
+      "src/providers/router.ts",
+      "src/security/scanner.ts",
+      "src/security/utilities.ts",
+      "src/tools/executor.ts",
+      "src/tui/index.ts",
+      "src/types.ts",
+      "tsconfig.json"
     ],
-    "structure": "CHANGELOG.md\nREADME.md\nbin\ndist\ndocs\nnode_modules\npackage-lock.json\npackage.json\nsrc\ntests\ntsconfig.json\nvibe.config.ai.json\nvibe.example.json\nvitest.config.ts\n\n./bin:\nvibe.js\n\n./dist:\nagents\nai\napi-context\ncli\ncommands\ncompact\nconfig\ncore\nlsp\nmcp\nmemory\norchestration\norchestrator\noutput\npermissions\npipelines\nprompts\nproviders\nresponse-formats\nrules\nstorage\ntools\nui\nutils\nv12\nworkflows\n\n./dist/agents:\nbuiltin.d.ts\nbuiltin.d.ts.map\nbuiltin.js\n",
+    "structure": "README.md\nbin\ndist\ndocs\nnode_modules\npackage-lock.json\npackage.json\nsrc\ntests\ntsconfig.json\nvibe-cli\n\n./bin:\nvibe.js\n\n./dist:\nagents\napprovals\ncli\nconfig.d.ts\nconfig.d.ts.map\nconfig.js\nconfig.js.map\ncontext\ncore\nindex.d.ts\nindex.d.ts.map\nindex.js\nindex.js.map\nintent\nmcp\nmemory\nmodules\norchestration\nproviders\nsecurity\ntools\ntui\ntypes.d.ts\ntypes.d.ts.map\ntypes.js\ntypes.js.map\n\n./dist/agents:\nindex.d.ts\nindex.d.ts.map\nindex.js\nindex.js.map\nplanner.d.ts\nplanner.d.ts.map\n",
     "fileSummaries": {},
     "lastUpdated": "",
     "recentChanges": [],
@@ -142,31 +82,107 @@
     },
     "scripts": {
       "build": "tsc",
-      "build:v8": "tsc && echo '✅ v8.0.2 Ultimate Build Complete'",
-      "prepublishOnly": "npm run build",
-      "test": "vitest run && npm run test:no-leak",
-      "test:no-leak": "test ! -d generated-project && test ! -d test-project && test ! -d my-app || (echo '❌ Tests created project folders in repo root' && exit 1)",
-      "test:watch": "vitest",
+      "build:v12": "tsc && echo '✅ VIBE v12 Build Complete'",
+      "build:watch": "tsc --watch",
+      "test": "vitest run",
       "test:unit": "vitest run tests/unit",
       "test:integration": "vitest run tests/integration",
       "test:e2e": "vitest run tests/e2e",
-      "test:security": "vitest run tests/security tests/agents",
-      "test:performance": "vitest run tests/performance",
-      "test:agents": "vitest run tests/agents",
-      "test:mcp": "vitest run tests/mcp",
-      "test:providers": "vitest run tests/providers",
-      "test:commands": "vitest run tests/commands",
-      "test:observability": "vitest run tests/observability",
-      "test:all": "vitest run",
-      "test:acceptance": "node scripts/acceptance.js",
+      "test:ci": "vitest run --reporter=default",
       "test:coverage": "vitest run --coverage",
       "start": "node bin/vibe.js",
-      "dev": "tsc --watch"
+      "lint": "eslint src/**/*.ts",
+      "type-check": "tsc --noEmit",
+      "prepublishOnly": "npm run build"
     },
     "gitBranch": "main",
     "gitRemote": "https://github.com/mk-knight23/vibe.git"
   },
   "taskHistory": [
+    {
+      "description": "hello",
+      "filesCreated": [],
+      "filesModified": [],
+      "errors": [
+        "Chat request failed after 3 attempts (openrouter/qwen/qwen3-next-80b-a3b-instruct): 401: {\"error\":{\"message\":\"No cookie auth credentials found\",\"code\":401}}"
+      ],
+      "suggestions": [],
+      "timestamp": 1767682376032,
+      "duration": 0,
+      "success": true
+    },
+    {
+      "description": "use free models",
+      "filesCreated": [],
+      "filesModified": [],
+      "errors": [
+        "Chat request failed after 3 attempts (openrouter/qwen/qwen3-next-80b-a3b-instruct): 401: {\"error\":{\"message\":\"No cookie auth credentials found\",\"code\":401}}"
+      ],
+      "suggestions": [],
+      "timestamp": 1767682350588,
+      "duration": 0,
+      "success": true
+    },
+    {
+      "description": "openrouter",
+      "filesCreated": [],
+      "filesModified": [],
+      "errors": [
+        "Chat request failed after 3 attempts (openrouter/qwen/qwen3-next-80b-a3b-instruct): 401: {\"error\":{\"message\":\"No cookie auth credentials found\",\"code\":401}}"
+      ],
+      "suggestions": [],
+      "timestamp": 1767682314735,
+      "duration": 0,
+      "success": true
+    },
+    {
+      "description": "old ui , fix it",
+      "filesCreated": [],
+      "filesModified": [],
+      "errors": [
+        "Chat request failed after 3 attempts (openrouter/openai/gpt-4o-mini): 401: {\"error\":{\"message\":\"No cookie auth credentials found\",\"code\":401}}"
+      ],
+      "suggestions": [],
+      "timestamp": 1767682286478,
+      "duration": 0,
+      "success": true
+    },
+    {
+      "description": "hello",
+      "filesCreated": [],
+      "filesModified": [],
+      "errors": [
+        "Chat request failed after 3 attempts (openrouter/qwen/qwen3-next-80b-a3b-instruct): 401: {\"error\":{\"message\":\"No cookie auth credentials found\",\"code\":401}}"
+      ],
+      "suggestions": [],
+      "timestamp": 1767682272925,
+      "duration": 0,
+      "success": true
+    },
+    {
+      "description": "who are you ",
+      "filesCreated": [],
+      "filesModified": [],
+      "errors": [
+        "Chat request failed after 3 attempts (megallm/qwen/qwen3-next-80b-a3b-instruct): 401: {\"error\":\"No API key provided\",\"code\":\"AUTH_FAILED\"}"
+      ],
+      "suggestions": [],
+      "timestamp": 1767682246786,
+      "duration": 0,
+      "success": true
+    },
+    {
+      "description": "hello",
+      "filesCreated": [],
+      "filesModified": [],
+      "errors": [
+        "Chat request failed after 3 attempts (megallm/qwen/qwen3-next-80b-a3b-instruct): 401: {\"error\":\"No API key provided\",\"code\":\"AUTH_FAILED\"}"
+      ],
+      "suggestions": [],
+      "timestamp": 1767680186985,
+      "duration": 0,
+      "success": true
+    },
     {
       "description": "hello",
       "filesCreated": [],
@@ -205,41 +221,6 @@
     }
   ],
   "chatHistory": [
-    {
-      "role": "user",
-      "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "timestamp": 1767028134245
-    },
-    {
-      "role": "user",
-      "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "timestamp": 1767028148999
-    },
-    {
-      "role": "user",
-      "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "timestamp": 1767028169013
-    },
-    {
-      "role": "user",
-      "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "timestamp": 1767028199113
-    },
-    {
-      "role": "user",
-      "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "timestamp": 1767028334896
-    },
-    {
-      "role": "user",
-      "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "timestamp": 1767028386558
-    },
-    {
-      "role": "user",
-      "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "timestamp": 1767028592169
-    },
     {
       "role": "user",
       "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -704,6 +685,41 @@
       "role": "user",
       "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "timestamp": 1767644013564
+    },
+    {
+      "role": "user",
+      "content": "hello",
+      "timestamp": 1767680186986
+    },
+    {
+      "role": "user",
+      "content": "who are you ",
+      "timestamp": 1767682246787
+    },
+    {
+      "role": "user",
+      "content": "hello",
+      "timestamp": 1767682272926
+    },
+    {
+      "role": "user",
+      "content": "old ui , fix it",
+      "timestamp": 1767682286478
+    },
+    {
+      "role": "user",
+      "content": "openrouter",
+      "timestamp": 1767682314736
+    },
+    {
+      "role": "user",
+      "content": "use free models",
+      "timestamp": 1767682350589
+    },
+    {
+      "role": "user",
+      "content": "hello",
+      "timestamp": 1767682376033
     }
   ],
   "storyMemory": {

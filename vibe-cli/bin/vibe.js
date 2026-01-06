@@ -2,42 +2,38 @@
 
 /**
  * VIBE CLI v12 - Entry Point
- * 
+ *
  * One command to rule them all.
  * Run `vibe` to start the interactive TUI.
+ *
+ * Note: Uses require() for CommonJS entry point since package.json uses "type": "commonjs"
  */
 
-const { CommandLineArgs } = require('../dist/cli/args');
-const { VIBE_SYSTEM_PROMPT, getSystemPrompt } = require('../dist/cli/system-prompt');
-const { VibeProviderRouter } = require('../dist/providers/router');
-const { VibeMemoryManager } = require('../dist/memory');
-const { Orchestrator } = require('../dist/orchestration');
-const { IntentRouter } = require('../dist/intent/router');
-const { CLIEngine } = require('../dist/tui');
-const { VibeSession } = require('../dist/types');
+// Load environment variables first
+require('dotenv').config();
 
-// Get session
-function getSession() {
-  return {
-    id: `session-${Date.now()}`,
-    projectRoot: process.cwd(),
-    createdAt: new Date(),
-    lastActivity: new Date(),
-  };
+/**
+ * Simple argument parser for flags
+ */
+function hasFlag(flags) {
+  return process.argv.slice(2).some(arg =>
+    flags.some(flag => arg === flag || arg.startsWith(`${flag}=`))
+  );
 }
 
-async function main() {
-  const args = new CommandLineArgs(process.argv);
-  
-  // Show version
-  if (args.hasFlag('--version') || args.hasFlag('-v')) {
-    console.log('VIBE v12.0.0');
-    return;
-  }
-  
-  // Show help
-  if (args.hasFlag('--help') || args.hasFlag('-h')) {
-    console.log(`
+/**
+ * Show version
+ */
+function showVersion() {
+  console.log('VIBE v12.0.0');
+  process.exit(0);
+}
+
+/**
+ * Show help
+ */
+function showHelp() {
+  console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
 ║   V I B E  v12.0.0                                            ║
@@ -56,27 +52,61 @@ async function main() {
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);
-    return;
+  process.exit(0);
+}
+
+/**
+ * Main entry point
+ */
+async function main() {
+  // Handle --version / -v flag
+  if (hasFlag(['--version', '-v'])) {
+    showVersion();
   }
-  
-  // Start interactive TUI
+
+  // Handle --help / -h flag
+  if (hasFlag(['--help', '-h'])) {
+    showHelp();
+  }
+
+  // Display startup banner
   console.log('\n🎨 VIBE v12.0.0\n');
   console.log('Initializing...');
-  
+
   try {
+    // Import from dist/ (compiled JavaScript)
+    const { VibeProviderRouter } = require('../dist/providers/router');
+    const { VibeMemoryManager } = require('../dist/memory');
+    const { CLIEngine } = require('../dist/tui');
+
+    // Initialize core components
     const provider = new VibeProviderRouter();
     const memory = new VibeMemoryManager();
-    const orchestrator = new Orchestrator({ provider, memory });
-    const session = getSession();
-    
+
     console.log('Ready!\n');
-    
-    const cli = new CLIEngine(provider, memory, orchestrator, session);
+
+    // Start the CLI
+    const cli = new CLIEngine(provider, memory);
     await cli.start();
+
   } catch (error) {
-    console.error('Error:', error instanceof Error ? error.message : error);
+    console.error('\n❌ Error starting VIBE:', error.message);
+    console.error('\nMake sure all dependencies are installed: npm install\n');
     process.exit(1);
   }
 }
 
+// Handle Ctrl+C gracefully
+process.on('SIGINT', () => {
+  console.log('\n\n👋 Goodbye! Happy coding!\n');
+  process.exit(0);
+});
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('\n❌ Unexpected error:', error.message);
+  process.exit(1);
+});
+
+// Run main
 main();

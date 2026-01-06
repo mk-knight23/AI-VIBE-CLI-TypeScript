@@ -6,8 +6,9 @@
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import chalk from 'chalk';
 import { VibeApprovalManager } from '../approvals';
-import type { IApprovalSystem, ApprovalDetails, ApprovalType, ApprovalRisk } from '../types';
+import type { IApprovalSystem, ApprovalDetails, ApprovalType, ApprovalRisk, MultiEditResult, EditOperation, EditResult } from '../types';
 
 export interface ToolResult {
   success: boolean;
@@ -235,6 +236,207 @@ export class VibeToolExecutor {
   clearHistory(): void {
     this.history = [];
   }
+
+  /**
+   * Multi-edit: Perform multiple file edits atomically
+   */
+  async multiEdit(operations: EditOperation[], context: ExecutionContext): Promise<MultiEditResult> {
+    const startTime = Date.now();
+    const results: EditResult[] = [];
+    let successfulFiles = 0;
+    let failedFiles = 0;
+
+    // Create checkpoint before multi-edit
+    const checkpointId = await this.checkpointSystem.create(
+      context.sessionId,
+      `Before multi-edit (${operations.length} operations)`
+    );
+
+    try {
+      for (const op of operations) {
+        const result = await this.applyEdit(op, context);
+        results.push(result);
+        if (result.success) {
+          successfulFiles++;
+        } else {
+          failedFiles++;
+        }
+      }
+
+      return {
+        success: failedFiles === 0,
+        totalFiles: operations.length,
+        successfulFiles,
+        failedFiles,
+        results,
+        checkpointId,
+      };
+    } catch (error) {
+      // Rollback on error
+      await this.checkpointSystem.restore(checkpointId);
+      return {
+        success: false,
+        totalFiles: operations.length,
+        successfulFiles: 0,
+        failedFiles: operations.length,
+        results,
+        checkpointId,
+      };
+    }
+  }
+
+  /**
+   * Apply a single edit operation
+   */
+  private async applyEdit(op: EditOperation, _context: ExecutionContext): Promise<EditResult> {
+    const filePath = path.isAbsolute(op.file) ? op.file : path.join(process.cwd(), op.file);
+
+    if (!fs.existsSync(filePath)) {
+      return {
+        success: false,
+        file: op.file,
+        changes: [],
+        error: 'File not found',
+      };
+    }
+
+    try {
+      let content = fs.readFileSync(filePath, 'utf-8');
+      const changes: EditResult['changes'] = [];
+
+      switch (op.type) {
+        case 'replace':
+          if (op.searchPattern && op.replacement !== undefined) {
+            const beforeLen = content.length;
+            content = content.split(op.searchPattern).join(op.replacement);
+            if (content.length !== beforeLen) {
+              changes.push({ type: 'replace', content: op.replacement });
+            }
+          }
+          break;
+
+        case 'insert':
+          if (op.lineNumber && op.replacement !== undefined) {
+            const lines = content.split('\n');
+            lines.splice(op.lineNumber, 0, op.replacement);
+            content = lines.join('\n');
+            changes.push({ type: 'insert', lineStart: op.lineNumber, content: op.replacement });
+          }
+          break;
+
+        case 'append':
+          if (op.replacement !== undefined) {
+            content += '\n' + op.replacement;
+            changes.push({ type: 'append', content: op.replacement });
+          }
+          break;
+
+        case 'delete':
+          if (op.searchPattern) {
+            const beforeLen = content.length;
+            content = content.split(op.searchPattern).join('');
+            if (content.length !== beforeLen) {
+              changes.push({ type: 'delete', content: op.searchPattern });
+            }
+          }
+          break;
+      }
+
+      fs.writeFileSync(filePath, content);
+
+      return {
+        success: true,
+        file: op.file,
+        changes,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        file: op.file,
+        changes: [],
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Read a file
+   */
+  readFile(filePath: string): string | null {
+    const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
+    try {
+      return fs.readFileSync(absolutePath, 'utf-8');
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Write a file with diff preview
+   */
+  async writeFile(
+    filePath: string,
+    content: string,
+    context: ExecutionContext,
+    showDiff: boolean = true
+  ): Promise<{ success: boolean; checkpointId?: string }> {
+    const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
+    const dir = path.dirname(absolutePath);
+
+    // Create directory if needed
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    // Show diff if file exists
+    if (showDiff && fs.existsSync(absolutePath)) {
+      const existingContent = fs.readFileSync(absolutePath, 'utf-8');
+      this.showDiff(existingContent, content, filePath);
+    }
+
+    // Create checkpoint
+    const checkpointId = await this.checkpointSystem.create(
+      context.sessionId,
+      `Before writing ${filePath}`
+    );
+
+    try {
+      fs.writeFileSync(absolutePath, content);
+      return { success: true, checkpointId };
+    } catch (error) {
+      await this.checkpointSystem.restore(checkpointId);
+      return { success: false };
+    }
+  }
+
+  /**
+   * Show a diff between two strings
+   */
+  private showDiff(oldContent: string, newContent: string, filePath: string): void {
+    console.log(chalk.cyan(`\n─── Diff: ${filePath} ───\n`));
+
+    const oldLines = oldContent.split('\n');
+    const newLines = newContent.split('\n');
+    const maxLines = Math.max(oldLines.length, newLines.length);
+
+    for (let i = 0; i < maxLines; i++) {
+      const oldLine = oldLines[i];
+      const newLine = newLines[i];
+
+      if (oldLine === newLine) {
+        // Unchanged
+        console.log(chalk.gray(`  ${String(i + 1).padStart(3)} │ ${oldLine || ''}`));
+      } else {
+        if (oldLine !== undefined) {
+          console.log(chalk.red(`-${String(i + 1).padStart(3)} │ ${oldLine}`));
+        }
+        if (newLine !== undefined) {
+          console.log(chalk.green(`+${String(i + 1).padStart(3)} │ ${newLine}`));
+        }
+      }
+    }
+    console.log('');
+  }
 }
 
 /**
@@ -371,30 +573,31 @@ export class VibeCheckpointSystem {
   }
 
   /**
-   * Capture current file contents
+   * Capture current file contents for checkpoint
+   * Returns the originalContent needed for restore
    */
   private async captureDiffs(files: string[]): Promise<FileDiff[]> {
     const diffs: FileDiff[] = [];
-    
+
     for (const file of files) {
       const filePath = path.join(process.cwd(), file);
-      
+
       if (!fs.existsSync(filePath)) {
         continue;
       }
-      
+
       try {
         const content = fs.readFileSync(filePath, 'utf-8');
         diffs.push({
           path: file,
           type: 'modified',
-          currentContent: content,
+          originalContent: content, // Store as originalContent for restore
         });
       } catch {
         // Skip files we can't read
       }
     }
-    
+
     return diffs;
   }
 }

@@ -48,6 +48,21 @@ export interface ProviderCapability {
 // ============================================================================
 
 export const PROVIDER_REGISTRY: ProviderInfo[] = [
+  // === MINIMAX (DEFAULT) ===
+  {
+    id: 'minimax',
+    name: 'MiniMax',
+    baseUrl: 'https://api.minimax.io/v1',
+    apiKeyEnv: 'MINIMAX_API_KEY',
+    models: [
+      { id: 'MiniMax-M2.1', name: 'MiniMax-M2.1', contextWindow: 200000, maxOutput: 16384, capabilities: ['completion', 'reasoning', 'function-calling'], freeTier: false, tier: 'balanced' },
+      { id: 'MiniMax-M2.0', name: 'MiniMax-M2.0', contextWindow: 200000, maxOutput: 8192, capabilities: ['completion', 'reasoning'], freeTier: false, tier: 'balanced' },
+      { id: 'MiniMax-M1', name: 'MiniMax-M1', contextWindow: 128000, maxOutput: 4096, capabilities: ['completion'], freeTier: false, tier: 'fast' },
+    ],
+    defaultModel: 'MiniMax-M2.1',
+    requiresApiKey: true,
+  },
+
   // === OPENAI ===
   {
     id: 'openai',

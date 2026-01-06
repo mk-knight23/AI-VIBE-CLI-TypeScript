@@ -24,12 +24,14 @@ export enum IntentType {
   UNKNOWN = 'unknown'
 }
 
-export type IntentCategory = 
+export type IntentCategory =
   | 'question'
   | 'code_generation'
+  | 'code_assistant'
   | 'refactor'
   | 'debug'
   | 'testing'
+  | 'security'
   | 'api'
   | 'ui'
   | 'deploy'
@@ -39,6 +41,7 @@ export type IntentCategory =
   | 'agent'
   | 'git'
   | 'analysis'
+  | 'completion'
   | 'unknown';
 
 export interface IntentPattern {
@@ -53,6 +56,8 @@ export interface IntentContext {
   target?: string;
   language?: string;
   framework?: string;
+  stepAction?: string;
+  stepFiles?: string[];
 }
 
 export interface VibeIntent {
@@ -109,6 +114,7 @@ export interface ProviderConfig {
   requiresApiKey: boolean;
   model?: string;
   apiKey?: string;
+  freeTier?: boolean;
 }
 
 export interface VibeProviderRouter {

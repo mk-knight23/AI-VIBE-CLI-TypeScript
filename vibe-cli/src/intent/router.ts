@@ -1,6 +1,6 @@
 /**
  * Intent Router - Classifies natural language into actionable intents
- * 
+ *
  * This is the core of the intent-driven UX.
  * Users type naturally; the system infers what they want.
  */
@@ -43,86 +43,104 @@ export class IntentRouter {
     return [
       {
         category: 'question',
-        keywords: ['why', 'how', 'what is', 'explain', 'help me understand', '?', 'tell me'],
+        keywords: ['why', 'how', 'what is', 'explain', 'help me understand', '?', 'tell me', 'what does'],
         phrases: [/^(why|how|what|explain)/i, /\?$/],
         confidence: 0.9,
       },
       {
         category: 'code_generation',
-        keywords: ['create', 'add', 'build', 'implement', 'write', 'generate', 'make'],
-        phrases: [/create\s+\w+/i, /add\s+\w+/i, /build\s+\w+/i, /implement\s+\w+/i],
+        keywords: ['create', 'add', 'build', 'implement', 'write', 'generate', 'make', 'develop'],
+        phrases: [/create\s+\w+/i, /add\s+\w+/i, /build\s+\w+/i, /implement\s+\w+/i, /write\s+\w+/i],
         confidence: 0.85,
       },
       {
         category: 'refactor',
-        keywords: ['refactor', 'restructure', 'reorganize', 'improve', 'clean', 'optimize'],
-        phrases: [/refactor/i, /restructure/i, /reorganize/i, /clean\s+up/i],
+        keywords: ['refactor', 'restructure', 'reorganize', 'improve', 'clean', 'optimize', 'simplify'],
+        phrases: [/refactor/i, /restructure/i, /reorganize/i, /clean\s+up/i, /improve/i, /optimize/i],
         confidence: 0.9,
       },
       {
         category: 'debug',
-        keywords: ['fix', 'bug', 'error', 'issue', 'problem', 'broken', 'failing', 'crash'],
-        phrases: [/fix\s+\w+/i, /debug/i, /failing/i, /broken/i, /error/i],
+        keywords: ['fix', 'bug', 'error', 'issue', 'problem', 'broken', 'failing', 'crash', 'debug', 'not working'],
+        phrases: [/fix\s+\w+/i, /debug/i, /failing/i, /broken/i, /error/i, /not\s+working/i],
         confidence: 0.9,
       },
       {
         category: 'testing',
-        keywords: ['test', 'spec', 'verify', 'check', 'validate', 'run tests'],
-        phrases: [/test/i, /spec/i, /verify/i, /run\s+test/i, /check\s+\w+/i],
+        keywords: ['test', 'spec', 'verify', 'check', 'validate', 'run tests', 'unit test', 'integration test'],
+        phrases: [/test/i, /spec/i, /verify/i, /run\s+test/i, /check\s+\w+/i, /write\s+test/i],
         confidence: 0.85,
       },
       {
+        category: 'security',
+        keywords: ['security', 'vulnerability', 'scan', 'audit', 'cve', 'exploit', 'hack', 'secure'],
+        phrases: [/security/i, /vulnerability/i, /scan/i, /audit/i, /cve/i, /secure/i],
+        confidence: 0.9,
+      },
+      {
         category: 'api',
-        keywords: ['api', 'endpoint', 'route', 'controller', 'handler', 'openapi', 'swagger'],
-        phrases: [/api/i, /endpoint/i, /route/i, /controller/i, /handler/i, /openapi/i],
+        keywords: ['api', 'endpoint', 'route', 'controller', 'handler', 'openapi', 'swagger', 'rest'],
+        phrases: [/api/i, /endpoint/i, /route/i, /controller/i, /handler/i, /openapi/i, /rest\s+api/i],
         confidence: 0.9,
       },
       {
         category: 'ui',
-        keywords: ['ui', 'component', 'button', 'form', 'modal', 'dashboard', 'layout', 'frontend'],
+        keywords: ['ui', 'component', 'button', 'form', 'modal', 'dashboard', 'layout', 'frontend', 'interface'],
         phrases: [/ui/i, /component/i, /button/i, /form/i, /modal/i, /dashboard/i, /frontend/i],
         confidence: 0.85,
       },
       {
         category: 'deploy',
-        keywords: ['deploy', 'push', 'release', 'publish', 'ship', 'production'],
-        phrases: [/deploy/i, /push\s+to/i, /release/i, /publish/i, /ship/i],
+        keywords: ['deploy', 'push', 'release', 'publish', 'ship', 'production', 'release'],
+        phrases: [/deploy/i, /push\s+to/i, /release/i, /publish/i, /ship/i, /to\s+production/i],
         confidence: 0.9,
       },
       {
         category: 'infra',
-        keywords: ['infrastructure', 'terraform', 'kubernetes', 'docker', 'aws', 'gcp', 'cloud'],
-        phrases: [/infrastructure/i, /terraform/i, /kubernetes/i, /docker/i, /aws/i, /gcp/i, /cloud/i],
+        keywords: ['infrastructure', 'terraform', 'kubernetes', 'docker', 'aws', 'gcp', 'cloud', 'server'],
+        phrases: [/infrastructure/i, /terraform/i, /kubernetes/i, /docker/i, /aws/i, /gcp/i, /cloud/i, /k8s/i],
         confidence: 0.85,
       },
       {
         category: 'memory',
-        keywords: ['remember', 'forget', 'store', 'note', 'remember that'],
-        phrases: [/remember/i, /forget/i, /store/i, /note/i],
+        keywords: ['remember', 'forget', 'store', 'note', 'remember that', 'recall', 'context'],
+        phrases: [/remember/i, /forget/i, /store/i, /note/i, /recall/i],
         confidence: 0.95,
       },
       {
         category: 'planning',
-        keywords: ['plan', 'design', 'architecture', 'roadmap', 'approach', 'strategy'],
+        keywords: ['plan', 'design', 'architecture', 'roadmap', 'approach', 'strategy', 'outline'],
         phrases: [/plan/i, /design/i, /architecture/i, /roadmap/i, /approach/i, /strategy/i],
         confidence: 0.85,
       },
       {
         category: 'agent',
-        keywords: ['agent', 'autonomous', 'task', 'do it', 'handle it', 'take care of'],
+        keywords: ['agent', 'autonomous', 'task', 'do it', 'handle it', 'take care of', 'run'],
         phrases: [/agent/i, /autonomous/i, /do\s+it/i, /handle\s+it/i, /take\s+care/i],
         confidence: 0.8,
       },
       {
         category: 'git',
-        keywords: ['commit', 'push', 'pull', 'branch', 'merge', 'checkout', 'git'],
-        phrases: [/commit/i, /push/i, /pull/i, /branch/i, /merge/i, /checkout/i, /git\s+\w+/i],
+        keywords: ['commit', 'push', 'pull', 'branch', 'merge', 'checkout', 'git', 'status', 'diff'],
+        phrases: [/commit/i, /push/i, /pull/i, /branch/i, /merge/i, /checkout/i, /git\s+\w+/i, /git\s+status/i],
         confidence: 0.9,
       },
       {
         category: 'analysis',
-        keywords: ['analyze', 'review', 'audit', 'examine', 'inspect', 'investigate'],
+        keywords: ['analyze', 'review', 'audit', 'examine', 'inspect', 'investigate', 'explain'],
         phrases: [/analyze/i, /review/i, /audit/i, /examine/i, /inspect/i, /investigate/i],
+        confidence: 0.85,
+      },
+      {
+        category: 'code_assistant',
+        keywords: ['complete', 'autocomplete', 'suggest', 'refill', 'fill in', 'continue'],
+        phrases: [/complete/i, /autocomplete/i, /suggest/i, /fill\s+in/i, /continue/i],
+        confidence: 0.9,
+      },
+      {
+        category: 'completion',
+        keywords: ['complete', 'finish', 'ending', 'rest of', 'rest'],
+        phrases: [/complete/i, /finish/i, /rest\s+of/i],
         confidence: 0.85,
       },
     ];
@@ -134,10 +152,20 @@ export class IntentRouter {
    */
   async classify(input: string): Promise<IntentClassificationResult> {
     const normalizedInput = input.toLowerCase().trim();
-    
+
     // Check for meta-commands first
     if (this.isMetaCommand(normalizedInput)) {
       const intent = this.createMetaIntent(input);
+      return {
+        intent,
+        needsClarification: false,
+      };
+    }
+
+    // Check for module-specific commands
+    const moduleCommand = this.detectModuleCommand(normalizedInput);
+    if (moduleCommand) {
+      const intent = this.createModuleIntent(input, moduleCommand);
       return {
         intent,
         needsClarification: false,
@@ -166,7 +194,7 @@ export class IntentRouter {
 
     // Check if clarification is needed
     const needsClarification = confidence < this.LOW_CONFIDENCE_THRESHOLD;
-    const suggestedOptions = needsClarification 
+    const suggestedOptions = needsClarification
       ? this.generateClarificationOptions(input, category)
       : undefined;
 
@@ -178,11 +206,96 @@ export class IntentRouter {
   }
 
   /**
+   * Detect module-specific commands
+   */
+  private detectModuleCommand(input: string): string | null {
+    const moduleCommands: Record<string, string[]> = {
+      'code-assistant': ['generate code', 'write code', 'create function', 'create class', 'write tests', 'explain code'],
+      'testing': ['run tests', 'test suite', 'unit test', 'integration test', 'coverage'],
+      'debugging': ['debug', 'debugging', 'debug this', 'trace execution', 'profile'],
+      'security': ['security scan', 'vulnerability', 'audit', 'check security'],
+      'deployment': ['deploy', 'build', 'ci cd', 'ci/cd', 'pipeline'],
+    };
+
+    for (const [module, commands] of Object.entries(moduleCommands)) {
+      if (commands.some(cmd => input.includes(cmd))) {
+        return module;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Create intent for module command
+   */
+  private createModuleIntent(input: string, module: string): VibeIntent {
+    const category = this.moduleToCategory(module);
+
+    return {
+      id: `module-${module}-${Date.now()}`,
+      type: IntentType.CODE,
+      category,
+      query: input,
+      confidence: 0.95,
+      context: this.extractContext(input, category),
+      shouldRemember: false,
+      shouldApprove: false,
+      risk: this.assessRisk(category, {}),
+    };
+  }
+
+  /**
+   * Map module name to category
+   */
+  private moduleToCategory(module: string): IntentCategory {
+    const map: Record<string, IntentCategory> = {
+      'code-assistant': 'code_generation',
+      'testing': 'testing',
+      'debugging': 'debug',
+      'security': 'security',
+      'deployment': 'deploy',
+    };
+    return map[module] || 'analysis';
+  }
+
+  /**
+   * Route intent to module
+   */
+  routeToModule(intent: VibeIntent): { module: string; action: string; params: Record<string, any> } | null {
+    const category = intent.category;
+
+    const moduleMap: Record<string, { module: string; action: string }> = {
+      'code_generation': { module: 'code-assistant', action: 'generate' },
+      'refactor': { module: 'code-assistant', action: 'refactor' },
+      'testing': { module: 'testing', action: 'run' },
+      'debug': { module: 'debugging', action: 'analyze' },
+      'security': { module: 'security', action: 'scan' },
+      'deploy': { module: 'deployment', action: 'deploy' },
+      'analysis': { module: 'code-assistant', action: 'explain' },
+    };
+
+    const mapping = moduleMap[category];
+    if (!mapping) {
+      return null;
+    }
+
+    return {
+      module: mapping.module,
+      action: mapping.action,
+      params: {
+        ...intent.context,
+        query: intent.query,
+      },
+    };
+  }
+
+  /**
    * Generate clarification options when confidence is low
    */
   private generateClarificationOptions(input: string, currentCategory: IntentCategory): ClarificationOption[] {
     const options: ClarificationOption[] = [];
-    
+
     // Get top 3 most likely categories
     const scores = this.patterns.map(pattern => ({
       category: pattern.category,
@@ -246,6 +359,9 @@ export class IntentRouter {
       agent: 'Run autonomous tasks',
       git: 'Work with Git version control',
       analysis: 'Analyze or review code',
+      security: 'Scan for security vulnerabilities',
+      code_assistant: 'AI code assistance',
+      completion: 'Complete or finish code',
       unknown: 'I\'m not sure what you mean',
     };
     return descriptions[category] || 'Perform an action';
@@ -273,6 +389,7 @@ export class IntentRouter {
 - agent: Run autonomous tasks
 - git: Work with Git version control
 - analysis: Analyze or review code
+- security: Scan for security vulnerabilities
 
 Respond with ONLY the category name and a brief description of what you're trying to do.`
       },
@@ -297,7 +414,7 @@ Respond with ONLY the category name and a brief description of what you're tryin
   private parseLLMResponse(input: string, response: string): VibeIntent {
     const category = this.parseCategoryFromResponse(response);
     const confidence = 0.7; // LLM classification is more reliable
-    
+
     return {
       id: `llm-${Date.now()}`,
       type: this.mapCategoryToIntentType(category),
@@ -316,7 +433,7 @@ Respond with ONLY the category name and a brief description of what you're tryin
    */
   private parseCategoryFromResponse(response: string): IntentCategory {
     const lower = response.toLowerCase();
-    
+
     if (lower.includes('question') || lower.includes('answer') || lower.includes('explain')) return 'question';
     if (lower.includes('code_generation') || lower.includes('generate') || lower.includes('create')) return 'code_generation';
     if (lower.includes('refactor') || lower.includes('improve') || lower.includes('restructure')) return 'refactor';
@@ -331,7 +448,8 @@ Respond with ONLY the category name and a brief description of what you're tryin
     if (lower.includes('agent') || lower.includes('autonomous') || lower.includes('task')) return 'agent';
     if (lower.includes('git') || lower.includes('commit') || lower.includes('branch')) return 'git';
     if (lower.includes('analyze') || lower.includes('review') || lower.includes('audit')) return 'analysis';
-    
+    if (lower.includes('security') || lower.includes('vulnerability')) return 'security';
+
     return 'unknown';
   }
 
@@ -371,6 +489,9 @@ Respond with ONLY the category name and a brief description of what you're tryin
       'agent': IntentType.AGENT,
       'git': IntentType.GIT,
       'analysis': IntentType.ASK,
+      'security': IntentType.DEBUG,
+      'code_assistant': IntentType.CODE,
+      'completion': IntentType.CODE,
       'unknown': IntentType.UNKNOWN,
     };
     return map[category] || IntentType.UNKNOWN;
@@ -380,7 +501,7 @@ Respond with ONLY the category name and a brief description of what you're tryin
    * Check if input is a meta-command
    */
   private isMetaCommand(input: string): boolean {
-    const metaCommands = ['help', 'status', 'memory', 'clear', 'exit', 'quit', 'undo', '?'];
+    const metaCommands = ['help', 'status', 'memory', 'clear', 'exit', 'quit', 'undo', '?', '/help', '/status', '/memory'];
     return metaCommands.includes(input);
   }
 
@@ -397,10 +518,13 @@ Respond with ONLY the category name and a brief description of what you're tryin
       'quit': 'unknown',
       'undo': 'agent',
       '?': 'question',
+      '/help': 'question',
+      '/status': 'analysis',
+      '/memory': 'memory',
     };
 
     const category = metaMap[input.toLowerCase()] || 'unknown';
-    
+
     return {
       id: `meta-${input}-${Date.now()}`,
       type: this.mapCategoryToIntentType(category),
@@ -444,7 +568,7 @@ Respond with ONLY the category name and a brief description of what you're tryin
     const keywordMatches = pattern.keywords.filter(k => input.includes(k)).length;
     const phraseMatches = pattern.phrases.filter(p => p.test(input)).length;
     score += (keywordMatches + phraseMatches) * 0.05;
-    
+
     return Math.min(score, 1.0);
   }
 
@@ -454,12 +578,25 @@ Respond with ONLY the category name and a brief description of what you're tryin
   private extractContext(input: string, category: IntentCategory): IntentContext {
     const context: IntentContext = {};
 
+    // Extract file names
     const filePatterns = [/\.ts\b/g, /\.tsx\b/g, /\.js\b/g, /\.jsx\b/g, /\.py\b/g, /\.go\b/g, /\.rs\b/g];
     for (const pattern of filePatterns) {
       const matches = input.match(pattern);
       if (matches) {
         context.files = [...(context.files || []), ...matches];
       }
+    }
+
+    // Extract target language
+    const languageMatch = input.match(/\b(typescript|javascript|python|java|go|rust|react|vue|node)\b/i);
+    if (languageMatch) {
+      context.language = languageMatch[1].toLowerCase();
+    }
+
+    // Extract framework
+    const frameworkMatch = input.match(/\b(nextjs|express|fastify|nestjs|react|vue|angular)\b/i);
+    if (frameworkMatch) {
+      context.framework = frameworkMatch[1].toLowerCase();
     }
 
     return context;
@@ -470,12 +607,12 @@ Respond with ONLY the category name and a brief description of what you're tryin
    */
   private assessRisk(category: IntentCategory, context: IntentContext): 'low' | 'medium' | 'high' {
     const highRiskCategories = ['deploy', 'infra', 'git', 'agent'];
-    const mediumRiskCategories = ['code_generation', 'refactor', 'api', 'ui'];
-    
+    const mediumRiskCategories = ['code_generation', 'refactor', 'api', 'ui', 'security'];
+
     if (highRiskCategories.includes(category)) return 'high';
     if (mediumRiskCategories.includes(category)) return 'medium';
     if (context.files && context.files.length > 3) return 'medium';
-    
+
     return 'low';
   }
 

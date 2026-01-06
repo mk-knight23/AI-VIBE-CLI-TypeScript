@@ -2,7 +2,7 @@
   "name": "@vibe/cli",
   "version": "12.0.0",
   "description": "VIBE CLI v12 - AI Developer Teammate. One command, infinite capability.",
-  "main": "dist/v12/index.js",
+  "main": "dist/index.js",
   "bin": {
     "vibe": "bin/vibe.js"
   },
