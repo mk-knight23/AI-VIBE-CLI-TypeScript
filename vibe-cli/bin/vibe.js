@@ -74,23 +74,21 @@ async function main() {
   console.log('Initializing...');
 
   try {
-    // Import from dist/ (compiled JavaScript)
-    const { VibeProviderRouter } = require('../dist/providers/router');
-    const { VibeMemoryManager } = require('../dist/memory');
-    const { CLIEngine } = require('../dist/tui');
+    // Import the core engine (the single source of truth)
+    const { VibeCoreEngine } = require('../dist/core/engine');
 
-    // Initialize core components
-    const provider = new VibeProviderRouter();
-    const memory = new VibeMemoryManager();
+    // Create and initialize the engine
+    const engine = new VibeCoreEngine();
 
+    // Initialize and start interactive mode
     console.log('Ready!\n');
-
-    // Start the CLI
-    const cli = new CLIEngine(provider, memory);
-    await cli.start();
+    await engine.startInteractiveMode();
 
   } catch (error) {
     console.error('\n❌ Error starting VIBE:', error.message);
+    if (process.env.DEBUG) {
+      console.error(error.stack);
+    }
     console.error('\nMake sure all dependencies are installed: npm install\n');
     process.exit(1);
   }
