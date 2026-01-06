@@ -1,0 +1,110 @@
+# ===============================
+# OS / Editor
+# ===============================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*.log
+
+# ===============================
+# Node / Package Managers
+# ===============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# ===============================
+# Build / Output
+# ===============================
+dist/
+build/
+out/
+coverage/
+.esbuild/
+.cache/
+
+# ===============================
+# TypeScript
+# ===============================
+*.tsbuildinfo
+
+# ===============================
+# Environment / Secrets
+# ===============================
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+
+# ===============================
+# AI / LLM / Provider Artifacts
+# ===============================
+.llm-cache/
+.llm/
+.model-cache/
+.openrouter/
+.gemini/
+.anthropic/
+.openai/
+
+# ===============================
+# Runtime / Temp Files
+# ===============================
+tmp/
+temp/
+.tmp/
+.logs/
+*.tmp
+
+# ===============================
+# Test Artifacts
+# ===============================
+test-results/
+playwright-report/
+jest-cache/
+.nyc_output/
+coverage-final.json
+
+# ===============================
+# CLI Generated Files
+# ===============================
+.vibe/
+.vibe-cache/
+.vibe-history/
+.vibe-session/
+.vibe-output/
+
+# ===============================
+# Sandboxes / Containers
+# ===============================
+sandbox/
+.sandbox/
+docker-volumes/
+*.pid
+
+# ===============================
+# Git / CI Noise
+# ===============================
+*.orig
+*.rej
+
+# ===============================
+# Docs Build (if any)
+# ===============================
+docs/.cache/
+docs/.vitepress/dist/
+docs/.next/
+
+# ===============================
+# Logs
+# ===============================
+logs/
+*.log
