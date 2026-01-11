@@ -27,8 +27,8 @@ export class MultiEditPrimitive extends BasePrimitive {
 Given a set of files and a transformation request, output the UPDATED content for EACH modified file.
 Format your output as a JSON object where keys are file paths and values are the NEW content of the entire file.
 
-Example:
-{ "src/main.ts": "...new content..." }`;
+IMPORTANT: Preserve original indentation and coding style exactly.
+If a file does not need changes, do not include it in the JSON.`;
 
             const userPrompt = `Request: ${input.description}\n\nFiles:\n${JSON.stringify(fileContents, null, 2)}`;
 
@@ -45,9 +45,19 @@ Example:
             const updates = JSON.parse(jsonMatch[0]);
             const appliedFiles = [];
 
+            // Before applying, create a checkpoint
+            try {
+                const { execSync } = require('child_process');
+                execSync('git add .');
+                execSync(`git commit -m "VIBE_AUTO_CHECKPOINT: Before ${input.description.slice(0, 30)}" --allow-empty`);
+            } catch (e) {
+                logger.warn('Git checkpoint failed before multi-edit');
+            }
+
             for (const [filePath, newContent] of Object.entries(updates)) {
-                await fs.mkdirp(path.dirname(filePath as string));
-                await fs.writeFile(filePath as string, newContent as string);
+                const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
+                await fs.mkdirp(path.dirname(absolutePath));
+                await fs.writeFile(absolutePath, newContent as string);
                 appliedFiles.push(filePath);
             }
 

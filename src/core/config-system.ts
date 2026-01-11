@@ -44,7 +44,11 @@ const VibeConfigSchema = z.object({
         allowedDomains: ['*.github.com', '*.npmjs.com']
     }),
     telemetry: z.boolean().default(true),
-    theme: z.enum(['dark', 'light', 'nord', 'solarized']).default('dark'),
+    theme: z.string().default('vibe'),
+    safeMode: z.boolean().default(false),
+    dryRun: z.boolean().default(false),
+    profile: z.string().default('default'),
+    profiles: z.record(z.string(), z.any()).default({}),
 });
 
 export type VibeConfig = z.infer<typeof VibeConfigSchema>;
@@ -53,9 +57,11 @@ export class ConfigManager {
     private static instance: ConfigManager;
     private config: VibeConfig;
     private configPath: string;
+    private globalConfigPath: string;
 
     private constructor() {
         this.configPath = path.join(process.cwd(), '.vibe', 'config.json');
+        this.globalConfigPath = path.join(os.homedir(), '.vibe', 'config.json');
         this.config = this.loadConfig();
     }
 
@@ -67,16 +73,42 @@ export class ConfigManager {
     }
 
     private loadConfig(): VibeConfig {
+        let config = VibeConfigSchema.parse({});
+
+        // 1. Global config
+        try {
+            if (fs.existsSync(this.globalConfigPath)) {
+                const globalRaw = fs.readFileSync(this.globalConfigPath, 'utf-8');
+                const globalParsed = JSON.parse(globalRaw);
+                config = { ...config, ...globalParsed };
+            }
+        } catch (e) { }
+
+        // 2. Project config
         try {
             if (fs.existsSync(this.configPath)) {
-                const raw = fs.readFileSync(this.configPath, 'utf-8');
-                const parsed = JSON.parse(raw);
-                return VibeConfigSchema.parse(parsed);
+                const projectRaw = fs.readFileSync(this.configPath, 'utf-8');
+                const projectParsed = JSON.parse(projectRaw);
+                config = { ...config, ...projectParsed };
             }
-        } catch (error) {
-            console.warn('⚠️  Could not load .vibe/config.json, using defaults.');
+        } catch (e) { }
+
+        // Migration: Handle legacy format where 'model' was a string or 'provider' existed
+        const anyConfig = config as any;
+        if (typeof anyConfig.model === 'string' || anyConfig.provider) {
+            anyConfig.model = {
+                defaultTier: 'balanced',
+                providers: anyConfig.provider ? [anyConfig.provider] : ['minimax', 'anthropic', 'openai'],
+                fallbackOrder: anyConfig.provider ? [anyConfig.provider] : ['minimax', 'anthropic', 'openai'],
+                maxContextTokens: 128000
+            };
+            if (typeof anyConfig.model === 'string') {
+                anyConfig.model.defaultModel = anyConfig.model;
+            }
+            delete anyConfig.provider;
         }
-        return VibeConfigSchema.parse({});
+
+        return VibeConfigSchema.parse(anyConfig);
     }
 
     public getConfig(): VibeConfig {

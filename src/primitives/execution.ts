@@ -15,6 +15,15 @@ export class ExecutionPrimitive extends BasePrimitive {
         const config = configManager.getConfig();
         const dangerousCommands = config.approval.dangerousCommands;
 
+        // Dry-run check
+        if (config.dryRun) {
+            logger.info(`[DRY-RUN] Would execute: ${input.command}`);
+            return {
+                success: true,
+                data: { dryRun: true, command: input.command },
+            };
+        }
+
         // Safety check
         const isDangerous = dangerousCommands.some(cmd => input.command.includes(cmd));
         if (isDangerous) {

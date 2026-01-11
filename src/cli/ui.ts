@@ -7,11 +7,21 @@
 
 import readline from 'readline';
 
-export const rl = readline.createInterface({
+let completer: readline.Completer = (line: string) => [[], line];
+
+export let rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   terminal: true,
+  completer: (line: string) => completer(line),
 });
+
+/**
+ * Update the completer function
+ */
+export function setCompleter(newCompleter: readline.Completer) {
+  completer = newCompleter;
+}
 
 /**
  * Prompt helper - uses the shared readline interface

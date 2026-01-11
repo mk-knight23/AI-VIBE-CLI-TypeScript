@@ -14,25 +14,36 @@ export class Logger {
     private component: string;
     private logFile: string;
     private minLevel: LogLevel;
+    private isJson: boolean = false;
 
     constructor(component: string, minLevel: LogLevel = LogLevel.INFO) {
         this.component = component;
         this.minLevel = minLevel;
         this.logFile = path.join(process.cwd(), '.vibe', 'vibe.log');
+        this.isJson = process.env.VIBE_LOG_FORMAT === 'json';
 
         // Ensure logs directory exists
         const dir = path.dirname(this.logFile);
         if (!fs.existsSync(dir)) {
             try {
                 fs.mkdirSync(dir, { recursive: true });
-            } catch (err) {
-                // Fallback to no file logging if directory creation fails
-            }
+            } catch (err) { }
         }
+    }
+
+    public setLevel(level: LogLevel): void {
+        this.minLevel = level;
+    }
+
+    public setJsonMode(enabled: boolean): void {
+        this.isJson = enabled;
     }
 
     private formatMessage(level: string, message: string): string {
         const timestamp = new Date().toISOString();
+        if (this.isJson) {
+            return JSON.stringify({ timestamp, level, component: this.component, message });
+        }
         return `[${timestamp}] [${level}] [${this.component}] ${message}`;
     }
 

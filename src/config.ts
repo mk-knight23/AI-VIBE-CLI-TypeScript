@@ -15,6 +15,8 @@ interface StoredConfig {
   model?: string;
   apiKeys?: Record<string, string>;
   autoApprove?: boolean;
+  theme?: string;
+  telemetry?: boolean;
 }
 
 export class VibeConfigManager {
@@ -36,16 +38,44 @@ export class VibeConfigManager {
     const needsSetup = !config.provider;
 
     if (needsSetup) {
+      console.clear();
       console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║   Welcome to VIBE v12!                                        ║
-║   Let's get you set up with an AI provider.                   ║
+║   ${chalk.white.bold('V I B E')}  ${chalk.green('v13.0.0')}                                    ║
+║   ${chalk.gray('AI-Powered Development Environment')}                       ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
       `));
 
+      console.log(chalk.white('\nWelcome! Let\'s get you set up in 3 quick steps.\n'));
+
+      // Step 1: Provider & API Key
+      console.log(chalk.cyan('Step 1: AI Provider Configuration'));
       await this.configureProvider();
+
+      // Step 2: Theme Selection
+      console.log(chalk.cyan('\nStep 2: UI Personalization'));
+      const themes = ['vibe', 'minimal', 'neon'];
+      console.log(chalk.white('Available themes: ') + themes.join(', '));
+      const themeChoice = await prompt('Choose a theme [vibe/minimal/neon] (default: vibe)');
+      config.theme = themes.includes(themeChoice) ? themeChoice : 'vibe';
+
+      // Step 3: Telemetry (Feature #12)
+      console.log(chalk.cyan('\nStep 3: Privacy & Telemetry'));
+      const telemetry = await promptYesNo('Help improve VIBE by sending anonymous usage data? (Opt-in, privacy-first)');
+      config.telemetry = telemetry;
+
+      this.saveConfig({
+        ...config,
+        theme: config.theme,
+        telemetry: config.telemetry,
+        provider: this.provider.getCurrentProvider()?.id,
+        model: this.provider.getCurrentModel(),
+      });
+
+      console.log(chalk.green('\n✓ Setup complete! You\'re ready to vibe.\n'));
+      await prompt('Press [Enter] to start the TUI...');
     }
 
     return needsSetup;
