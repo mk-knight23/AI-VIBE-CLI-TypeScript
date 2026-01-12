@@ -1,13 +1,13 @@
 {
-  "name": "@vibe/cli",
-  "version": "0.0.1",
+  "name": "vibe-ai-teammate",
+  "version": "0.0.2",
   "description": "VIBE CLI - AI Developer Teammate. One command, infinite capability.",
   "main": "dist/index.js",
   "bin": {
     "vibe": "bin/vibe.js"
   },
   "vibe": {
-    "version": "0.0.1",
+    "version": "0.0.2",
     "architecture": "8-primitives",
     "mcp_enabled": true,
     "minimum_node_version": "20.0.0",
@@ -88,7 +88,7 @@
     "picocolors": "^1.1.1",
     "react-router-dom": "^7.12.0",
     "simple-git": "^3.30.0",
-    "uuid": "^0.0.1",
+    "uuid": "^11.0.3",
     "zod": "^4.3.5"
   },
   "devDependencies": {
@@ -110,9 +110,5 @@
     "LICENSE"
   ],
   "type": "commonjs",
-  "types": "./dist/cli/index.d.ts",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://npm.pkg.github.com"
-  }
+  "types": "./dist/cli/index.d.ts"
 }
