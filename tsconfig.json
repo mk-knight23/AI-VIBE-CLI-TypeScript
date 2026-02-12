@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
@@ -20,10 +20,11 @@
     "noFallthroughCasesInSwitch": true,
     "useDefineForClassFields": true,
     "isolatedModules": true,
-    "allowJs": false
+    "allowJs": false,
+    "jsx": "react"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",

@@ -1,5 +1,6 @@
-import { stateManager } from './state-manager';
-import { logger } from '../utils/structured-logger';
+import { stateManager } from './state-manager.js';
+import { createLogger } from '../utils/pino-logger.js';
+const logger = createLogger('recovery-manager');
 
 export class RecoveryManager {
     static saveCheckpoint(taskId: string, state: any): void {

@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - Unified Provider Router
  *
@@ -11,54 +10,19 @@
  *
  * Version: 0.0.1
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.unifiedRouter = exports.UnifiedProviderRouter = void 0;
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const os = __importStar(require("os"));
-const base_adapter_js_1 = require("./adapters/base.adapter.js");
-const openai_adapter_js_1 = require("./adapters/openai.adapter.js");
-const anthropic_adapter_js_1 = require("./adapters/anthropic.adapter.js");
-const google_adapter_js_1 = require("./adapters/google.adapter.js");
-const ollama_adapter_js_1 = require("./adapters/ollama.adapter.js");
-const openrouter_adapter_js_1 = require("./adapters/openrouter.adapter.js");
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { selectModelForTask, ProviderError, } from './adapters/base.adapter.js';
+import { OpenAIAdapter, AzureOpenAIAdapter, } from './adapters/openai.adapter.js';
+import { AnthropicAdapter, BedrockAnthropicAdapter, } from './adapters/anthropic.adapter.js';
+import { GoogleAdapter, } from './adapters/google.adapter.js';
+import { OllamaAdapter, LMStudioAdapter, } from './adapters/ollama.adapter.js';
+import { OpenRouterAdapter, } from './adapters/openrouter.adapter.js';
 // ============================================================================
 // UNIFIED ROUTER
 // ============================================================================
-class UnifiedProviderRouter {
+export class UnifiedProviderRouter {
     adapters = new Map();
     defaultProvider = 'anthropic';
     defaultModel = 'claude-sonnet-4-20250514';
@@ -90,15 +54,15 @@ class UnifiedProviderRouter {
      */
     initializeAdapters() {
         // Cloud providers
-        this.registerAdapter('openai', new openai_adapter_js_1.OpenAIAdapter());
-        this.registerAdapter('azure', new openai_adapter_js_1.AzureOpenAIAdapter());
-        this.registerAdapter('anthropic', new anthropic_adapter_js_1.AnthropicAdapter());
-        this.registerAdapter('bedrock', new anthropic_adapter_js_1.BedrockAnthropicAdapter());
-        this.registerAdapter('google', new google_adapter_js_1.GoogleAdapter());
-        this.registerAdapter('openrouter', new openrouter_adapter_js_1.OpenRouterAdapter());
+        this.registerAdapter('openai', new OpenAIAdapter());
+        this.registerAdapter('azure', new AzureOpenAIAdapter());
+        this.registerAdapter('anthropic', new AnthropicAdapter());
+        this.registerAdapter('bedrock', new BedrockAnthropicAdapter());
+        this.registerAdapter('google', new GoogleAdapter());
+        this.registerAdapter('openrouter', new OpenRouterAdapter());
         // Local providers
-        this.registerAdapter('ollama', new ollama_adapter_js_1.OllamaAdapter());
-        this.registerAdapter('lmstudio', new ollama_adapter_js_1.LMStudioAdapter());
+        this.registerAdapter('ollama', new OllamaAdapter());
+        this.registerAdapter('lmstudio', new LMStudioAdapter());
     }
     /**
      * Register a provider adapter
@@ -153,7 +117,7 @@ class UnifiedProviderRouter {
             return response;
         }
         catch (error) {
-            if (!(error instanceof base_adapter_js_1.ProviderError) || !error.retryable) {
+            if (!(error instanceof ProviderError) || !error.retryable) {
                 throw error;
             }
             // Try fallback providers
@@ -180,7 +144,7 @@ class UnifiedProviderRouter {
                     return response;
                 }
                 catch (error) {
-                    if (error instanceof base_adapter_js_1.ProviderError && error.retryable) {
+                    if (error instanceof ProviderError && error.retryable) {
                         lastError = error;
                         continue;
                     }
@@ -218,7 +182,7 @@ class UnifiedProviderRouter {
         const adapter = this.adapters.get(this.defaultProvider);
         if (!adapter)
             return this.defaultModel;
-        const modelInfo = (0, base_adapter_js_1.selectModelForTask)(task, adapter.getModels());
+        const modelInfo = selectModelForTask(task, adapter.getModels());
         return modelInfo?.id || this.defaultModel;
     }
     /**
@@ -486,9 +450,8 @@ class UnifiedProviderRouter {
         return configured;
     }
 }
-exports.UnifiedProviderRouter = UnifiedProviderRouter;
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.unifiedRouter = new UnifiedProviderRouter();
+export const unifiedRouter = new UnifiedProviderRouter();
 //# sourceMappingURL=unified.router.js.map

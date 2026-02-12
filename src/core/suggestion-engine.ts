@@ -1,5 +1,5 @@
-import { VibeProviderRouter } from '../providers/router';
-import { StateManager } from './state-manager';
+import { VibeProviderRouter } from '../providers/router.js';
+import { StateManager } from './state-manager.js';
 
 export class SuggestionEngine {
     constructor(

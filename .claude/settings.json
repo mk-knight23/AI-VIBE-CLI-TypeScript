@@ -1,0 +1,141 @@
+{
+  "project": {
+    "name": "VIBE CLI",
+    "version": "0.0.2",
+    "type": "cli",
+    "language": "typescript",
+    "description": "AI Developer Teammate - One command, infinite capability"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm run preview:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run deploy:gh:*)",
+      "Bash(vercel:*)",
+      "Bash(netlify deploy:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(done)",
+      "Bash(vitest run *)",
+      "Bash(node bin/vibe.js *)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(*> /dev/null*rm*)"
+    ]
+  },
+  "hooks": {
+    "preToolUse": {
+      "shellSafety": {
+        "enabled": true,
+        "warnOn": ["rm", "mv", "dd"]
+      },
+      "tmuxReminder": {
+        "enabled": true,
+        "commands": ["npm", "pnpm", "yarn", "cargo", "docker build"]
+      }
+    },
+    "postToolUse": {
+      "prettier": {
+        "enabled": true,
+        "filePattern": "*.{ts,tsx,js,jsx}"
+      },
+      "typeCheck": {
+        "enabled": true,
+        "command": "npm run type-check"
+      },
+      "consoleLogWarning": {
+        "enabled": true,
+        "severity": "warn"
+      }
+    },
+    "sessionEnd": {
+      "consoleLogAudit": {
+        "enabled": true
+      }
+    }
+  },
+  "agents": {
+    "enabled": [
+      "planner",
+      "tdd-guide",
+      "code-reviewer",
+      "security-reviewer",
+      "build-error-resolver",
+      "refactor-cleaner",
+      "doc-updater"
+    ]
+  },
+  "skills": {
+    "enabled": [
+      "tdd-workflow",
+      "code-review",
+      "security-review",
+      "build-fix",
+      "update-docs",
+      "refactor-clean"
+    ]
+  },
+  "rules": {
+    "codingStyle": ".claude/rules/coding-style.md",
+    "testing": ".claude/rules/testing.md",
+    "gitWorkflow": ".claude/rules/git-workflow.md",
+    "security": ".claude/rules/security.md",
+    "performance": ".claude/rules/performance.md"
+  },
+  "commands": {
+    "enabled": [
+      "tdd",
+      "code-review",
+      "build-fix",
+      "update-docs",
+      "update-codemaps",
+      "refactor-clean",
+      "test-coverage",
+      "verify",
+      "checkpoint",
+      "eval",
+      "e2e",
+      "plan",
+      "orchestrate",
+      "learn",
+      "evolve"
+    ]
+  },
+  "context": {
+    "include": [
+      "docs/**/*.md",
+      "src/**/*.ts",
+      "tests/**/*.ts",
+      "package.json",
+      "tsconfig.json",
+      "README.md"
+    ],
+    "exclude": [
+      "node_modules/**",
+      "dist/**",
+      "coverage/**",
+      "*.log"
+    ],
+    "maxFiles": 50
+  },
+  "testing": {
+    "framework": "vitest",
+    "coverage": {
+      "enabled": true,
+      "threshold": 80
+    },
+    "e2e": {
+      "enabled": true,
+      "framework": "playwright"
+    }
+  },
+  "build": {
+    "command": "npm run build",
+    "output": "dist",
+    "checkCommand": "npm run type-check"
+  }
+}

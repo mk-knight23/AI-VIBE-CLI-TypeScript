@@ -6,8 +6,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import type { ProviderConfig, ProviderResponse, IProviderRouter } from '../types';
-import { PROVIDER_REGISTRY, getProviderById, getProviderByModel } from './registry';
+import type { ProviderConfig, ProviderResponse, IProviderRouter } from '../types.js';
+import { PROVIDER_REGISTRY, getProviderById, getProviderByModel } from './registry.js';
 
 interface UserConfig {
   provider?: string;

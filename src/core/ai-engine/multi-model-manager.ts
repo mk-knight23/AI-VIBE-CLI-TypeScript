@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { ConfigLoader } from '../../utils/config.loader';
+import { ConfigLoader } from '../../utils/config.loader.js';
 
 /**
  * Supported AI providers

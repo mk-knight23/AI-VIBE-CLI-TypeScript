@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - OpenRouter Provider Adapter
  *
@@ -10,9 +9,7 @@
  *
  * Version: 0.0.1
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.openRouterAdapter = exports.OpenRouterAdapter = void 0;
-const base_adapter_js_1 = require("./base.adapter.js");
+import { BaseProviderAdapter, AuthenticationError, RateLimitError, ProviderError, } from './base.adapter.js';
 // ============================================================================
 // MODEL DEFINITIONS
 // ============================================================================
@@ -88,7 +85,7 @@ const OPENROUTER_CONFIG = {
 // ============================================================================
 // OPENROUTER ADAPTER
 // ============================================================================
-class OpenRouterAdapter extends base_adapter_js_1.BaseProviderAdapter {
+export class OpenRouterAdapter extends BaseProviderAdapter {
     baseUrl;
     constructor() {
         super(OPENROUTER_CONFIG, OPENROUTER_MODELS);
@@ -102,7 +99,7 @@ class OpenRouterAdapter extends base_adapter_js_1.BaseProviderAdapter {
         const model = options?.model || this.config.defaultModel;
         const apiKey = this.getApiKey();
         if (!apiKey) {
-            throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+            throw new AuthenticationError(this.config.id, model);
         }
         this.validateModel(model);
         const endpoint = `${this.baseUrl}/chat/completions`;
@@ -124,23 +121,23 @@ class OpenRouterAdapter extends base_adapter_js_1.BaseProviderAdapter {
                 }),
             });
             if (response.status === 401) {
-                throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+                throw new AuthenticationError(this.config.id, model);
             }
             if (response.status === 429) {
                 const retryAfter = response.headers.get('Retry-After');
-                throw new base_adapter_js_1.RateLimitError(this.config.id, model, retryAfter ? parseInt(retryAfter) : undefined);
+                throw new RateLimitError(this.config.id, model, retryAfter ? parseInt(retryAfter) : undefined);
             }
             if (!response.ok) {
                 const error = await response.text();
-                throw new base_adapter_js_1.ProviderError(`OpenRouter API error: ${error}`, this.config.id, model, response.status, response.status >= 500);
+                throw new ProviderError(`OpenRouter API error: ${error}`, this.config.id, model, response.status, response.status >= 500);
             }
             const data = await response.json();
             return this.parseResponse(data, model, Date.now() - startTime);
         }
         catch (error) {
-            if (error instanceof base_adapter_js_1.ProviderError)
+            if (error instanceof ProviderError)
                 throw error;
-            throw new base_adapter_js_1.ProviderError(`OpenRouter request failed: ${error instanceof Error ? error.message : 'Unknown error'}`, this.config.id, model, undefined, true);
+            throw new ProviderError(`OpenRouter request failed: ${error instanceof Error ? error.message : 'Unknown error'}`, this.config.id, model, undefined, true);
         }
     }
     /**
@@ -150,7 +147,7 @@ class OpenRouterAdapter extends base_adapter_js_1.BaseProviderAdapter {
         const model = options?.model || this.config.defaultModel;
         const apiKey = this.getApiKey();
         if (!apiKey) {
-            throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+            throw new AuthenticationError(this.config.id, model);
         }
         this.validateModel(model);
         const endpoint = `${this.baseUrl}/chat/completions`;
@@ -171,7 +168,7 @@ class OpenRouterAdapter extends base_adapter_js_1.BaseProviderAdapter {
             }),
         });
         if (!response.ok) {
-            throw new base_adapter_js_1.ProviderError(`OpenRouter streaming failed: ${response.statusText}`, this.config.id, model, response.status);
+            throw new ProviderError(`OpenRouter streaming failed: ${response.statusText}`, this.config.id, model, response.status);
         }
         const reader = response.body?.getReader();
         if (!reader)
@@ -313,9 +310,8 @@ class OpenRouterAdapter extends base_adapter_js_1.BaseProviderAdapter {
         };
     }
 }
-exports.OpenRouterAdapter = OpenRouterAdapter;
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.openRouterAdapter = new OpenRouterAdapter();
+export const openRouterAdapter = new OpenRouterAdapter();
 //# sourceMappingURL=openrouter.adapter.js.map

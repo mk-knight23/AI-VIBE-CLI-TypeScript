@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { progressDisplay } from '../../ui/progress-bars/progress-display';
+import { progressDisplay } from '../../ui/progress-bars/progress-display.js';
 
 /**
  * Pattern category

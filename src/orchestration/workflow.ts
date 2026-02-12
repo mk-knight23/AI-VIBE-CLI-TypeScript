@@ -4,8 +4,8 @@
  */
 
 import * as fs from 'fs';
-import { VibeToolExecutor, ToolResult } from '../tools/executor';
-import type { IApprovalSystem } from '../types';
+import { VibeToolExecutor, ToolResult } from '../tools/executor.js';
+import type { IApprovalSystem } from '../types.js';
 
 export interface WorkflowStep {
   id: string;

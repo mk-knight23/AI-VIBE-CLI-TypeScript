@@ -6,7 +6,7 @@
 import * as readline from 'readline';
 import * as child_process from 'child_process';
 import chalk from 'chalk';
-import { CommandGenerator, GeneratedCommand, CommandGenerationOptions } from './command-generator';
+import { CommandGenerator, GeneratedCommand, CommandGenerationOptions } from './command-generator.js';
 
 /**
  * UI options

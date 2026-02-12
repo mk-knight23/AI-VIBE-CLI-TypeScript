@@ -1,5 +1,5 @@
 import ora, { Ora } from 'ora';
-import { themeManager } from '../themes/theme-manager';
+import { themeManager } from '../themes/theme-manager.js';
 
 export class Spinner {
     private ora: Ora;

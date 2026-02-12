@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Security Module
  * Vulnerability scanning, dependency auditing, and security fixes
  */
-import { BaseModule, ModuleResult } from '../base.module';
+import { BaseModule, ModuleResult } from '../base.module.js';
 export declare class SecurityModule extends BaseModule {
     private provider;
     private readonly securityPatterns;

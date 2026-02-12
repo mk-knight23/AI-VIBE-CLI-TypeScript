@@ -1,5 +1,5 @@
-import { VibeProviderRouter } from '../providers/router';
-import { MultiEditPrimitive } from '../primitives/multi-edit';
+import { VibeProviderRouter } from '../providers/router.js';
+import { MultiEditPrimitive } from '../domain/primitives/multi-edit.js';
 
 export class ErrorResolver {
     constructor(

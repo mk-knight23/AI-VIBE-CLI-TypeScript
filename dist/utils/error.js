@@ -1,13 +1,8 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Custom Error Classes
  * Production-grade error handling with specific error types
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ValidationError = exports.ConfigurationError = exports.ProviderError = exports.RouteError = exports.ModuleError = exports.VibeError = void 0;
-exports.withErrorHandling = withErrorHandling;
-exports.createErrorResponse = createErrorResponse;
-class VibeError extends Error {
+export class VibeError extends Error {
     code;
     details;
     constructor(message, code = 'VIBE_ERROR', details) {
@@ -17,8 +12,7 @@ class VibeError extends Error {
         this.name = 'VibeError';
     }
 }
-exports.VibeError = VibeError;
-class ModuleError extends VibeError {
+export class ModuleError extends VibeError {
     moduleName;
     action;
     constructor(message, moduleName, action, details) {
@@ -28,8 +22,7 @@ class ModuleError extends VibeError {
         this.name = 'ModuleError';
     }
 }
-exports.ModuleError = ModuleError;
-class RouteError extends VibeError {
+export class RouteError extends VibeError {
     route;
     input;
     constructor(message, route, input, details) {
@@ -39,8 +32,7 @@ class RouteError extends VibeError {
         this.name = 'RouteError';
     }
 }
-exports.RouteError = RouteError;
-class ProviderError extends VibeError {
+export class ProviderError extends VibeError {
     provider;
     model;
     statusCode;
@@ -52,8 +44,7 @@ class ProviderError extends VibeError {
         this.name = 'ProviderError';
     }
 }
-exports.ProviderError = ProviderError;
-class ConfigurationError extends VibeError {
+export class ConfigurationError extends VibeError {
     configKey;
     constructor(message, configKey, details) {
         super(message, 'CONFIGURATION_ERROR', { configKey, ...details });
@@ -61,8 +52,7 @@ class ConfigurationError extends VibeError {
         this.name = 'ConfigurationError';
     }
 }
-exports.ConfigurationError = ConfigurationError;
-class ValidationError extends VibeError {
+export class ValidationError extends VibeError {
     field;
     value;
     constructor(message, field, value, details) {
@@ -72,11 +62,10 @@ class ValidationError extends VibeError {
         this.name = 'ValidationError';
     }
 }
-exports.ValidationError = ValidationError;
 /**
  * Error handler wrapper for async functions
  */
-async function withErrorHandling(fn, errorHandler) {
+export async function withErrorHandling(fn, errorHandler) {
     try {
         return await fn();
     }
@@ -87,7 +76,7 @@ async function withErrorHandling(fn, errorHandler) {
 /**
  * Create error response object
  */
-function createErrorResponse(error, context) {
+export function createErrorResponse(error, context) {
     const vibeError = error;
     return {
         success: false,

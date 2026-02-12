@@ -3,10 +3,10 @@
  * Unified git operations interface
  */
 
-import { AutoCommitGenerator } from './auto-commit';
-import { HistoryAnalyzer } from './history-analyzer';
-import { ConflictResolver, DetectedConflict } from './conflict-resolver';
-import { RebaseHelper } from './rebase-helper';
+import { AutoCommitGenerator } from './auto-commit.js';
+import { HistoryAnalyzer } from './history-analyzer.js';
+import { ConflictResolver, DetectedConflict } from './conflict-resolver.js';
+import { RebaseHelper } from './rebase-helper.js';
 
 /**
  * Git Manager - unified interface for git operations

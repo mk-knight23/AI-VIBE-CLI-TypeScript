@@ -1,0 +1,36 @@
+name: 'VIBE AI Teammate'
+description: 'AI-powered developer teammate for semantic commits, PR generation, and code review.'
+inputs:
+  command:
+    description: 'VIBE command to run (commit, pr, review, fix, test)'
+    required: true
+    default: 'review'
+  args:
+    description: 'Additional arguments for the command'
+    required: false
+  vibe-api-key:
+    description: 'API key for the AI provider'
+    required: true
+  provider:
+    description: 'AI provider to use (anthropic, openai)'
+    required: false
+    default: 'anthropic'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install VIBE CLI
+      shell: bash
+      run: npm install -g vibe-ai-teammate
+
+    - name: Run VIBE
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.provider == 'anthropic' && inputs.vibe-api-key || '' }}
+        OPENAI_API_KEY: ${{ inputs.provider == 'openai' && inputs.vibe-api-key || '' }}
+      run: vibe ${{ inputs.command }} ${{ inputs.args }}

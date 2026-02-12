@@ -10,7 +10,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import type { VibeConfig, ModelConfig, AgentSettingsConfig, UIConfig, TelemetryConfig, SecurityConfig, PluginConfig, PolicyConfig } from '../core-types';
+import type { VibeConfig, ModelConfig, AgentSettingsConfig, UIConfig, TelemetryConfig, SecurityConfig, PluginConfig, PolicyConfig } from '../core-types/index.js';
 
 // ============================================================================
 // Constants

@@ -7,15 +7,15 @@ import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import type { VibeIntent, VibeSession, IProviderRouter } from '../types';
-import { VibeProviderRouter } from '../providers/router';
-import { VibeMemoryManager } from '../memory';
-import { VibeApprovalManager } from '../approvals';
-import { CodeAssistantModule } from '../modules/code-assistant';
-import { TestingModule } from '../modules/testing';
-import { DebuggingModule } from '../modules/debugging';
-import { SecurityModule } from '../modules/security';
-import { DeploymentModule } from '../modules/deployment';
+import type { VibeIntent, VibeSession, IProviderRouter } from '../types.js';
+import { VibeProviderRouter } from '../providers/router.js';
+import { VibeMemoryManager } from '../memory/index.js';
+import { VibeApprovalManager } from '../approvals/index.js';
+import { CodeAssistantModule } from '../modules/code-assistant/index.js';
+import { TestingModule } from '../modules/testing/index.js';
+import { DebuggingModule } from '../modules/debugging/index.js';
+import { SecurityModule } from '../modules/security/index.js';
+import { DeploymentModule } from '../modules/deployment/index.js';
 
 export interface OrchestratorConfig {
   provider?: IProviderRouter;

@@ -84,13 +84,13 @@ export class CLIEngine {
   // ============================================================================
 
   async start(): Promise<void> {
-    this.displayWelcome();
     await this.configManager.runFirstTimeSetup();
+    this.displayWelcome();
 
     // Infinite REPL loop
     while (this.running) {
       try {
-        const input = await prompt(chalk.cyan('vibe') + this.getModeIndicator() + ' > ');
+        const input = await prompt(chalk.hex('#3B82F6')('vibe') + this.getModeIndicator() + ' > ');
         await this.handleInput(input);
       } catch (error) {
         console.log(chalk.red('\nAn error occurred. Try again.\n'));
@@ -1029,22 +1029,30 @@ Files are created automatically in agent mode.
   // ============================================================================
 
   private displayWelcome(): void {
-    console.log(chalk.cyan(`
-╔═════════════════════════════════════════════════════════════╗
-║                                                             ║
-║   ${chalk.white.bold('V I B E')}  ${chalk.green('v0.0.1.0.0')}                                    ║
-║   ${chalk.gray('AI-Powered Development Environment')}                       ║
-║                                                             ║
-║   ${chalk.white("I'm your AI development teammate.")}                       ║
-║   ${chalk.gray("Type naturally - I'll execute, not just chat.")}            ║
-║                                                             ║
-╚═════════════════════════════════════════════════════════════╝
+    const blue = chalk.hex('#3B82F6');
+    const slate = chalk.hex('#F1F5F9');
 
-Type ${chalk.cyan('/help')} for commands or just tell me what you want to build.
-
-${chalk.gray('New in v0.0.1:')} ${chalk.white('/sandbox')} ${chalk.gray('|')} ${chalk.white('/checkpoint')} ${chalk.gray('|')} ${chalk.white('/approve')}
-${chalk.gray('Modes:')} ${chalk.white('/mode agent')} ${chalk.gray('|')} ${chalk.white('/mode code')} ${chalk.gray('|')} ${chalk.white('/mode ask')} ${chalk.gray('|')} ${chalk.white('/mode debug')}
+    console.log(blue(`
+ ▟████▙      ▟████▙
+ █▛  ▜█      █▛  ▜█
+ █▌  ▐█      █▌  ▐█
+ █▙  ▟█  ▟█▙ █▙  ▟█  ▟██▙
+ ▜████▛  █▛▜█▜████▛  █▙▟█
+         █▌▐█        █▛▀▀
+         ▜█▛▘        ▜██▘
     `));
+
+    console.log(blue(' ╔' + '═'.repeat(60) + '╗'));
+    console.log(blue(' ║') + ' '.repeat(60) + blue('║'));
+    console.log(blue(' ║') + `   ${slate.bold('V I B E')}  ${chalk.green('v0.0.1 PRO')}                                ` + blue('║'));
+    console.log(blue(' ║') + `   ${chalk.gray('AI-Powered Development Environment')}                       ` + blue('║'));
+    console.log(blue(' ║') + ' '.repeat(60) + blue('║'));
+    console.log(blue(' ║') + `   ${slate("I'm your AI development teammate.")}                       ` + blue('║'));
+    console.log(blue(' ║') + `   ${chalk.gray("Type naturally - I'll execute, not just chat.")}            ` + blue('║'));
+    console.log(blue(' ║') + ' '.repeat(60) + blue('║'));
+    console.log(blue(' ╚' + '═'.repeat(60) + '╝'));
+
+    console.log(`\n Type ${blue('/help')} for commands or just tell me what you want to build.\n`);
   }
 
   private showHelp(): void {

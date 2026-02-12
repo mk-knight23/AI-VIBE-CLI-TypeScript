@@ -5,8 +5,8 @@
 
 import inquirer from 'inquirer';
 import chalk from 'chalk';
-import { configManager } from '../core/config-system';
-import { themeManager, ThemeName } from '../utils/theme-manager';
+import { configManager } from '../core/config-system.js';
+import { themeManager, ThemeName } from '../utils/theme-manager.js';
 
 export interface OnboardingAnswers {
     welcome: boolean;
@@ -119,7 +119,7 @@ export class OnboardingWizard {
                 ],
                 default: 'brief',
             },
-        ]);
+        ] as any);
 
         return answers as OnboardingAnswers;
     }

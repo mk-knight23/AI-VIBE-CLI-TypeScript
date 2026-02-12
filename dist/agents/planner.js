@@ -1,16 +1,13 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - PLANNING Primitive
  *
  * Creates execution plans for complex tasks.
  * Breaks down user intents into actionable steps.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlanningPrimitive = void 0;
 /**
  * PLANNING Primitive - Creates execution plans from intents
  */
-class PlanningPrimitive {
+export class PlanningPrimitive {
     completion;
     constructor(completion) {
         this.completion = completion;
@@ -229,5 +226,4 @@ class PlanningPrimitive {
         return steps.reduce((total, s) => total + (timePerStep[s.risk] || 2), 0);
     }
 }
-exports.PlanningPrimitive = PlanningPrimitive;
 //# sourceMappingURL=planner.js.map

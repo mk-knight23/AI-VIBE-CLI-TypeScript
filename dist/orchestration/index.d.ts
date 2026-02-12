@@ -2,9 +2,9 @@
  * VIBE-CLI v0.0.1 Orchestrator
  * Multi-agent orchestration for intent-driven execution
  */
-import type { VibeIntent, VibeSession, IProviderRouter } from '../types';
-import { VibeMemoryManager } from '../memory';
-import { VibeApprovalManager } from '../approvals';
+import type { VibeIntent, VibeSession, IProviderRouter } from '../types.js';
+import { VibeMemoryManager } from '../memory/index.js';
+import { VibeApprovalManager } from '../approvals/index.js';
 export interface OrchestratorConfig {
     provider?: IProviderRouter;
     memory?: VibeMemoryManager;

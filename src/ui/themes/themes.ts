@@ -50,4 +50,16 @@ export const themes: Record<string, VibeTheme> = {
         text: (text) => chalk.whiteBright(text),
         dim: (text) => chalk.blue(text),
     },
+    'vibe-pro': {
+        name: 'VIBE Pro',
+        primary: (text) => chalk.hex('#3B82F6')(text),
+        secondary: (text) => chalk.hex('#1E293B')(text),
+        accent: (text) => chalk.hex('#2563EB').bold(text),
+        error: (text) => chalk.red(text),
+        warning: (text) => chalk.yellow(text),
+        success: (text) => chalk.green(text),
+        border: (text) => chalk.hex('#3B82F6')(text),
+        text: (text) => chalk.hex('#F1F5F9')(text),
+        dim: (text) => chalk.gray(text),
+    },
 };

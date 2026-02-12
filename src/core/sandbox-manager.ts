@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
-import { Logger } from '../utils/structured-logger';
+import { createLogger } from '../utils/pino-logger.js';
 
-const logger = new Logger('SandboxManager');
+const logger = createLogger('sandbox-manager');
 
 export class SandboxManager {
     static execute(command: string, options: { timeout?: number; env?: any } = {}): { success: boolean; stdout: string; stderr: string } {

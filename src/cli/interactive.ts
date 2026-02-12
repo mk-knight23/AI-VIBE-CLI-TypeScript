@@ -1,13 +1,13 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
-import { IPrimitive } from '../primitives/types';
-import { PlanningPrimitive } from '../primitives/planning';
-import { OrchestrationPrimitive } from '../primitives/orchestration';
-import { ApprovalPrimitive } from '../primitives/approval';
-import { Logger } from '../utils/structured-logger';
-import { CommandHandler } from './command-handler';
+import { IPrimitive } from '../domain/primitives/types.js';
+import { PlanningPrimitive } from '../domain/primitives/planning.js';
+import { OrchestrationPrimitive } from '../domain/primitives/orchestration.js';
+import { ApprovalPrimitive } from '../domain/primitives/approval.js';
+import { createLogger } from '../utils/pino-logger.js';
+import { CommandHandler } from './command-handler.js';
 
-const logger = new Logger('Interactive');
+const logger = createLogger('Interactive');
 
 export async function runInteractive(primitiveMap: Map<string, IPrimitive>) {
     console.log(chalk.cyan(`

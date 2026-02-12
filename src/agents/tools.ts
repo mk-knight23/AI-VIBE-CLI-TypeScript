@@ -4,11 +4,11 @@
  */
 
 import { ToolDefinition, ToolContext, ToolResult } from '../tools/registry/index.js';
-import { ExecutionPrimitive } from '../primitives/execution';
-import { MultiEditPrimitive } from '../primitives/multi-edit';
-import { SearchPrimitive } from '../primitives/search';
-import { MemoryPrimitive } from '../primitives/memory';
-import { ApprovalPrimitive } from '../primitives/approval';
+import { ExecutionPrimitive } from '../domain/primitives/execution.js';
+import { MultiEditPrimitive } from '../domain/primitives/multi-edit.js';
+import { SearchPrimitive } from '../domain/primitives/search.js';
+import { MemoryPrimitive } from '../domain/primitives/memory.js';
+import { ApprovalPrimitive } from '../domain/primitives/approval.js';
 
 export type VibeTool = ToolDefinition;
 

@@ -1,4 +1,4 @@
-import { configManager } from './config-system';
+import { configManager } from './config-system.js';
 
 export class FeatureFlags {
     private static readonly FLAGS: Record<string, boolean> = {

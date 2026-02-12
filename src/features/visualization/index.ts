@@ -1,4 +1,4 @@
 /**
  * Visualization Module Exports
  */
-export * from './project-visualizer';
+export * from './project-visualizer.js';

@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - Security Module
  *
@@ -13,43 +12,8 @@
  *
  * Version: 0.0.1
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VibeCommandValidator = exports.VibeSecurityScanner = exports.commandValidator = exports.securityScanner = exports.CommandValidator = exports.SecurityScanner = void 0;
-const path = __importStar(require("path"));
-const fs = __importStar(require("fs"));
+import * as path from 'path';
+import * as fs from 'fs';
 // ============================================================================
 // DEFAULT CONFIGURATION
 // ============================================================================
@@ -110,7 +74,7 @@ const DEFAULT_CONFIG = {
 // ============================================================================
 // SECURITY SCANNER
 // ============================================================================
-class SecurityScanner {
+export class SecurityScanner {
     config;
     constructor(config = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -350,12 +314,10 @@ class SecurityScanner {
         return `${prefix}${masked}${suffix}`;
     }
 }
-exports.SecurityScanner = SecurityScanner;
-exports.VibeSecurityScanner = SecurityScanner;
 // ============================================================================
 // COMMAND VALIDATOR
 // ============================================================================
-class CommandValidator {
+export class CommandValidator {
     scanner;
     constructor(config) {
         this.scanner = new SecurityScanner(config);
@@ -388,11 +350,10 @@ class CommandValidator {
         };
     }
 }
-exports.CommandValidator = CommandValidator;
-exports.VibeCommandValidator = CommandValidator;
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.securityScanner = new SecurityScanner();
-exports.commandValidator = new CommandValidator();
+export const securityScanner = new SecurityScanner();
+export const commandValidator = new CommandValidator();
+export { SecurityScanner as VibeSecurityScanner, CommandValidator as VibeCommandValidator };
 //# sourceMappingURL=index.js.map

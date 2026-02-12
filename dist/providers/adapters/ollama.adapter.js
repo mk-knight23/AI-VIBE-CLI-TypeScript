@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - Ollama Provider Adapter
  *
@@ -10,9 +9,7 @@
  *
  * Version: 0.0.1
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.lmstudioAdapter = exports.ollamaAdapter = exports.LMStudioAdapter = exports.OllamaAdapter = void 0;
-const base_adapter_js_1 = require("./base.adapter.js");
+import { BaseProviderAdapter, ProviderError, } from './base.adapter.js';
 // ============================================================================
 // MODEL DEFINITIONS
 // ============================================================================
@@ -92,7 +89,7 @@ const OLLAMA_CONFIG = {
 // ============================================================================
 // OLLAMA ADAPTER
 // ============================================================================
-class OllamaAdapter extends base_adapter_js_1.BaseProviderAdapter {
+export class OllamaAdapter extends BaseProviderAdapter {
     baseUrl;
     healthCheckCache = new Map();
     constructor() {
@@ -123,15 +120,15 @@ class OllamaAdapter extends base_adapter_js_1.BaseProviderAdapter {
             });
             if (!response.ok) {
                 const error = await response.text();
-                throw new base_adapter_js_1.ProviderError(`Ollama API error: ${error}`, this.config.id, model, response.status, response.status >= 500);
+                throw new ProviderError(`Ollama API error: ${error}`, this.config.id, model, response.status, response.status >= 500);
             }
             const data = await response.json();
             return this.parseResponse(data, model, Date.now() - startTime);
         }
         catch (error) {
-            if (error instanceof base_adapter_js_1.ProviderError)
+            if (error instanceof ProviderError)
                 throw error;
-            throw new base_adapter_js_1.ProviderError(`Ollama request failed: ${error instanceof Error ? error.message : 'Unknown error'}`, this.config.id, model, undefined, true);
+            throw new ProviderError(`Ollama request failed: ${error instanceof Error ? error.message : 'Unknown error'}`, this.config.id, model, undefined, true);
         }
     }
     /**
@@ -155,7 +152,7 @@ class OllamaAdapter extends base_adapter_js_1.BaseProviderAdapter {
             }),
         });
         if (!response.ok) {
-            throw new base_adapter_js_1.ProviderError(`Ollama streaming failed: ${response.statusText}`, this.config.id, model, response.status);
+            throw new ProviderError(`Ollama streaming failed: ${response.statusText}`, this.config.id, model, response.status);
         }
         const reader = response.body?.getReader();
         if (!reader)
@@ -289,11 +286,10 @@ class OllamaAdapter extends base_adapter_js_1.BaseProviderAdapter {
         };
     }
 }
-exports.OllamaAdapter = OllamaAdapter;
 // ============================================================================
 // LM STUDIO ADAPTER (Compatibility)
 // ============================================================================
-class LMStudioAdapter extends OllamaAdapter {
+export class LMStudioAdapter extends OllamaAdapter {
     constructor() {
         super();
         this.config.id = 'lmstudio';
@@ -301,10 +297,9 @@ class LMStudioAdapter extends OllamaAdapter {
         this.baseUrl = process.env.LMSTUDIO_BASE_URL || 'http://localhost:1234/v1';
     }
 }
-exports.LMStudioAdapter = LMStudioAdapter;
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.ollamaAdapter = new OllamaAdapter();
-exports.lmstudioAdapter = new LMStudioAdapter();
+export const ollamaAdapter = new OllamaAdapter();
+export const lmstudioAdapter = new LMStudioAdapter();
 //# sourceMappingURL=ollama.adapter.js.map

@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as child_process from 'child_process';
 import { v4 as uuidv4 } from 'uuid';
 import chalk from 'chalk';
-import { CheckpointManager } from '../checkpoint-system/checkpoint-manager';
+import { CheckpointManager } from '../checkpoint-system/checkpoint-manager.js';
 
 /**
  * Simple diff result interface

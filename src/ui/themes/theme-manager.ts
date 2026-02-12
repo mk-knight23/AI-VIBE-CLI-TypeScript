@@ -1,4 +1,4 @@
-import { VibeTheme, themes } from './themes';
+import { VibeTheme, themes } from './themes.js';
 
 export class ThemeManager {
   private currentTheme: VibeTheme = themes.vibe;

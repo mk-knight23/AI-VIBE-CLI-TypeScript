@@ -1,4 +1,4 @@
-import { VibeProviderRouter } from '../providers/router';
+import { VibeProviderRouter } from '../providers/router.js';
 import os from 'os';
 
 export class CommandGenerator {

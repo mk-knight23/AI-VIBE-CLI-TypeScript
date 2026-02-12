@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Logger } from '../utils/structured-logger';
+import { createLogger } from '../utils/pino-logger.js';
 
-const logger = new Logger('ContextManager');
+const logger = createLogger('context-manager');
 
 export class ContextManager {
     private maxContextLength = 30000; // Average token limit safety

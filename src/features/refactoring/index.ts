@@ -1,4 +1,4 @@
 /**
  * Refactoring Module Exports
  */
-export * from './pattern-recognizer';
+export * from './pattern-recognizer.js';

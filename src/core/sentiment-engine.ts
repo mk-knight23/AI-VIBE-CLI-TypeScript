@@ -1,4 +1,4 @@
-import { VibeProviderRouter } from '../providers/router';
+import { VibeProviderRouter } from '../providers/router.js';
 
 export class SentimentEngine {
     constructor(private provider: VibeProviderRouter) { }

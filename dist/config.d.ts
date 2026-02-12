@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Configuration & BYOK (Bring Your Own Key) Manager
  * Handles API key input, secure storage, and provider configuration
  */
-import { VibeProviderRouter } from './providers/router';
+import { VibeProviderRouter } from './providers/router.js';
 interface StoredConfig {
     provider?: string;
     model?: string;
@@ -15,6 +15,7 @@ export declare class VibeConfigManager {
     private configDir;
     private configPath;
     private provider;
+    private explorer;
     constructor(provider: VibeProviderRouter);
     /**
      * Run first-time setup if no config exists
@@ -51,7 +52,7 @@ export declare class VibeConfigManager {
      */
     displayConfigStatus(): void;
     /**
-     * Load configuration from disk
+     * Load configuration from disk using cosmiconfig
      */
     loadConfig(): StoredConfig;
     /**

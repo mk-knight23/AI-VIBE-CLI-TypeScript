@@ -1,6 +1,6 @@
-import { VibeProviderRouter } from '../providers/router';
-import { Spinner } from '../ui/progress/spinner';
-import { formatTable } from '../ui/formatters/table';
+import { VibeProviderRouter } from '../providers/router.js';
+import { Spinner } from '../ui/progress/spinner.js';
+import { formatTable } from '../ui/formatters/table.js';
 
 export class Benchmarker {
     static async run(providerId: string): Promise<void> {

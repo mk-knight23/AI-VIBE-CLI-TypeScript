@@ -1,4 +1,4 @@
-import { Diagnostics } from './diagnostics';
+import { Diagnostics } from './diagnostics.js';
 
 export class ReadinessValidator {
     static async validate(): Promise<{ ready: boolean; report: string[] }> {

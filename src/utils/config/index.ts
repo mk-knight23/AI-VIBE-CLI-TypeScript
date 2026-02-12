@@ -8,12 +8,12 @@
  * - Secrets handling
  */
 
-export { configResolver, ConfigResolver, DEFAULT_CONFIG } from './resolver';
+export { configResolver, ConfigResolver, DEFAULT_CONFIG } from './resolver.js';
 export type {
   ConfigResolutionOptions,
   ConfigSource,
   VibeConfig,
   ThemeName,
   VerbosityLevel,
-} from './resolver';
-export { ConfigurationError } from './resolver';
+} from './resolver.js';
+export { ConfigurationError } from './resolver.js';

@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Testing Module
  * Test generation, execution, and coverage analysis
  */
-import { BaseModule, ModuleResult } from '../base.module';
+import { BaseModule, ModuleResult } from '../base.module.js';
 export declare class TestingModule extends BaseModule {
     private provider;
     private readonly frameworks;

@@ -7,8 +7,8 @@ import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { VibeApprovalManager } from '../approvals';
-import type { IApprovalSystem, ApprovalDetails, ApprovalType, ApprovalRisk, MultiEditResult, EditOperation, EditResult } from '../types';
+import { VibeApprovalManager } from '../approvals/index.js';
+import type { IApprovalSystem, ApprovalDetails, ApprovalType, ApprovalRisk, MultiEditResult, EditOperation, EditResult } from '../types.js';
 
 export interface ToolResult {
   success: boolean;

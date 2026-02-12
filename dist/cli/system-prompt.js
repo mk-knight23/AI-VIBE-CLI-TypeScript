@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI v0.0.1 - Agent System Prompt (Production-Grade)
  *
@@ -6,10 +5,7 @@
  * Used by LLM when processing user requests.
  * Version: 12.1.0
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VIBE_SYSTEM_PROMPT_VERSION = exports.MODE_PROMPTS = exports.VIBE_SYSTEM_PROMPT = void 0;
-exports.getSystemPrompt = getSystemPrompt;
-exports.VIBE_SYSTEM_PROMPT = `You are VIBE CLI — an AI SOFTWARE ENGINEER AGENT that OPERATES inside a terminal.
+export const VIBE_SYSTEM_PROMPT = `You are VIBE CLI — an AI SOFTWARE ENGINEER AGENT that OPERATES inside a terminal.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 CORE PRINCIPLE: EXECUTION > EXPLANATION
@@ -171,7 +167,7 @@ This is VIBE CLI v0.0.1.1.0 — An Agent That Executes.`;
 // ============================================================================
 // MODE-SPECIFIC SYSTEM PROMPTS
 // ============================================================================
-exports.MODE_PROMPTS = {
+export const MODE_PROMPTS = {
     /**
      * AGENT MODE - Full execution (default)
      * Tools are MANDATORY for any task with side effects
@@ -225,12 +221,12 @@ You can show code snippets when analyzing bugs.`,
 /**
  * Get system prompt with context injection
  */
-function getSystemPrompt(options = {}) {
+export function getSystemPrompt(options = {}) {
     const { mode = 'agent', context, projectContext } = options;
     // Start with mode-specific prompt
-    let prompt = exports.MODE_PROMPTS[mode] || exports.MODE_PROMPTS.agent;
+    let prompt = MODE_PROMPTS[mode] || MODE_PROMPTS.agent;
     // Add core execution rules
-    prompt += '\n\n' + exports.VIBE_SYSTEM_PROMPT;
+    prompt += '\n\n' + VIBE_SYSTEM_PROMPT;
     // Add project context if provided
     if (projectContext) {
         prompt += `\n\n## Current Project Context\n${projectContext}`;
@@ -249,5 +245,5 @@ function getSystemPrompt(options = {}) {
     }
     return prompt;
 }
-exports.VIBE_SYSTEM_PROMPT_VERSION = '0.0.1';
+export const VIBE_SYSTEM_PROMPT_VERSION = '0.0.1';
 //# sourceMappingURL=system-prompt.js.map

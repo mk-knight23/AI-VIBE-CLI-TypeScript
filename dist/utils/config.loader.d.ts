@@ -6,7 +6,7 @@
  *
  * Version: 0.0.1
  */
-import type { VibeConfig } from '../core-types';
+import type { VibeConfig } from '../core-types/index.js';
 /** Default configuration path in user's home directory */
 export declare const DEFAULT_CONFIG_DIR: string;
 /** Project-level config path */

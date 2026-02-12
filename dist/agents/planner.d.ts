@@ -4,8 +4,8 @@
  * Creates execution plans for complex tasks.
  * Breaks down user intents into actionable steps.
  */
-import type { VibeIntent, Plan } from '../types';
-import { CompletionPrimitive } from '../providers/completion';
+import type { VibeIntent, Plan } from '../types.js';
+import { CompletionPrimitive } from '../providers/completion.js';
 export interface PlanningOptions {
     maxSteps?: number;
     includeRisks?: boolean;

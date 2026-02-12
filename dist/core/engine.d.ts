@@ -2,9 +2,9 @@
  * VIBE-CLI v0.0.1 - Core Engine
  * Main orchestrator for the CLI
  */
-import { VibeProviderRouter } from '../providers/router';
-import { VibeMemoryManager } from '../memory';
-import { VibeAgentExecutor } from '../agents';
+import { VibeProviderRouter } from '../providers/router.js';
+import { VibeMemoryManager } from '../memory/index.js';
+import { VibeAgentExecutor } from '../agents/index.js';
 export interface EngineConfig {
     modulesDir?: string;
     skipModules?: boolean;

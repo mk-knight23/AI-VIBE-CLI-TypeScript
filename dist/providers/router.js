@@ -1,48 +1,12 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Provider Router
  * Universal interface for AI providers (OpenAI, Anthropic, Google, xAI, Ollama)
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VibeProviderRouter = void 0;
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const os = __importStar(require("os"));
-const registry_1 = require("./registry");
-class VibeProviderRouter {
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { PROVIDER_REGISTRY, getProviderById, getProviderByModel } from './registry.js';
+export class VibeProviderRouter {
     providers;
     defaultProvider = 'minimax';
     currentProvider = 'minimax';
@@ -62,7 +26,7 @@ class VibeProviderRouter {
         return { totalTokens, totalCost };
     }
     initializeProviders() {
-        for (const provider of registry_1.PROVIDER_REGISTRY) {
+        for (const provider of PROVIDER_REGISTRY) {
             this.providers.set(provider.id, {
                 id: provider.id,
                 name: provider.name,
@@ -616,7 +580,7 @@ class VibeProviderRouter {
      */
     setModel(model) {
         // Check if it's a model ID in any provider
-        const providerInfo = (0, registry_1.getProviderByModel)(model);
+        const providerInfo = getProviderByModel(model);
         if (providerInfo) {
             this.currentProvider = providerInfo.id;
             this.currentModel = model;
@@ -626,7 +590,7 @@ class VibeProviderRouter {
             return true;
         }
         // Check if it's a model ID in current provider
-        for (const m of registry_1.PROVIDER_REGISTRY) {
+        for (const m of PROVIDER_REGISTRY) {
             if (m.id === this.currentProvider) {
                 const modelExists = m.models?.some(mm => mm.id === model || mm.id.includes(model));
                 if (modelExists) {
@@ -663,7 +627,7 @@ class VibeProviderRouter {
     listProviders() {
         const providers = [];
         for (const [id, config] of this.providers) {
-            const providerInfo = (0, registry_1.getProviderById)(id);
+            const providerInfo = getProviderById(id);
             providers.push({
                 id,
                 name: config.name,
@@ -702,7 +666,7 @@ class VibeProviderRouter {
     getFreeTierModels() {
         const freeModels = [];
         for (const [providerId, config] of this.providers) {
-            const providerInfo = (0, registry_1.getProviderById)(providerId);
+            const providerInfo = getProviderById(providerId);
             if (!providerInfo)
                 continue;
             for (const model of providerInfo.models) {
@@ -799,5 +763,4 @@ class VibeProviderRouter {
         };
     }
 }
-exports.VibeProviderRouter = VibeProviderRouter;
 //# sourceMappingURL=router.js.map

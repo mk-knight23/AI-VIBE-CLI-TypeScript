@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - Provider Adapter Base Interface
  *
@@ -7,13 +6,10 @@
  *
  * Version: 0.0.1
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ModelNotFoundError = exports.RateLimitError = exports.AuthenticationError = exports.ProviderError = exports.BaseProviderAdapter = void 0;
-exports.selectModelForTask = selectModelForTask;
 // ============================================================================
 // BASE ADAPTER
 // ============================================================================
-class BaseProviderAdapter {
+export class BaseProviderAdapter {
     config;
     models;
     constructor(config, models) {
@@ -68,11 +64,10 @@ class BaseProviderAdapter {
         }
     }
 }
-exports.BaseProviderAdapter = BaseProviderAdapter;
 // ============================================================================
 // ROUTING HELPERS
 // ============================================================================
-function selectModelForTask(task, models) {
+export function selectModelForTask(task, models) {
     const taskLower = task.toLowerCase();
     // Task-based model selection
     if (taskLower.includes('reason') || taskLower.includes('think') || taskLower.includes('plan')) {
@@ -102,7 +97,7 @@ function selectModelForTask(task, models) {
 // ============================================================================
 // ERROR TYPES
 // ============================================================================
-class ProviderError extends Error {
+export class ProviderError extends Error {
     provider;
     model;
     statusCode;
@@ -116,26 +111,22 @@ class ProviderError extends Error {
         this.name = 'ProviderError';
     }
 }
-exports.ProviderError = ProviderError;
-class AuthenticationError extends ProviderError {
+export class AuthenticationError extends ProviderError {
     constructor(provider, model) {
         super(`Authentication failed for ${provider}. Check your API key.`, provider, model, 401, false);
         this.name = 'AuthenticationError';
     }
 }
-exports.AuthenticationError = AuthenticationError;
-class RateLimitError extends ProviderError {
+export class RateLimitError extends ProviderError {
     constructor(provider, model, retryAfter) {
         super(`Rate limit exceeded for ${provider}.${retryAfter ? ` Retry after ${retryAfter}s.` : ''}`, provider, model, 429, true);
         this.name = 'RateLimitError';
     }
 }
-exports.RateLimitError = RateLimitError;
-class ModelNotFoundError extends ProviderError {
+export class ModelNotFoundError extends ProviderError {
     constructor(provider, model) {
         super(`Model ${model} not available for ${provider}`, provider, model, 404, false);
         this.name = 'ModelNotFoundError';
     }
 }
-exports.ModelNotFoundError = ModelNotFoundError;
 //# sourceMappingURL=base.adapter.js.map

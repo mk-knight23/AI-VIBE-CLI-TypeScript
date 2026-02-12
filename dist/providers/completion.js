@@ -1,17 +1,13 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - COMPLETION Primitive
  *
  * Handles LLM completion requests with provider routing.
  * Selects best model per task type (completion, planning, refactoring, reasoning).
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CompletionPrimitive = void 0;
-exports.completeText = completeText;
 /**
  * COMPLETION Primitive - Handles all LLM completions
  */
-class CompletionPrimitive {
+export class CompletionPrimitive {
     provider;
     constructor(provider) {
         this.provider = provider;
@@ -96,11 +92,10 @@ class CompletionPrimitive {
         return (tokens / 1000) * costPer1k;
     }
 }
-exports.CompletionPrimitive = CompletionPrimitive;
 /**
  * Simple text completion without provider routing
  */
-async function completeText(prompt, _apiKey) {
+export async function completeText(prompt, _apiKey) {
     // Placeholder for simple completion without full provider routing
     // In production, this would call OpenAI or another provider directly
     return `[COMPLETION] Response to: ${prompt.slice(0, 50)}...`;

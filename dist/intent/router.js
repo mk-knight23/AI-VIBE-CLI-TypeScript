@@ -1,17 +1,14 @@
-"use strict";
 /**
  * Intent Router - Classifies natural language into actionable intents
  *
  * This is the core of the intent-driven UX.
  * Users type naturally; the system infers what they want.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.IntentRouter = void 0;
-const types_js_1 = require("../types.js");
+import { IntentType } from '../types.js';
 /**
  * Intent Router - classifies natural language input
  */
-class IntentRouter {
+export class IntentRouter {
     patterns;
     provider;
     LOW_CONFIDENCE_THRESHOLD = 0.6;
@@ -206,7 +203,7 @@ class IntentRouter {
         const category = this.moduleToCategory(module);
         return {
             id: `module-${module}-${Date.now()}`,
-            type: types_js_1.IntentType.CODE,
+            type: IntentType.CODE,
             category,
             query: input,
             confidence: 0.95,
@@ -433,7 +430,7 @@ Respond with ONLY the category name and a brief description of what you're tryin
     createUnknownIntent(input) {
         return {
             id: `unknown-${Date.now()}`,
-            type: types_js_1.IntentType.UNKNOWN,
+            type: IntentType.UNKNOWN,
             category: 'unknown',
             query: input,
             confidence: this.UNKNOWN_CONFIDENCE,
@@ -448,26 +445,26 @@ Respond with ONLY the category name and a brief description of what you're tryin
      */
     mapCategoryToIntentType(category) {
         const map = {
-            'question': types_js_1.IntentType.ASK,
-            'code_generation': types_js_1.IntentType.CODE,
-            'refactor': types_js_1.IntentType.REFACTOR,
-            'debug': types_js_1.IntentType.DEBUG,
-            'testing': types_js_1.IntentType.TEST,
-            'api': types_js_1.IntentType.API,
-            'ui': types_js_1.IntentType.UI,
-            'deploy': types_js_1.IntentType.DEPLOY,
-            'infra': types_js_1.IntentType.DEPLOY,
-            'memory': types_js_1.IntentType.MEMORY,
-            'planning': types_js_1.IntentType.PLAN,
-            'agent': types_js_1.IntentType.AGENT,
-            'git': types_js_1.IntentType.GIT,
-            'analysis': types_js_1.IntentType.ASK,
-            'security': types_js_1.IntentType.DEBUG,
-            'code_assistant': types_js_1.IntentType.CODE,
-            'completion': types_js_1.IntentType.CODE,
-            'unknown': types_js_1.IntentType.UNKNOWN,
+            'question': IntentType.ASK,
+            'code_generation': IntentType.CODE,
+            'refactor': IntentType.REFACTOR,
+            'debug': IntentType.DEBUG,
+            'testing': IntentType.TEST,
+            'api': IntentType.API,
+            'ui': IntentType.UI,
+            'deploy': IntentType.DEPLOY,
+            'infra': IntentType.DEPLOY,
+            'memory': IntentType.MEMORY,
+            'planning': IntentType.PLAN,
+            'agent': IntentType.AGENT,
+            'git': IntentType.GIT,
+            'analysis': IntentType.ASK,
+            'security': IntentType.DEBUG,
+            'code_assistant': IntentType.CODE,
+            'completion': IntentType.CODE,
+            'unknown': IntentType.UNKNOWN,
         };
-        return map[category] || types_js_1.IntentType.UNKNOWN;
+        return map[category] || IntentType.UNKNOWN;
     }
     /**
      * Check if input is a meta-command
@@ -589,5 +586,4 @@ Respond with ONLY the category name and a brief description of what you're tryin
         return false;
     }
 }
-exports.IntentRouter = IntentRouter;
 //# sourceMappingURL=router.js.map

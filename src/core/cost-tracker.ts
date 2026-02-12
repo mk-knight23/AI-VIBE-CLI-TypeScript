@@ -1,4 +1,4 @@
-import { stateManager } from './state-manager';
+import { stateManager } from './state-manager.js';
 
 export interface TokenUsage {
     promptTokens: number;

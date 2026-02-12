@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Deployment Module
  * Build, deploy, CI/CD setup, and monitoring
  */
-import { BaseModule, ModuleResult } from '../base.module';
+import { BaseModule, ModuleResult } from '../base.module.js';
 export declare class DeploymentModule extends BaseModule {
     private provider;
     private readonly targets;

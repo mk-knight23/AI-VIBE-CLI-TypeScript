@@ -1,24 +1,17 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Logger Utility
  * Production-grade logging with levels and formatting
  */
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.logger = exports.Logger = exports.LogLevel = void 0;
-exports.createLogger = createLogger;
-const chalk_1 = __importDefault(require("chalk"));
-var LogLevel;
+import chalk from 'chalk';
+export var LogLevel;
 (function (LogLevel) {
     LogLevel[LogLevel["DEBUG"] = 0] = "DEBUG";
     LogLevel[LogLevel["INFO"] = 1] = "INFO";
     LogLevel[LogLevel["WARN"] = 2] = "WARN";
     LogLevel[LogLevel["ERROR"] = 3] = "ERROR";
     LogLevel[LogLevel["NONE"] = 4] = "NONE";
-})(LogLevel || (exports.LogLevel = LogLevel = {}));
-class Logger {
+})(LogLevel || (LogLevel = {}));
+export class Logger {
     static instance;
     level = LogLevel.INFO;
     moduleName = 'VIBE';
@@ -73,16 +66,16 @@ class Logger {
         const formatted = this.format(entry);
         switch (level) {
             case LogLevel.DEBUG:
-                console.log(chalk_1.default.gray(formatted));
+                console.log(chalk.gray(formatted));
                 break;
             case LogLevel.INFO:
-                console.log(chalk_1.default.cyan(formatted));
+                console.log(chalk.cyan(formatted));
                 break;
             case LogLevel.WARN:
-                console.log(chalk_1.default.yellow(formatted));
+                console.log(chalk.yellow(formatted));
                 break;
             case LogLevel.ERROR:
-                console.error(chalk_1.default.red(formatted));
+                console.error(chalk.red(formatted));
                 break;
         }
     }
@@ -129,12 +122,11 @@ class Logger {
         }
     }
 }
-exports.Logger = Logger;
-exports.logger = Logger.getInstance();
+export const logger = Logger.getInstance();
 /**
  * Create a logger for a specific module
  */
-function createLogger(moduleName) {
-    return exports.logger.child(moduleName);
+export function createLogger(moduleName) {
+    return logger.child(moduleName);
 }
 //# sourceMappingURL=logger.js.map

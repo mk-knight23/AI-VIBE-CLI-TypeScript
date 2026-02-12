@@ -1,5 +1,5 @@
-import { VibeProviderRouter } from '../providers/router';
-import { themeManager } from '../ui/themes/theme-manager';
+import { VibeProviderRouter } from '../providers/router.js';
+import { themeManager } from '../ui/themes/theme-manager.js';
 
 export class PairProgrammingManager {
     constructor(private provider: VibeProviderRouter) { }

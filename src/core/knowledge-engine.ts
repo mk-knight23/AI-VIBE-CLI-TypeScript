@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { VibeProviderRouter } from '../providers/router';
+import { VibeProviderRouter } from '../providers/router.js';
 
 export class KnowledgeEngine {
     constructor(private provider: VibeProviderRouter) { }

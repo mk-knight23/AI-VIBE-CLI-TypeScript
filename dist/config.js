@@ -1,56 +1,29 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Configuration & BYOK (Bring Your Own Key) Manager
  * Handles API key input, secure storage, and provider configuration
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import chalk from 'chalk';
+import { cosmiconfigSync } from 'cosmiconfig';
+import pino from 'pino';
+import * as keytar from 'keytar';
+import { VibeProviderRouter } from './providers/router.js';
+import { prompt, promptYesNo, promptNumber } from './cli/ui.js';
+const logger = pino({
+    transport: {
+        target: 'pino-pretty',
+        options: {
+            colorize: true,
+        },
+    },
 });
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VibeConfigManager = void 0;
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const os = __importStar(require("os"));
-const chalk_1 = __importDefault(require("chalk"));
-const router_1 = require("./providers/router");
-const ui_1 = require("./cli/ui");
-class VibeConfigManager {
+export class VibeConfigManager {
     configDir;
     configPath;
     provider;
+    explorer = cosmiconfigSync('vibe');
     constructor(provider) {
         this.provider = provider;
         this.configDir = path.join(os.homedir(), '.vibe');
@@ -64,27 +37,27 @@ class VibeConfigManager {
         const needsSetup = !config.provider;
         if (needsSetup) {
             console.clear();
-            console.log(chalk_1.default.cyan(`
+            console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║   ${chalk_1.default.white.bold('V I B E')}  ${chalk_1.default.green('v0.0.1.0.0')}                                    ║
-║   ${chalk_1.default.gray('AI-Powered Development Environment')}                       ║
+║   ${chalk.white.bold('V I B E')}  ${chalk.green('v0.0.1.0.0')}                                    ║
+║   ${chalk.gray('AI-Powered Development Environment')}                       ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
       `));
-            console.log(chalk_1.default.white('\nWelcome! Let\'s get you set up in 3 quick steps.\n'));
+            console.log(chalk.white('\nWelcome! Let\'s get you set up in 3 quick steps.\n'));
             // Step 1: Provider & API Key
-            console.log(chalk_1.default.cyan('Step 1: AI Provider Configuration'));
+            console.log(chalk.cyan('Step 1: AI Provider Configuration'));
             await this.configureProvider();
             // Step 2: Theme Selection
-            console.log(chalk_1.default.cyan('\nStep 2: UI Personalization'));
+            console.log(chalk.cyan('\nStep 2: UI Personalization'));
             const themes = ['vibe', 'minimal', 'neon'];
-            console.log(chalk_1.default.white('Available themes: ') + themes.join(', '));
-            const themeChoice = await (0, ui_1.prompt)('Choose a theme [vibe/minimal/neon] (default: vibe)');
+            console.log(chalk.white('Available themes: ') + themes.join(', '));
+            const themeChoice = await prompt('Choose a theme [vibe/minimal/neon] (default: vibe)');
             config.theme = themes.includes(themeChoice) ? themeChoice : 'vibe';
             // Step 3: Telemetry (Feature #12)
-            console.log(chalk_1.default.cyan('\nStep 3: Privacy & Telemetry'));
-            const telemetry = await (0, ui_1.promptYesNo)('Help improve VIBE by sending anonymous usage data? (Opt-in, privacy-first)');
+            console.log(chalk.cyan('\nStep 3: Privacy & Telemetry'));
+            const telemetry = await promptYesNo('Help improve VIBE by sending anonymous usage data? (Opt-in, privacy-first)');
             config.telemetry = telemetry;
             this.saveConfig({
                 ...config,
@@ -93,8 +66,8 @@ class VibeConfigManager {
                 provider: this.provider.getCurrentProvider()?.id,
                 model: this.provider.getCurrentModel(),
             });
-            console.log(chalk_1.default.green('\n✓ Setup complete! You\'re ready to vibe.\n'));
-            await (0, ui_1.prompt)('Press [Enter] to start the TUI...');
+            console.log(chalk.green('\n✓ Setup complete! You\'re ready to vibe.\n'));
+            await prompt('Press [Enter] to start the TUI...');
         }
         return needsSetup;
     }
@@ -112,10 +85,10 @@ class VibeConfigManager {
         if (freeProviders.length > 0) {
             // Suggest free options silently
             const freeNames = freeProviders.map(p => p.name).join(', ');
-            console.log(chalk_1.default.gray(`\n💡 Tip: Free options available: ${freeNames}\n`));
+            console.log(chalk.gray(`\n💡 Tip: Free options available: ${freeNames}\n`));
         }
         // Only prompt once, non-intrusively
-        console.log(chalk_1.default.gray('Configure an AI provider with: ') + chalk_1.default.cyan('/config\n'));
+        console.log(chalk.gray('Configure an AI provider with: ') + chalk.cyan('/config\n'));
     }
     /**
      * Configure a provider interactively with searchable selection
@@ -125,37 +98,37 @@ class VibeConfigManager {
         const freeProviders = providers.filter(p => p.freeTier);
         const paidProviders = providers.filter(p => !p.freeTier);
         // Show providers organized by tier with searchable format
-        console.log(chalk_1.default.cyan('\n╔═══════════════════════════════════════════════════════════════╗'));
-        console.log(chalk_1.default.cyan('║  Select Provider (type to search, arrows to navigate)         ║'));
-        console.log(chalk_1.default.cyan('╠═══════════════════════════════════════════════════════════════╣'));
+        console.log(chalk.cyan('\n╔═══════════════════════════════════════════════════════════════╗'));
+        console.log(chalk.cyan('║  Select Provider (type to search, arrows to navigate)         ║'));
+        console.log(chalk.cyan('╠═══════════════════════════════════════════════════════════════╣'));
         if (freeProviders.length > 0) {
-            console.log(chalk_1.default.cyan('║  FREE TIER:                                                  ║'));
+            console.log(chalk.cyan('║  FREE TIER:                                                  ║'));
             for (const p of freeProviders) {
-                const status = p.configured ? chalk_1.default.green('[✓]') : chalk_1.default.gray('[○]');
-                console.log(chalk_1.default.cyan('║    ') + status + ' ' + chalk_1.default.white(p.name.padEnd(20)));
+                const status = p.configured ? chalk.green('[✓]') : chalk.gray('[○]');
+                console.log(chalk.cyan('║    ') + status + ' ' + chalk.white(p.name.padEnd(20)));
             }
-            console.log(chalk_1.default.cyan('║                                                               ║'));
+            console.log(chalk.cyan('║                                                               ║'));
         }
-        console.log(chalk_1.default.cyan('║  PAID:                                                       ║'));
+        console.log(chalk.cyan('║  PAID:                                                       ║'));
         for (const p of paidProviders) {
-            const status = p.configured ? chalk_1.default.green('[✓]') : chalk_1.default.red('[✗]');
-            console.log(chalk_1.default.cyan('║    ') + status + ' ' + chalk_1.default.white(p.name.padEnd(20)));
+            const status = p.configured ? chalk.green('[✓]') : chalk.red('[✗]');
+            console.log(chalk.cyan('║    ') + status + ' ' + chalk.white(p.name.padEnd(20)));
         }
-        console.log(chalk_1.default.cyan('║                                                               ║'));
-        console.log(chalk_1.default.cyan('║  [type provider name] to filter                              ║'));
-        console.log(chalk_1.default.cyan('║  [enter] to select  [ctrl+c] to cancel                       ║'));
-        console.log(chalk_1.default.cyan('╚═══════════════════════════════════════════════════════════════╝'));
+        console.log(chalk.cyan('║                                                               ║'));
+        console.log(chalk.cyan('║  [type provider name] to filter                              ║'));
+        console.log(chalk.cyan('║  [enter] to select  [ctrl+c] to cancel                       ║'));
+        console.log(chalk.cyan('╚═══════════════════════════════════════════════════════════════╝'));
         // Get user input (searchable)
-        const searchTerm = await (0, ui_1.prompt)('\nProvider (or part of name):');
+        const searchTerm = await prompt('\nProvider (or part of name):');
         if (!searchTerm.trim()) {
-            console.log(chalk_1.default.gray('Selection cancelled.\n'));
+            console.log(chalk.gray('Selection cancelled.\n'));
             return;
         }
         // Filter providers by search term
         const filtered = providers.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             p.id.toLowerCase().includes(searchTerm.toLowerCase()));
         if (filtered.length === 0) {
-            console.log(chalk_1.default.yellow(`\nNo providers match "${searchTerm}". Try a different term.\n`));
+            console.log(chalk.yellow(`\nNo providers match "${searchTerm}". Try a different term.\n`));
             return;
         }
         if (filtered.length === 1) {
@@ -164,12 +137,12 @@ class VibeConfigManager {
             return;
         }
         // Multiple matches - show filtered list
-        console.log(chalk_1.default.cyan('\nMatching providers:\n'));
+        console.log(chalk.cyan('\nMatching providers:\n'));
         filtered.forEach((p, i) => {
-            const status = p.configured ? chalk_1.default.green('✓') : p.freeTier ? chalk_1.default.gray('○') : chalk_1.default.red('✗');
-            console.log(`  ${chalk_1.default.white(String(i + 1))}. ${status} ${p.name}`);
+            const status = p.configured ? chalk.green('✓') : p.freeTier ? chalk.gray('○') : chalk.red('✗');
+            console.log(`  ${chalk.white(String(i + 1))}. ${status} ${p.name}`);
         });
-        const selected = await (0, ui_1.promptNumber)('\nSelect number', 1, filtered.length);
+        const selected = await promptNumber('\nSelect number', 1, filtered.length);
         await this.configureProviderById(filtered[selected - 1].id);
     }
     /**
@@ -186,29 +159,37 @@ class VibeConfigManager {
         // If provider doesn't need API key (like Ollama), just set it
         if (!config.requiresApiKey) {
             this.provider.setProvider(providerId);
-            console.log(chalk_1.default.green(`\n✓ Provider set to ${providerInfo.name}\n`));
+            console.log(chalk.green(`\n✓ Provider set to ${providerInfo.name}\n`));
             return;
         }
         // Prompt for API key
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
 To use ${providerInfo.name}, you need an API key.
 
 You can get a key from: ${this.getProviderKeyUrl(providerId)}
     `));
-        const apiKey = await (0, ui_1.prompt)('Paste your API key');
+        const apiKey = await prompt('Paste your API key');
         if (!apiKey || apiKey.trim().length < 5) {
-            console.log(chalk_1.default.red('Invalid API key. Setup cancelled.\n'));
+            console.log(chalk.red('Invalid API key. Setup cancelled.\n'));
             return;
         }
-        // Save the key FIRST (test on first real request, not here)
-        this.provider.setApiKey(providerId, apiKey.trim());
-        this.provider.setProvider(providerId);
-        console.log(chalk_1.default.green(`
+        // Save the key securely using keytar
+        try {
+            await keytar.setPassword('vibe-cli', providerId, apiKey.trim());
+            this.provider.setApiKey(providerId, apiKey.trim());
+            this.provider.setProvider(providerId);
+            logger.info(`API key saved securely for ${providerInfo.name}`);
+            console.log(chalk.green(`
 ✓ API key saved for ${providerInfo.name}
 ✓ Provider set to ${providerInfo.name}
 
 Note: The key will be tested on your first request.
-    `));
+      `));
+        }
+        catch (error) {
+            logger.error(error, 'Failed to save API key securely');
+            console.log(chalk.red('Failed to save API key securely. Is the system keychain accessible?\n'));
+        }
     }
     /**
      * Configure a specific provider by name
@@ -218,7 +199,7 @@ Note: The key will be tested on your first request.
         const providers = this.provider.listProviders();
         const provider = providers.find(p => p.id === providerName || p.name.toLowerCase().includes(providerName.toLowerCase()));
         if (!provider) {
-            console.log(chalk_1.default.red(`Provider "${providerName}" not found.\n`));
+            console.log(chalk.red(`Provider "${providerName}" not found.\n`));
             return false;
         }
         const config = this.provider.getProvider(provider.id);
@@ -227,21 +208,21 @@ Note: The key will be tested on your first request.
         // If no API key needed
         if (!config.requiresApiKey) {
             this.provider.setProvider(provider.id);
-            console.log(chalk_1.default.green(`✓ Provider set to ${provider.name}\n`));
+            console.log(chalk.green(`✓ Provider set to ${provider.name}\n`));
             return true;
         }
-        console.log(chalk_1.default.cyan(`\nConfiguring ${provider.name}...`));
-        console.log(chalk_1.default.gray(`Get your key from: ${this.getProviderKeyUrl(provider.id)}\n`));
-        const apiKey = await (0, ui_1.prompt)('Paste your API key');
+        console.log(chalk.cyan(`\nConfiguring ${provider.name}...`));
+        console.log(chalk.gray(`Get your key from: ${this.getProviderKeyUrl(provider.id)}\n`));
+        const apiKey = await prompt('Paste your API key');
         if (!apiKey || apiKey.trim().length < 5) {
-            console.log(chalk_1.default.red('Invalid API key.\n'));
+            console.log(chalk.red('Invalid API key.\n'));
             return false;
         }
         // Save the key FIRST (test on first real request, not here)
         this.provider.setApiKey(provider.id, apiKey.trim());
         this.provider.setProvider(provider.id);
-        console.log(chalk_1.default.green(`✓ API key saved for ${provider.name}`));
-        console.log(chalk_1.default.gray('Note: The key will be tested on your first request.\n'));
+        console.log(chalk.green(`✓ API key saved for ${provider.name}`));
+        console.log(chalk.gray('Note: The key will be tested on your first request.\n'));
         return true;
     }
     /**
@@ -249,7 +230,7 @@ Note: The key will be tested on your first request.
      */
     async testProviderKey(providerId, apiKey) {
         // Temporarily set the key for testing
-        const tempProvider = new router_1.VibeProviderRouter();
+        const tempProvider = new VibeProviderRouter();
         tempProvider.setApiKey(providerId, apiKey);
         try {
             const response = await tempProvider.complete('test');
@@ -285,23 +266,23 @@ Note: The key will be tested on your first request.
     displayConfigStatus() {
         const status = this.provider.getStatus();
         const providers = this.provider.listProviders();
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║  Configuration Status                                         ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║                                                               ║
-║  ${chalk_1.default.white('Current Provider:')} ${chalk_1.default.green(status.provider)}                        ║
-║  ${chalk_1.default.white('Current Model:')} ${chalk_1.default.green(status.model)}                           ║
+║  ${chalk.white('Current Provider:')} ${chalk.green(status.provider)}                        ║
+║  ${chalk.white('Current Model:')} ${chalk.green(status.model)}                           ║
 ║                                                               ║
-║  ${chalk_1.default.white('Providers:')} ${status.configured}/${status.available} configured                                ║
+║  ${chalk.white('Providers:')} ${status.configured}/${status.available} configured                                ║
 ║                                                               ║
     `));
         for (const p of providers) {
-            const statusIcon = p.configured ? chalk_1.default.green('✓') : p.freeTier ? chalk_1.default.gray('○') : chalk_1.default.red('✗');
+            const statusIcon = p.configured ? chalk.green('✓') : p.freeTier ? chalk.gray('○') : chalk.red('✗');
             const line = `  ${statusIcon} ${p.name.padEnd(18)} ${p.model}`;
             console.log(line);
         }
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
 ║                                                               ║
 ║  Commands:                                                    ║
 ║    /config          - Configure a provider                    ║
@@ -313,16 +294,26 @@ Note: The key will be tested on your first request.
     `));
     }
     /**
-     * Load configuration from disk
+     * Load configuration from disk using cosmiconfig
      */
     loadConfig() {
+        try {
+            const result = this.explorer.search();
+            if (result && !result.isEmpty) {
+                return result.config;
+            }
+        }
+        catch (error) {
+            logger.error(error, 'Error searching for config');
+        }
         if (!fs.existsSync(this.configPath)) {
             return {};
         }
         try {
             return JSON.parse(fs.readFileSync(this.configPath, 'utf-8'));
         }
-        catch {
+        catch (error) {
+            logger.error(error, 'Error reading config.json');
             return {};
         }
     }
@@ -336,5 +327,4 @@ Note: The key will be tested on your first request.
         fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2));
     }
 }
-exports.VibeConfigManager = VibeConfigManager;
 //# sourceMappingURL=config.js.map

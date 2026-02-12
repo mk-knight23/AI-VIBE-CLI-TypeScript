@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { DependencyGraphBuilder, DependencyGraph } from '../../core/codebase-analyzer/dependency-graph';
+import { DependencyGraphBuilder, DependencyGraph } from '../../core/codebase-analyzer/dependency-graph.js';
 
 /**
  * Visual output format

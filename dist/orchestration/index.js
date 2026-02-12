@@ -1,58 +1,22 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 Orchestrator
  * Multi-agent orchestration for intent-driven execution
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Orchestrator = void 0;
-const child_process = __importStar(require("child_process"));
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const router_1 = require("../providers/router");
-const memory_1 = require("../memory");
-const approvals_1 = require("../approvals");
-const code_assistant_1 = require("../modules/code-assistant");
-const testing_1 = require("../modules/testing");
-const debugging_1 = require("../modules/debugging");
-const security_1 = require("../modules/security");
-const deployment_1 = require("../modules/deployment");
+import * as child_process from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import { VibeProviderRouter } from '../providers/router.js';
+import { VibeMemoryManager } from '../memory/index.js';
+import { VibeApprovalManager } from '../approvals/index.js';
+import { CodeAssistantModule } from '../modules/code-assistant/index.js';
+import { TestingModule } from '../modules/testing/index.js';
+import { DebuggingModule } from '../modules/debugging/index.js';
+import { SecurityModule } from '../modules/security/index.js';
+import { DeploymentModule } from '../modules/deployment/index.js';
 /**
  * V0.0.1 Orchestrator - manages agent execution
  */
-class Orchestrator {
+export class Orchestrator {
     provider;
     memory;
     approvals;
@@ -64,9 +28,9 @@ class Orchestrator {
     security;
     deployment;
     constructor(config = {}) {
-        this.provider = config.provider || new router_1.VibeProviderRouter();
-        this.memory = config.memory || new memory_1.VibeMemoryManager();
-        this.approvals = config.approvals || new approvals_1.VibeApprovalManager();
+        this.provider = config.provider || new VibeProviderRouter();
+        this.memory = config.memory || new VibeMemoryManager();
+        this.approvals = config.approvals || new VibeApprovalManager();
         this.session = config.session || {
             id: `session-${Date.now()}`,
             projectRoot: process.cwd(),
@@ -74,11 +38,11 @@ class Orchestrator {
             lastActivity: new Date(),
         };
         // Initialize modules
-        this.codeAssistant = new code_assistant_1.CodeAssistantModule();
-        this.testing = new testing_1.TestingModule();
-        this.debugging = new debugging_1.DebuggingModule();
-        this.security = new security_1.SecurityModule();
-        this.deployment = new deployment_1.DeploymentModule();
+        this.codeAssistant = new CodeAssistantModule();
+        this.testing = new TestingModule();
+        this.debugging = new DebuggingModule();
+        this.security = new SecurityModule();
+        this.deployment = new DeploymentModule();
     }
     /**
      * Create an execution plan from an intent
@@ -590,5 +554,4 @@ Be concise and practical.`;
         return changes;
     }
 }
-exports.Orchestrator = Orchestrator;
 //# sourceMappingURL=index.js.map

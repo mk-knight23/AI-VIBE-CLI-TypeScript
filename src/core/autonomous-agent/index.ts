@@ -1,4 +1,4 @@
 /**
  * Autonomous Agent Module Exports
  */
-export * from './agent-orchestrator';
+export * from './agent-orchestrator.js';

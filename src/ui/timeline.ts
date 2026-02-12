@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { themeManager } from '../ui/themes/theme-manager';
+import { themeManager } from '../ui/themes/theme-manager.js';
 
 export interface VibeEvent {
     timestamp: Date;

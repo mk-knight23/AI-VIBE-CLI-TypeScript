@@ -1,7 +1,7 @@
 import os from 'os';
 import { execSync } from 'child_process';
 import chalk from 'chalk';
-import { formatTable } from '../ui/formatters/table';
+import { formatTable } from '../ui/formatters/table.js';
 
 export class Diagnostics {
     static check(): void {

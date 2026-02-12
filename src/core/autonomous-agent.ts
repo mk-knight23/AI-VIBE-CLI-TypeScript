@@ -1,9 +1,9 @@
-import { OrchestrationPrimitive } from '../primitives/orchestration';
-import { PlanningPrimitive } from '../primitives/planning';
-import { VibeProviderRouter } from '../providers/router';
-import { Logger } from '../utils/structured-logger';
+import { OrchestrationPrimitive } from '../domain/primitives/orchestration.js';
+import { PlanningPrimitive } from '../domain/primitives/planning.js';
+import { VibeProviderRouter } from '../providers/router.js';
+import { createLogger } from '../utils/pino-logger.js';
 
-const logger = new Logger('AutonomousAgent');
+const logger = createLogger('AutonomousAgent');
 
 export class AutonomousAgent {
     private maxIterations = 5;

@@ -1,9 +1,9 @@
-import simpleGit from 'simple-git';
-import { StateManager } from './state-manager';
-import { Logger } from '../utils/structured-logger';
+import { simpleGit } from 'simple-git';
+import { StateManager } from './state-manager.js';
+import { createLogger } from '../utils/pino-logger.js';
 
 const git = simpleGit();
-const logger = new Logger('CheckpointSystem');
+const logger = createLogger('checkpoint-system');
 
 export class CheckpointSystem {
     constructor(private state: StateManager) { }
@@ -32,7 +32,7 @@ export class CheckpointSystem {
 
     async rollback(name?: string): Promise<boolean> {
         try {
-            const log = await git.log();
+            const log: any = await git.log();
             let targetHash = '';
 
             if (name) {
@@ -41,12 +41,12 @@ export class CheckpointSystem {
                     targetHash = stored.commit;
                 } else {
                     // Try to find in git log
-                    const entry = log.all.find(c => c.message.includes(`VIBE_CHECKPOINT: ${name}`));
+                    const entry = log.all.find((c: any) => c.message.includes(`VIBE_CHECKPOINT: ${name}`));
                     if (entry) targetHash = entry.hash;
                 }
             } else {
                 // Rollback to very last VIBE_CHECKPOINT
-                const entry = log.all.find(c => c.message.includes('VIBE_CHECKPOINT'));
+                const entry = log.all.find((c: any) => c.message.includes('VIBE_CHECKPOINT'));
                 if (entry) targetHash = entry.hash;
             }
 
@@ -60,10 +60,10 @@ export class CheckpointSystem {
     }
 
     async list(): Promise<any[]> {
-        const log = await git.log();
+        const log: any = await git.log();
         return log.all
-            .filter(c => c.message.includes('VIBE_CHECKPOINT'))
-            .map(c => ({
+            .filter((c: any) => c.message.includes('VIBE_CHECKPOINT'))
+            .map((c: any) => ({
                 hash: c.hash,
                 message: c.message.replace('VIBE_CHECKPOINT: ', ''),
                 date: c.date,

@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Debugging Module
  * Error analysis, fix suggestions, and performance profiling
  */
-import { BaseModule, ModuleResult } from '../base.module';
+import { BaseModule, ModuleResult } from '../base.module.js';
 export declare class DebuggingModule extends BaseModule {
     private provider;
     private readonly errorPatterns;

@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Module Loader
  * Loads and manages VIBE modules
  */
-import { BaseModule } from '../modules/base.module';
+import { BaseModule } from '../modules/base.module.js';
 export interface ModuleLoadResult {
     name: string;
     module: BaseModule | null;

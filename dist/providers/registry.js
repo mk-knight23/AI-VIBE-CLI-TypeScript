@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI v0.0.1 - Provider Registry
  *
@@ -11,17 +10,10 @@
  *
  * Version: 0.0.1
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PROVIDER_REGISTRY = void 0;
-exports.getProviderById = getProviderById;
-exports.getProviderByModel = getProviderByModel;
-exports.getModelsByTier = getModelsByTier;
-exports.getFreeTierModels = getFreeTierModels;
-exports.listProviders = listProviders;
 // ============================================================================
 // PROVIDER REGISTRY
 // ============================================================================
-exports.PROVIDER_REGISTRY = [
+export const PROVIDER_REGISTRY = [
     // === MINIMAX (DEFAULT) ===
     {
         id: 'minimax',
@@ -303,15 +295,15 @@ exports.PROVIDER_REGISTRY = [
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
-function getProviderById(id) {
-    return exports.PROVIDER_REGISTRY.find(p => p.id === id);
+export function getProviderById(id) {
+    return PROVIDER_REGISTRY.find(p => p.id === id);
 }
-function getProviderByModel(modelId) {
-    return exports.PROVIDER_REGISTRY.find(p => p.models.some(m => m.id === modelId));
+export function getProviderByModel(modelId) {
+    return PROVIDER_REGISTRY.find(p => p.models.some(m => m.id === modelId));
 }
-function getModelsByTier(tier) {
+export function getModelsByTier(tier) {
     const result = [];
-    for (const provider of exports.PROVIDER_REGISTRY) {
+    for (const provider of PROVIDER_REGISTRY) {
         for (const model of provider.models) {
             if (model.tier === tier) {
                 result.push({ provider: provider.id, model });
@@ -320,11 +312,11 @@ function getModelsByTier(tier) {
     }
     return result;
 }
-function getFreeTierModels() {
+export function getFreeTierModels() {
     return getModelsByTier('fast').filter(m => m.model.freeTier);
 }
-function listProviders() {
-    return exports.PROVIDER_REGISTRY.map(p => ({
+export function listProviders() {
+    return PROVIDER_REGISTRY.map(p => ({
         id: p.id,
         name: p.name,
         requiresApiKey: p.requiresApiKey,

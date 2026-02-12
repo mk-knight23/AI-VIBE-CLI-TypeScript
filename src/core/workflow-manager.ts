@@ -1,4 +1,4 @@
-import { OrchestrationPrimitive } from '../primitives/orchestration';
+import { OrchestrationPrimitive } from '../domain/primitives/orchestration.js';
 import * as fs from 'fs';
 import * as path from 'path';
 

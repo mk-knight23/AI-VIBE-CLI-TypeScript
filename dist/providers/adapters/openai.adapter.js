@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - OpenAI Provider Adapter
  *
@@ -10,9 +9,7 @@
  *
  * Version: 0.0.1
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.azureAdapter = exports.openaiAdapter = exports.AzureOpenAIAdapter = exports.OpenAIAdapter = void 0;
-const base_adapter_js_1 = require("./base.adapter.js");
+import { BaseProviderAdapter, AuthenticationError, RateLimitError, ModelNotFoundError, ProviderError, } from './base.adapter.js';
 // ============================================================================
 // MODEL DEFINITIONS
 // ============================================================================
@@ -74,7 +71,7 @@ const OPENAI_CONFIG = {
 // ============================================================================
 // OPENAI ADAPTER
 // ============================================================================
-class OpenAIAdapter extends base_adapter_js_1.BaseProviderAdapter {
+export class OpenAIAdapter extends BaseProviderAdapter {
     baseUrl;
     constructor() {
         super(OPENAI_CONFIG, OPENAI_MODELS);
@@ -88,7 +85,7 @@ class OpenAIAdapter extends base_adapter_js_1.BaseProviderAdapter {
         const model = options?.model || this.config.defaultModel;
         const apiKey = this.getApiKey();
         if (!apiKey) {
-            throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+            throw new AuthenticationError(this.config.id, model);
         }
         this.validateModel(model);
         const endpoint = `${this.baseUrl}/chat/completions`;
@@ -103,26 +100,26 @@ class OpenAIAdapter extends base_adapter_js_1.BaseProviderAdapter {
                 body: JSON.stringify(body),
             });
             if (response.status === 401) {
-                throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+                throw new AuthenticationError(this.config.id, model);
             }
             if (response.status === 429) {
                 const retryAfter = response.headers.get('Retry-After');
-                throw new base_adapter_js_1.RateLimitError(this.config.id, model, retryAfter ? parseInt(retryAfter) : undefined);
+                throw new RateLimitError(this.config.id, model, retryAfter ? parseInt(retryAfter) : undefined);
             }
             if (response.status === 404) {
-                throw new base_adapter_js_1.ModelNotFoundError(this.config.id, model);
+                throw new ModelNotFoundError(this.config.id, model);
             }
             if (!response.ok) {
                 const error = await response.text();
-                throw new base_adapter_js_1.ProviderError(`OpenAI API error: ${error}`, this.config.id, model, response.status, response.status >= 500);
+                throw new ProviderError(`OpenAI API error: ${error}`, this.config.id, model, response.status, response.status >= 500);
             }
             const data = await response.json();
             return this.parseResponse(data, model, Date.now() - startTime);
         }
         catch (error) {
-            if (error instanceof base_adapter_js_1.ProviderError)
+            if (error instanceof ProviderError)
                 throw error;
-            throw new base_adapter_js_1.ProviderError(`OpenAI request failed: ${error instanceof Error ? error.message : 'Unknown error'}`, this.config.id, model, undefined, true);
+            throw new ProviderError(`OpenAI request failed: ${error instanceof Error ? error.message : 'Unknown error'}`, this.config.id, model, undefined, true);
         }
     }
     /**
@@ -132,7 +129,7 @@ class OpenAIAdapter extends base_adapter_js_1.BaseProviderAdapter {
         const model = options?.model || this.config.defaultModel;
         const apiKey = this.getApiKey();
         if (!apiKey) {
-            throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+            throw new AuthenticationError(this.config.id, model);
         }
         this.validateModel(model);
         const endpoint = `${this.baseUrl}/chat/completions`;
@@ -149,7 +146,7 @@ class OpenAIAdapter extends base_adapter_js_1.BaseProviderAdapter {
             body: JSON.stringify(body),
         });
         if (!response.ok) {
-            throw new base_adapter_js_1.ProviderError(`OpenAI streaming failed: ${response.statusText}`, this.config.id, model, response.status);
+            throw new ProviderError(`OpenAI streaming failed: ${response.statusText}`, this.config.id, model, response.status);
         }
         const reader = response.body?.getReader();
         if (!reader)
@@ -265,11 +262,10 @@ class OpenAIAdapter extends base_adapter_js_1.BaseProviderAdapter {
         };
     }
 }
-exports.OpenAIAdapter = OpenAIAdapter;
 // ============================================================================
 // AZURE OPENAI ADAPTER (EXTENSION)
 // ============================================================================
-class AzureOpenAIAdapter extends OpenAIAdapter {
+export class AzureOpenAIAdapter extends OpenAIAdapter {
     deploymentName;
     constructor() {
         super();
@@ -290,10 +286,9 @@ class AzureOpenAIAdapter extends OpenAIAdapter {
         };
     }
 }
-exports.AzureOpenAIAdapter = AzureOpenAIAdapter;
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.openaiAdapter = new OpenAIAdapter();
-exports.azureAdapter = new AzureOpenAIAdapter();
+export const openaiAdapter = new OpenAIAdapter();
+export const azureAdapter = new AzureOpenAIAdapter();
 //# sourceMappingURL=openai.adapter.js.map

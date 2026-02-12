@@ -5,9 +5,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { VibeMemoryEntry, MemoryType, MemoryQuery } from '../types';
+import type { VibeMemoryEntry, MemoryType, MemoryQuery } from '../types.js';
 
-export type { MemoryQuery } from '../types';
+export type { MemoryQuery } from '../types.js';
 export { VibeMemoryEntry, MemoryType };
 
 export class VibeMemoryManager {

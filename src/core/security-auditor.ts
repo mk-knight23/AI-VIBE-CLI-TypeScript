@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { PIIScrubber } from '../security/pii-scrubber';
+import { PIIScrubber } from '../security/pii-scrubber.js';
 
 export class SecurityAuditor {
     static auditFile(filePath: string): string[] {

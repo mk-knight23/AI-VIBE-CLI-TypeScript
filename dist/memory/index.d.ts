@@ -2,8 +2,8 @@
  * VIBE-CLI v0.0.1 - Memory Module
  * Project context and memory management
  */
-import type { VibeMemoryEntry, MemoryType, MemoryQuery } from '../types';
-export type { MemoryQuery } from '../types';
+import type { VibeMemoryEntry, MemoryType, MemoryQuery } from '../types.js';
+export type { MemoryQuery } from '../types.js';
 export { VibeMemoryEntry, MemoryType };
 export declare class VibeMemoryManager {
     private storageDir;

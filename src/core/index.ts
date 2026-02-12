@@ -4,10 +4,10 @@
  */
 
 import { EventEmitter } from 'events';
-import { VibeMemoryManager } from '../memory';
-import { VibeProviderRouter } from '../providers/router';
-import { VibeApprovalManager } from '../approvals';
-import type { VibeConfig, VibeSession } from '../types';
+import { VibeMemoryManager } from '../memory/index.js';
+import { VibeProviderRouter } from '../providers/router.js';
+import { VibeApprovalManager } from '../approvals/index.js';
+import type { VibeConfig, VibeSession } from '../types.js';
 
 export class VibeCore {
   private sessionManager!: SessionManager;

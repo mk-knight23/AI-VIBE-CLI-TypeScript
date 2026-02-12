@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - Real Approval System
  *
@@ -11,47 +10,9 @@
  *
  * Version: 0.0.1
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VibeApprovalManager = exports.approvalManager = exports.ApprovalManager = void 0;
-const readline = __importStar(require("readline"));
-const crypto = __importStar(require("crypto"));
-const chalk_1 = __importDefault(require("chalk"));
+import * as readline from 'readline';
+import * as crypto from 'crypto';
+import chalk from 'chalk';
 // ============================================================================
 // USER INTERFACE
 // ============================================================================
@@ -87,13 +48,13 @@ class ApprovalUI {
         };
         const header = `${icons[risk]} ${risk.toUpperCase()} RISK OPERATION`;
         console.log('\n' + header); // eslint-disable-line no-console
-        console.log(chalk_1.default.gray('─'.repeat(50))); // eslint-disable-line no-console
+        console.log(chalk.gray('─'.repeat(50))); // eslint-disable-line no-console
     }
     showOperation(operation, index) {
-        console.log(chalk_1.default.cyan(`  ${index + 1}. ${operation}`)); // eslint-disable-line no-console
+        console.log(chalk.cyan(`  ${index + 1}. ${operation}`)); // eslint-disable-line no-console
     }
     showDiff(filePath, oldContent, newContent) {
-        console.log(chalk_1.default.cyan(`\n─── Diff: ${filePath} ───\n`)); // eslint-disable-line no-console
+        console.log(chalk.cyan(`\n─── Diff: ${filePath} ───\n`)); // eslint-disable-line no-console
         const oldLines = oldContent.split('\n');
         const newLines = newContent.split('\n');
         const maxLines = Math.max(oldLines.length, newLines.length);
@@ -101,21 +62,21 @@ class ApprovalUI {
             const oldLine = oldLines[i];
             const newLine = newLines[i];
             if (oldLine === newLine) {
-                console.log(chalk_1.default.gray(`    ${String(i + 1).padStart(3)} │ ${oldLine || ''}`)); // eslint-disable-line no-console
+                console.log(chalk.gray(`    ${String(i + 1).padStart(3)} │ ${oldLine || ''}`)); // eslint-disable-line no-console
             }
             else {
                 if (oldLine !== undefined) {
-                    console.log(chalk_1.default.red(`   -${String(i + 1).padStart(3)} │ ${oldLine}`)); // eslint-disable-line no-console
+                    console.log(chalk.red(`   -${String(i + 1).padStart(3)} │ ${oldLine}`)); // eslint-disable-line no-console
                 }
                 if (newLine !== undefined) {
-                    console.log(chalk_1.default.green(`   +${String(i + 1).padStart(3)} │ ${newLine}`)); // eslint-disable-line no-console
+                    console.log(chalk.green(`   +${String(i + 1).padStart(3)} │ ${newLine}`)); // eslint-disable-line no-console
                 }
             }
         }
         console.log(''); // eslint-disable-line no-console
     }
     showApprovalOptions() {
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
   Options:
     [y] Yes, proceed
     [n] No, cancel
@@ -128,7 +89,7 @@ class ApprovalUI {
     `)); // eslint-disable-line no-console
     }
     showHelp(risk) {
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
   Risk Assessment for ${risk.toUpperCase()} operations:
 
   - ${risk === 'low' ? 'Read-only or safe operations' : risk === 'medium' ? 'File modifications' : 'Shell commands, deployments, or deletions'}
@@ -143,7 +104,7 @@ class ApprovalUI {
 // ============================================================================
 // APPROVAL MANAGER
 // ============================================================================
-class ApprovalManager {
+export class ApprovalManager {
     requests = new Map();
     policy;
     ui;
@@ -245,15 +206,15 @@ class ApprovalManager {
      */
     async showPrompt(request) {
         this.ui.showBanner(request.risk);
-        console.log(chalk_1.default.white(`  ${request.description}\n`)); // eslint-disable-line no-console
+        console.log(chalk.white(`  ${request.description}\n`)); // eslint-disable-line no-console
         if (request.operations.length > 0) {
-            console.log(chalk_1.default.gray('  Operations:')); // eslint-disable-line no-console
+            console.log(chalk.gray('  Operations:')); // eslint-disable-line no-console
             request.operations.forEach((op, i) => this.ui.showOperation(op, i));
         }
         console.log(''); // eslint-disable-line no-console
         // Get user choice
         while (true) {
-            const answer = await this.ui.question(chalk_1.default.cyan('  Proceed? '));
+            const answer = await this.ui.question(chalk.cyan('  Proceed? '));
             switch (answer.toLowerCase()) {
                 case 'y':
                 case 'yes':
@@ -292,7 +253,7 @@ class ApprovalManager {
                     request.status = 'denied';
                     return false;
                 default:
-                    console.log(chalk_1.default.yellow('  Invalid option. Type ? for help.')); // eslint-disable-line no-console
+                    console.log(chalk.yellow('  Invalid option. Type ? for help.')); // eslint-disable-line no-console
                     continue;
             }
         }
@@ -328,7 +289,7 @@ class ApprovalManager {
         this.requests.set(request.id, request);
         // Show diff preview
         this.ui.showBanner(request.risk);
-        console.log(chalk_1.default.white(`  ${description}\n`)); // eslint-disable-line no-console
+        console.log(chalk.white(`  ${description}\n`)); // eslint-disable-line no-console
         for (const op of operations) {
             this.ui.showDiff(op.file, op.oldContent, op.newContent);
         }
@@ -404,13 +365,13 @@ class ApprovalManager {
     showPending() {
         const pending = this.listRequests().filter(r => r.status === 'pending');
         if (pending.length === 0) {
-            console.log(chalk_1.default.cyan('\n  No pending approvals.\n')); // eslint-disable-line no-console
+            console.log(chalk.cyan('\n  No pending approvals.\n')); // eslint-disable-line no-console
             return;
         }
-        console.log(chalk_1.default.cyan('\n  Pending Approvals:\n')); // eslint-disable-line no-console
+        console.log(chalk.cyan('\n  Pending Approvals:\n')); // eslint-disable-line no-console
         for (const request of pending) {
             console.log(`  ${request.risk.toUpperCase()} ${request.description}`); // eslint-disable-line no-console
-            console.log(chalk_1.default.gray(`    Operations: ${request.operations.join(', ')}\n`)); // eslint-disable-line no-console
+            console.log(chalk.gray(`    Operations: ${request.operations.join(', ')}\n`)); // eslint-disable-line no-console
         }
     }
     /**
@@ -427,10 +388,9 @@ class ApprovalManager {
         };
     }
 }
-exports.ApprovalManager = ApprovalManager;
-exports.VibeApprovalManager = ApprovalManager;
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.approvalManager = new ApprovalManager();
+export const approvalManager = new ApprovalManager();
+export { ApprovalManager as VibeApprovalManager };
 //# sourceMappingURL=manager.js.map

@@ -1,4 +1,4 @@
-import { themeManager } from '../themes/theme-manager';
+import { themeManager } from '../themes/theme-manager.js';
 
 export class ProgressBar {
     private width: number = 40;

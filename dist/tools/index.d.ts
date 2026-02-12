@@ -1,12 +1,12 @@
 /**
  * VIBE-CLI v0.0.1 - Tools Index
  */
-export { VibeToolExecutor } from './executor';
-export { ToolRegistry, toolRegistry, VibeToolRegistry } from './registry/index';
-export { Sandbox, sandbox, VibeSandbox } from './sandbox';
-export type { SandboxConfig, SandboxResult } from './sandbox';
-export { DiffEditor, diffEditor, VibeDiffEditor, CheckpointSystem, checkpointSystem } from './diff-editor';
-export { securityScanner, commandValidator } from '../security/index';
-export type { VibeSecurityIssue } from '../security/index';
-export type { EditOperation, EditResult } from '../types';
+export { VibeToolExecutor } from './executor.js';
+export { ToolRegistry, toolRegistry, VibeToolRegistry } from './registry/index.js';
+export { Sandbox, sandbox, VibeSandbox } from './sandbox.js';
+export type { SandboxConfig, SandboxResult } from './sandbox.js';
+export { DiffEditor, diffEditor, VibeDiffEditor, CheckpointSystem, checkpointSystem } from './diff-editor.js';
+export { securityScanner, commandValidator } from '../security/index.js';
+export type { VibeSecurityIssue } from '../security/index.js';
+export type { EditOperation, EditResult } from '../types.js';
 //# sourceMappingURL=index.d.ts.map

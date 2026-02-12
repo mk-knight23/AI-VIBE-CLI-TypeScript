@@ -1,16 +1,12 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Core Engine
  * Main initialization and orchestration
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventEmitter = exports.SessionManager = exports.VibeCore = void 0;
-const events_1 = require("events");
-Object.defineProperty(exports, "EventEmitter", { enumerable: true, get: function () { return events_1.EventEmitter; } });
-const memory_1 = require("../memory");
-const router_1 = require("../providers/router");
-const approvals_1 = require("../approvals");
-class VibeCore {
+import { EventEmitter } from 'events';
+import { VibeMemoryManager } from '../memory/index.js';
+import { VibeProviderRouter } from '../providers/router.js';
+import { VibeApprovalManager } from '../approvals/index.js';
+export class VibeCore {
     config;
     sessionManager;
     memory;
@@ -20,15 +16,15 @@ class VibeCore {
     initialized = false;
     constructor(config) {
         this.config = config;
-        this.eventEmitter = new events_1.EventEmitter();
+        this.eventEmitter = new EventEmitter();
     }
     async initialize() {
         if (this.initialized)
             return;
-        this.provider = new router_1.VibeProviderRouter();
-        this.memory = new memory_1.VibeMemoryManager();
+        this.provider = new VibeProviderRouter();
+        this.memory = new VibeMemoryManager();
         this.sessionManager = new SessionManager(this.config);
-        this.approvals = new approvals_1.VibeApprovalManager();
+        this.approvals = new VibeApprovalManager();
         this.initialized = true;
         this.eventEmitter.emit('initialized');
     }
@@ -48,8 +44,7 @@ class VibeCore {
         return this.initialized;
     }
 }
-exports.VibeCore = VibeCore;
-class SessionManager {
+export class SessionManager {
     config;
     sessions = new Map();
     currentSession = null;
@@ -77,5 +72,5 @@ class SessionManager {
         }
     }
 }
-exports.SessionManager = SessionManager;
+export { EventEmitter };
 //# sourceMappingURL=index.js.map

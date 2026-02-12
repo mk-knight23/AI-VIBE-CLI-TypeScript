@@ -6,10 +6,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { SecurityAnalyzer, SecurityIssue, SecurityAnalysisResult } from '../code-review/security-analyzer';
-import { QualityChecker, QualityIssue, QualityMetrics } from '../code-review/quality-checker';
-import { ErrorAnalyzer, AnalyzedError } from '../debugging/error-analyzer';
-import { progressDisplay } from '../../ui/progress-bars/progress-display';
+import { SecurityAnalyzer, SecurityIssue, SecurityAnalysisResult } from '../code-review/security-analyzer.js';
+import { QualityChecker, QualityIssue, QualityMetrics } from '../code-review/quality-checker.js';
+import { ErrorAnalyzer, AnalyzedError } from '../debugging/error-analyzer.js';
+import { progressDisplay } from '../../ui/progress-bars/progress-display.js';
 
 /**
  * Remediation type

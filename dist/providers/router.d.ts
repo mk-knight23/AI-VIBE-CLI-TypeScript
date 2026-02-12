@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Provider Router
  * Universal interface for AI providers (OpenAI, Anthropic, Google, xAI, Ollama)
  */
-import type { ProviderConfig, ProviderResponse, IProviderRouter } from '../types';
+import type { ProviderConfig, ProviderResponse, IProviderRouter } from '../types.js';
 export declare class VibeProviderRouter implements IProviderRouter {
     private providers;
     private defaultProvider;

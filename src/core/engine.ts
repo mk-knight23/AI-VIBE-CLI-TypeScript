@@ -4,15 +4,17 @@
  */
 
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import * as fs from 'fs';
 import chalk from 'chalk';
-import { ModuleLoader } from './module.loader';
-import { VibeProviderRouter } from '../providers/router';
-import { VibeMemoryManager } from '../memory';
-import { VibeConfigManager } from '../config';
-import { CLIEngine } from '../tui';
-import { VibeAgentExecutor } from '../agents';
-import type { VibeSession } from '../types';
+import { ModuleLoader } from './module.loader.js';
+import { VibeProviderRouter } from '../providers/router.js';
+import { VibeMemoryManager } from '../memory/index.js';
+import { VibeConfigManager } from '../config.js';
+import { CLIEngine } from '../tui/index.js';
+import { VibeAgentExecutor } from '../agents/index.js';
+import type { VibeSession } from '../types.js';
 
 export interface EngineConfig {
   modulesDir?: string;
@@ -42,6 +44,7 @@ export class VibeCoreEngine {
   private readonly VERSION = '0.0.1';
 
   constructor(config?: EngineConfig) {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
     const modulesDir = config?.modulesDir || path.join(__dirname, '..', 'modules');
     this.moduleLoader = new ModuleLoader(modulesDir);
     this.provider = new VibeProviderRouter();

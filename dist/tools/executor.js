@@ -1,57 +1,18 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Tool Execution Engine
  * Safe, sandboxed execution with approval gates and rollback support
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VibeCheckpointSystem = exports.VibeToolExecutor = void 0;
-const child_process = __importStar(require("child_process"));
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const chalk_1 = __importDefault(require("chalk"));
-const approvals_1 = require("../approvals");
-class VibeToolExecutor {
+import * as child_process from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import chalk from 'chalk';
+import { VibeApprovalManager } from '../approvals/index.js';
+export class VibeToolExecutor {
     approvalSystem;
     checkpointSystem;
     history = [];
     constructor(approvalSystem) {
-        this.approvalSystem = approvalSystem || new approvals_1.VibeApprovalManager();
+        this.approvalSystem = approvalSystem || new VibeApprovalManager();
         this.checkpointSystem = new VibeCheckpointSystem();
     }
     /**
@@ -359,7 +320,7 @@ class VibeToolExecutor {
      * Show a diff between two strings
      */
     showDiff(oldContent, newContent, filePath) {
-        console.log(chalk_1.default.cyan(`\n─── Diff: ${filePath} ───\n`));
+        console.log(chalk.cyan(`\n─── Diff: ${filePath} ───\n`));
         const oldLines = oldContent.split('\n');
         const newLines = newContent.split('\n');
         const maxLines = Math.max(oldLines.length, newLines.length);
@@ -368,26 +329,25 @@ class VibeToolExecutor {
             const newLine = newLines[i];
             if (oldLine === newLine) {
                 // Unchanged
-                console.log(chalk_1.default.gray(`  ${String(i + 1).padStart(3)} │ ${oldLine || ''}`));
+                console.log(chalk.gray(`  ${String(i + 1).padStart(3)} │ ${oldLine || ''}`));
             }
             else {
                 if (oldLine !== undefined) {
-                    console.log(chalk_1.default.red(`-${String(i + 1).padStart(3)} │ ${oldLine}`));
+                    console.log(chalk.red(`-${String(i + 1).padStart(3)} │ ${oldLine}`));
                 }
                 if (newLine !== undefined) {
-                    console.log(chalk_1.default.green(`+${String(i + 1).padStart(3)} │ ${newLine}`));
+                    console.log(chalk.green(`+${String(i + 1).padStart(3)} │ ${newLine}`));
                 }
             }
         }
         console.log('');
     }
 }
-exports.VibeToolExecutor = VibeToolExecutor;
 /**
  * VIBE-CLI v0.0.1 - Checkpoint System
  * Version control for file system operations
  */
-class VibeCheckpointSystem {
+export class VibeCheckpointSystem {
     checkpoints = new Map();
     storageDir;
     constructor() {
@@ -519,5 +479,4 @@ class VibeCheckpointSystem {
         return diffs;
     }
 }
-exports.VibeCheckpointSystem = VibeCheckpointSystem;
 //# sourceMappingURL=executor.js.map

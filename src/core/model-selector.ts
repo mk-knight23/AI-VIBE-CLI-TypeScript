@@ -1,5 +1,5 @@
-import { VibeProviderRouter } from '../providers/router';
-import { CostTracker } from './cost-tracker';
+import { VibeProviderRouter } from '../providers/router.js';
+import { CostTracker } from './cost-tracker.js';
 
 export class OptimalModelSelector {
     static select(prompt: string, budgetRemaining: number = 1.0): string {

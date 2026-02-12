@@ -1,15 +1,12 @@
-"use strict";
 /**
  * VIBE CLI v0.0.1 - Core Types
  *
  * All types are defined here to avoid circular imports.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.IntentType = void 0;
 // ============================================================================
 // INTENT TYPES
 // ============================================================================
-var IntentType;
+export var IntentType;
 (function (IntentType) {
     IntentType["ASK"] = "ask";
     IntentType["CODE"] = "code";
@@ -24,5 +21,5 @@ var IntentType;
     IntentType["AGENT"] = "agent";
     IntentType["GIT"] = "git";
     IntentType["UNKNOWN"] = "unknown";
-})(IntentType || (exports.IntentType = IntentType = {}));
+})(IntentType || (IntentType = {}));
 //# sourceMappingURL=types.js.map

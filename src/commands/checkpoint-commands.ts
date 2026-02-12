@@ -6,7 +6,7 @@
 import * as readline from 'readline';
 import * as path from 'path';
 import chalk from 'chalk';
-import { checkpointManager, Checkpoint, RollbackOptions } from '../core/checkpoint-system/checkpoint-manager';
+import { checkpointManager, Checkpoint, RollbackOptions } from '../core/checkpoint-system/checkpoint-manager.js';
 
 /**
  * Session ID for checkpoint operations

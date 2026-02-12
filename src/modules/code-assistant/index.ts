@@ -6,8 +6,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { BaseModule, ModuleResult } from '../base.module';
-import { VibeProviderRouter } from '../../providers/router';
+import { BaseModule, ModuleResult } from '../base.module.js';
+import { VibeProviderRouter } from '../../providers/router.js';
 
 interface CodeAssistantConfig {
   generateTokens: number;

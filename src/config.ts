@@ -7,8 +7,20 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import chalk from 'chalk';
-import { VibeProviderRouter } from './providers/router';
-import { prompt, promptYesNo, promptNumber } from './cli/ui';
+import { cosmiconfigSync } from 'cosmiconfig';
+import pino from 'pino';
+import * as keytar from 'keytar';
+import { VibeProviderRouter } from './providers/router.js';
+import { prompt, promptYesNo, promptNumber } from './cli/ui.js';
+
+const logger = pino({
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+    },
+  },
+});
 
 interface StoredConfig {
   provider?: string;
@@ -23,6 +35,7 @@ export class VibeConfigManager {
   private configDir: string;
   private configPath: string;
   private provider: VibeProviderRouter;
+  private explorer = cosmiconfigSync('vibe');
 
   constructor(provider: VibeProviderRouter) {
     this.provider = provider;
@@ -205,16 +218,23 @@ You can get a key from: ${this.getProviderKeyUrl(providerId)}
       return;
     }
 
-    // Save the key FIRST (test on first real request, not here)
-    this.provider.setApiKey(providerId, apiKey.trim());
-    this.provider.setProvider(providerId);
+    // Save the key securely using keytar
+    try {
+      await keytar.setPassword('vibe-cli', providerId, apiKey.trim());
+      this.provider.setApiKey(providerId, apiKey.trim());
+      this.provider.setProvider(providerId);
 
-    console.log(chalk.green(`
+      logger.info(`API key saved securely for ${providerInfo.name}`);
+      console.log(chalk.green(`
 ✓ API key saved for ${providerInfo.name}
 ✓ Provider set to ${providerInfo.name}
 
 Note: The key will be tested on your first request.
-    `));
+      `));
+    } catch (error) {
+      logger.error(error, 'Failed to save API key securely');
+      console.log(chalk.red('Failed to save API key securely. Is the system keychain accessible?\n'));
+    }
   }
 
   /**
@@ -336,15 +356,25 @@ Note: The key will be tested on your first request.
   }
 
   /**
-   * Load configuration from disk
+   * Load configuration from disk using cosmiconfig
    */
   loadConfig(): StoredConfig {
+    try {
+      const result = this.explorer.search();
+      if (result && !result.isEmpty) {
+        return result.config as StoredConfig;
+      }
+    } catch (error) {
+      logger.error(error, 'Error searching for config');
+    }
+
     if (!fs.existsSync(this.configPath)) {
       return {};
     }
     try {
       return JSON.parse(fs.readFileSync(this.configPath, 'utf-8'));
-    } catch {
+    } catch (error) {
+      logger.error(error, 'Error reading config.json');
       return {};
     }
   }

@@ -9,15 +9,31 @@ export interface MCPServerConnection {
     client: Client;
     transport: StdioClientTransport;
     name: string;
+    config: {
+        command: string;
+        args: string[];
+        env?: Record<string, string>;
+    };
+    retryCount: number;
+    lastHeartbeat?: Date;
 }
 export declare class VibeMCPManager extends EventEmitter {
     private connections;
+    private maxRetries;
+    private heartbeatInterval;
     constructor();
     initialize(): Promise<void>;
+    private connectWithRetry;
     private connectToServer;
+    private startHeartbeat;
     shutdown(): Promise<void>;
     listServers(): string[];
     isConnected(name: string): boolean;
+    getStatus(): {
+        name: string;
+        lastHeartbeat: Date | undefined;
+        status: string;
+    }[];
 }
 export declare const mcpManager: VibeMCPManager;
 //# sourceMappingURL=index.d.ts.map

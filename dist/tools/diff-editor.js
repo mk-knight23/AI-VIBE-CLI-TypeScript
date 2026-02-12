@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - Diff-Based Editor
  *
@@ -10,51 +9,13 @@
  *
  * Version: 0.0.1
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VibeDiffEditor = exports.checkpointSystem = exports.diffEditor = exports.CheckpointSystem = exports.DiffEditor = exports.DiffGenerator = void 0;
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const chalk_1 = __importDefault(require("chalk"));
+import * as fs from 'fs';
+import * as path from 'path';
+import chalk from 'chalk';
 // ============================================================================
 // DIFF GENERATOR
 // ============================================================================
-class DiffGenerator {
+export class DiffGenerator {
     /**
      * Generate unified diff between two strings
      */
@@ -176,10 +137,10 @@ class DiffGenerator {
                     lines.push(` ${prefix}${item.line}`);
                     break;
                 case 'delete':
-                    lines.push(opts.color ? chalk_1.default.red(`-${prefix}${item.line}`) : `-${prefix}${item.line}`);
+                    lines.push(opts.color ? chalk.red(`-${prefix}${item.line}`) : `-${prefix}${item.line}`);
                     break;
                 case 'insert':
-                    lines.push(opts.color ? chalk_1.default.green(`+${prefix}${item.line}`) : `+${prefix}${item.line}`);
+                    lines.push(opts.color ? chalk.green(`+${prefix}${item.line}`) : `+${prefix}${item.line}`);
                     break;
             }
         }
@@ -193,30 +154,29 @@ class DiffGenerator {
         const newLines = newContent.split('\n');
         const maxLines = Math.max(oldLines.length, newLines.length);
         const lines = [];
-        lines.push(chalk_1.default.cyan(`\n─── Diff: ${filePath} ───\n`));
+        lines.push(chalk.cyan(`\n─── Diff: ${filePath} ───\n`));
         for (let i = 0; i < maxLines; i++) {
             const oldLine = oldLines[i];
             const newLine = newLines[i];
             if (oldLine === newLine) {
-                lines.push(chalk_1.default.gray(`  ${String(i + 1).padStart(3)} │ ${oldLine || ''}`));
+                lines.push(chalk.gray(`  ${String(i + 1).padStart(3)} │ ${oldLine || ''}`));
             }
             else {
                 if (oldLine !== undefined) {
-                    lines.push(chalk_1.default.red(`-${String(i + 1).padStart(3)} │ ${oldLine}`));
+                    lines.push(chalk.red(`-${String(i + 1).padStart(3)} │ ${oldLine}`));
                 }
                 if (newLine !== undefined) {
-                    lines.push(chalk_1.default.green(`+${String(i + 1).padStart(3)} │ ${newLine}`));
+                    lines.push(chalk.green(`+${String(i + 1).padStart(3)} │ ${newLine}`));
                 }
             }
         }
         return lines.join('\n');
     }
 }
-exports.DiffGenerator = DiffGenerator;
 // ============================================================================
 // DIFF-BASED EDITOR
 // ============================================================================
-class DiffEditor {
+export class DiffEditor {
     checkpointSystem;
     constructor(checkpointSystem) {
         this.checkpointSystem = checkpointSystem || new CheckpointSystem();
@@ -423,12 +383,10 @@ class DiffEditor {
         };
     }
 }
-exports.DiffEditor = DiffEditor;
-exports.VibeDiffEditor = DiffEditor;
 // ============================================================================
 // CHECKPOINT SYSTEM (for undo)
 // ============================================================================
-class CheckpointSystem {
+export class CheckpointSystem {
     checkpoints = new Map();
     async create(sessionId, description) {
         const checkpointId = `chk-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -545,14 +503,14 @@ class CheckpointSystem {
         return files;
     }
 }
-exports.CheckpointSystem = CheckpointSystem;
 // ============================================================================
 // IMPORTS
 // ============================================================================
-const child_process = __importStar(require("child_process"));
+import * as child_process from 'child_process';
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.diffEditor = new DiffEditor();
-exports.checkpointSystem = new CheckpointSystem();
+export const diffEditor = new DiffEditor();
+export const checkpointSystem = new CheckpointSystem();
+export { DiffEditor as VibeDiffEditor };
 //# sourceMappingURL=diff-editor.js.map

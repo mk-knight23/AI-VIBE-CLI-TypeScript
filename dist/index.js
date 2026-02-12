@@ -1,41 +1,32 @@
-"use strict";
 /**
  * VIBE CLI v0.0.2 - Main Export
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VIBE_VERSION = void 0;
-var version_1 = require("./version");
-Object.defineProperty(exports, "VIBE_VERSION", { enumerable: true, get: function () { return version_1.VIBE_VERSION; } });
+export { VIBE_VERSION } from './version.js';
 // Core
-__exportStar(require("./core/config-system"), exports);
-__exportStar(require("./utils/structured-logger"), exports);
+export * from './core/config-system.js';
+export * from './utils/pino-logger.js';
 // Adapters
-__exportStar(require("./adapters/types"), exports);
-__exportStar(require("./adapters/router"), exports);
+export * from './infrastructure/adapters/types.js';
+export * from './infrastructure/adapters/router.js';
+// Enhanced Components
+export * from './providers/enhanced-router.js';
+export * from './mcp/enhanced-manager.js';
+export * from './cli/enhanced-command-handler.js';
+export * from './cli/enhanced-interactive.js';
+// Utilities
+export * from './utils/circuit-breaker.js';
+export * from './utils/rate-limiter.js';
+export * from './utils/lru-cache.js';
 // Primitives
-__exportStar(require("./primitives/types"), exports);
-__exportStar(require("./primitives/completion"), exports);
-__exportStar(require("./primitives/planning"), exports);
-__exportStar(require("./primitives/execution"), exports);
-__exportStar(require("./primitives/multi-edit"), exports);
-__exportStar(require("./primitives/approval"), exports);
-__exportStar(require("./primitives/memory"), exports);
-__exportStar(require("./primitives/determinism"), exports);
-__exportStar(require("./primitives/orchestration"), exports);
+export * from './domain/primitives/types.js';
+export * from './domain/primitives/completion.js';
+export * from './domain/primitives/planning.js';
+export * from './domain/primitives/execution.js';
+export * from './domain/primitives/multi-edit.js';
+export * from './domain/primitives/approval.js';
+export * from './domain/primitives/memory.js';
+export * from './domain/primitives/determinism.js';
+export * from './domain/primitives/orchestration.js';
 // CLI
-__exportStar(require("./cli/main"), exports);
+export * from './cli/main.js';
 //# sourceMappingURL=index.js.map

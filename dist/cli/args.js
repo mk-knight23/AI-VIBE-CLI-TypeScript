@@ -1,11 +1,8 @@
-"use strict";
 /**
  * VIBE CLI v0.0.1 - Command Line Arguments Parser
  * Simple, minimal argument parsing for single-command UX
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CommandLineArgs = void 0;
-class CommandLineArgs {
+export class CommandLineArgs {
     args;
     constructor() {
         this.args = process.argv.slice(2);
@@ -95,5 +92,4 @@ class CommandLineArgs {
         return options;
     }
 }
-exports.CommandLineArgs = CommandLineArgs;
 //# sourceMappingURL=args.js.map

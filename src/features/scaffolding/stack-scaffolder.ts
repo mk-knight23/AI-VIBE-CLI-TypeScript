@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { progressDisplay } from '../../ui/progress-bars/progress-display';
+import { progressDisplay } from '../../ui/progress-bars/progress-display.js';
 
 /**
  * Project type
@@ -668,7 +668,7 @@ export default App;
 `,
       'react-index': `import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import App from './App.js';
 ${vars.styling === 'tailwind' ? "import './index.css';" : ''}
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
@@ -715,7 +715,7 @@ export default api;
       'express-server': `import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import routes from './routes';
+import routes from './routes.js';
 
 dotenv.config();
 
@@ -748,7 +748,7 @@ app.listen(PORT, () => {
 export default app;
 `,
       'express-routes': `import { Router } from 'express';
-import appController from '../controllers/app.controller';
+import appController from '../controllers/app.controller.js';
 
 const router = Router();
 

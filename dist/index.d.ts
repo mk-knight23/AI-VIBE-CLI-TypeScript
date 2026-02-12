@@ -1,19 +1,26 @@
 /**
  * VIBE CLI v0.0.2 - Main Export
  */
-export { VIBE_VERSION } from './version';
-export * from './core/config-system';
-export * from './utils/structured-logger';
-export * from './adapters/types';
-export * from './adapters/router';
-export * from './primitives/types';
-export * from './primitives/completion';
-export * from './primitives/planning';
-export * from './primitives/execution';
-export * from './primitives/multi-edit';
-export * from './primitives/approval';
-export * from './primitives/memory';
-export * from './primitives/determinism';
-export * from './primitives/orchestration';
-export * from './cli/main';
+export { VIBE_VERSION } from './version.js';
+export * from './core/config-system.js';
+export * from './utils/pino-logger.js';
+export * from './infrastructure/adapters/types.js';
+export * from './infrastructure/adapters/router.js';
+export * from './providers/enhanced-router.js';
+export * from './mcp/enhanced-manager.js';
+export * from './cli/enhanced-command-handler.js';
+export * from './cli/enhanced-interactive.js';
+export * from './utils/circuit-breaker.js';
+export * from './utils/rate-limiter.js';
+export * from './utils/lru-cache.js';
+export * from './domain/primitives/types.js';
+export * from './domain/primitives/completion.js';
+export * from './domain/primitives/planning.js';
+export * from './domain/primitives/execution.js';
+export * from './domain/primitives/multi-edit.js';
+export * from './domain/primitives/approval.js';
+export * from './domain/primitives/memory.js';
+export * from './domain/primitives/determinism.js';
+export * from './domain/primitives/orchestration.js';
+export * from './cli/main.js';
 //# sourceMappingURL=index.d.ts.map

@@ -1,51 +1,15 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - MCP Context Providers
  * Structured, minimal, inspectable context for agents
  *
  * Phase 5: MCP Everywhere
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MCPContextAggregator = exports.MemoryContextProvider = exports.TestsContextProvider = exports.OpenAPIContextProvider = exports.GitContextProvider = exports.FileSystemContextProvider = void 0;
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
+import * as fs from 'fs';
+import * as path from 'path';
 /**
  * File System Context Provider
  */
-class FileSystemContextProvider {
+export class FileSystemContextProvider {
     rootDir;
     contextType = 'filesystem';
     constructor(rootDir = process.cwd()) {
@@ -127,11 +91,10 @@ class FileSystemContextProvider {
         // No-op for file system - always fresh
     }
 }
-exports.FileSystemContextProvider = FileSystemContextProvider;
 /**
  * Git Context Provider
  */
-class GitContextProvider {
+export class GitContextProvider {
     repoDir;
     contextType = 'git';
     constructor(repoDir = process.cwd()) {
@@ -239,11 +202,10 @@ class GitContextProvider {
         // Git status is always fresh
     }
 }
-exports.GitContextProvider = GitContextProvider;
 /**
  * OpenAPI Context Provider
  */
-class OpenAPIContextProvider {
+export class OpenAPIContextProvider {
     specPaths;
     baseUrl;
     contextType = 'openapi';
@@ -312,11 +274,10 @@ class OpenAPIContextProvider {
         this.baseUrl = baseUrl;
     }
 }
-exports.OpenAPIContextProvider = OpenAPIContextProvider;
 /**
  * Tests Context Provider
  */
-class TestsContextProvider {
+export class TestsContextProvider {
     projectDir;
     contextType = 'tests';
     constructor(projectDir = process.cwd()) {
@@ -439,11 +400,10 @@ class TestsContextProvider {
         // Would need to re-run tests for accurate status
     }
 }
-exports.TestsContextProvider = TestsContextProvider;
 /**
  * Memory Context Provider
  */
-class MemoryContextProvider {
+export class MemoryContextProvider {
     projectDir;
     sessionDir;
     contextType = 'memory';
@@ -550,11 +510,10 @@ class MemoryContextProvider {
         // Memory is always current
     }
 }
-exports.MemoryContextProvider = MemoryContextProvider;
 // ============================================================================
 // CONTEXT AGGREGATOR
 // ============================================================================
-class MCPContextAggregator {
+export class MCPContextAggregator {
     projectDir;
     providers = new Map();
     constructor(projectDir = process.cwd()) {
@@ -633,5 +592,4 @@ class MCPContextAggregator {
         await provider?.refresh();
     }
 }
-exports.MCPContextAggregator = MCPContextAggregator;
 //# sourceMappingURL=context-provider.js.map

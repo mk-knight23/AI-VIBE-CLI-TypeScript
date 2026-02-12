@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import chalk from 'chalk';
-import { Spinner } from '../ui/progress/spinner';
+import { Spinner } from '../ui/progress/spinner.js';
 
 export class UpdateManager {
     static async update(): Promise<void> {

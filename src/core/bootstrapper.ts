@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { Spinner } from '../ui/progress/spinner';
-import { DEFAULT_MCP_SERVERS } from './mcp-defaults';
+import { Spinner } from '../ui/progress/spinner.js';
+import { DEFAULT_MCP_SERVERS } from './mcp-defaults.js';
 
 export class Bootstrapper {
     static async init(projectPath: string = process.cwd()): Promise<boolean> {

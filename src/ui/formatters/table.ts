@@ -1,4 +1,4 @@
-import { themeManager } from '../themes/theme-manager';
+import { themeManager } from '../themes/theme-manager.js';
 
 export function formatTable(headers: string[], rows: string[][]): string {
     const theme = themeManager.getCurrentTheme();

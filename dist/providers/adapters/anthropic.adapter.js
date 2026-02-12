@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE CLI - Anthropic Provider Adapter
  *
@@ -10,9 +9,7 @@
  *
  * Version: 0.0.1
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.bedrockAdapter = exports.anthropicAdapter = exports.BedrockAnthropicAdapter = exports.AnthropicAdapter = void 0;
-const base_adapter_js_1 = require("./base.adapter.js");
+import { BaseProviderAdapter, AuthenticationError, RateLimitError, ModelNotFoundError, ProviderError, } from './base.adapter.js';
 // ============================================================================
 // MODEL DEFINITIONS
 // ============================================================================
@@ -74,7 +71,7 @@ const ANTHROPIC_CONFIG = {
 // ============================================================================
 // ANTHROPIC ADAPTER
 // ============================================================================
-class AnthropicAdapter extends base_adapter_js_1.BaseProviderAdapter {
+export class AnthropicAdapter extends BaseProviderAdapter {
     baseUrl;
     constructor() {
         super(ANTHROPIC_CONFIG, ANTHROPIC_MODELS);
@@ -88,7 +85,7 @@ class AnthropicAdapter extends base_adapter_js_1.BaseProviderAdapter {
         const model = options?.model || this.config.defaultModel;
         const apiKey = this.getApiKey();
         if (!apiKey) {
-            throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+            throw new AuthenticationError(this.config.id, model);
         }
         this.validateModel(model);
         const { system, userMessages } = this.extractSystemMessage(messages);
@@ -110,26 +107,26 @@ class AnthropicAdapter extends base_adapter_js_1.BaseProviderAdapter {
                 }),
             });
             if (response.status === 401) {
-                throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+                throw new AuthenticationError(this.config.id, model);
             }
             if (response.status === 429) {
                 const retryAfter = response.headers.get('Retry-After');
-                throw new base_adapter_js_1.RateLimitError(this.config.id, model, retryAfter ? parseInt(retryAfter) : undefined);
+                throw new RateLimitError(this.config.id, model, retryAfter ? parseInt(retryAfter) : undefined);
             }
             if (response.status === 404) {
-                throw new base_adapter_js_1.ModelNotFoundError(this.config.id, model);
+                throw new ModelNotFoundError(this.config.id, model);
             }
             if (!response.ok) {
                 const error = await response.text();
-                throw new base_adapter_js_1.ProviderError(`Anthropic API error: ${error}`, this.config.id, model, response.status, response.status >= 500);
+                throw new ProviderError(`Anthropic API error: ${error}`, this.config.id, model, response.status, response.status >= 500);
             }
             const data = await response.json();
             return this.parseResponse(data, model, Date.now() - startTime);
         }
         catch (error) {
-            if (error instanceof base_adapter_js_1.ProviderError)
+            if (error instanceof ProviderError)
                 throw error;
-            throw new base_adapter_js_1.ProviderError(`Anthropic request failed: ${error instanceof Error ? error.message : 'Unknown error'}`, this.config.id, model, undefined, true);
+            throw new ProviderError(`Anthropic request failed: ${error instanceof Error ? error.message : 'Unknown error'}`, this.config.id, model, undefined, true);
         }
     }
     /**
@@ -139,7 +136,7 @@ class AnthropicAdapter extends base_adapter_js_1.BaseProviderAdapter {
         const model = options?.model || this.config.defaultModel;
         const apiKey = this.getApiKey();
         if (!apiKey) {
-            throw new base_adapter_js_1.AuthenticationError(this.config.id, model);
+            throw new AuthenticationError(this.config.id, model);
         }
         this.validateModel(model);
         const { system, userMessages } = this.extractSystemMessage(messages);
@@ -161,7 +158,7 @@ class AnthropicAdapter extends base_adapter_js_1.BaseProviderAdapter {
             }),
         });
         if (!response.ok) {
-            throw new base_adapter_js_1.ProviderError(`Anthropic streaming failed: ${response.statusText}`, this.config.id, model, response.status);
+            throw new ProviderError(`Anthropic streaming failed: ${response.statusText}`, this.config.id, model, response.status);
         }
         const reader = response.body?.getReader();
         if (!reader)
@@ -287,11 +284,10 @@ class AnthropicAdapter extends base_adapter_js_1.BaseProviderAdapter {
         };
     }
 }
-exports.AnthropicAdapter = AnthropicAdapter;
 // ============================================================================
 // BEDROCK ANTHROPIC ADAPTER (AWS)
 // ============================================================================
-class BedrockAnthropicAdapter extends AnthropicAdapter {
+export class BedrockAnthropicAdapter extends AnthropicAdapter {
     constructor() {
         super();
         this.config.id = 'bedrock';
@@ -318,10 +314,9 @@ class BedrockAnthropicAdapter extends AnthropicAdapter {
         throw new Error('Bedrock adapter requires AWS SDK integration');
     }
 }
-exports.BedrockAnthropicAdapter = BedrockAnthropicAdapter;
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.anthropicAdapter = new AnthropicAdapter();
-exports.bedrockAdapter = new BedrockAnthropicAdapter();
+export const anthropicAdapter = new AnthropicAdapter();
+export const bedrockAdapter = new BedrockAnthropicAdapter();
 //# sourceMappingURL=anthropic.adapter.js.map

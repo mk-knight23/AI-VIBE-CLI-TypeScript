@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { ASTAnalyzer, CodeDefinition } from './ast-analyzer';
+import { ASTAnalyzer, CodeDefinition } from './ast-analyzer.js';
 
 /**
  * Edge type in dependency graph

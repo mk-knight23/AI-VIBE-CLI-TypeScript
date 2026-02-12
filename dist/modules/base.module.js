@@ -1,15 +1,9 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Base Module Class
  * All modules extend this class for consistency
  */
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseModule = void 0;
-const chalk_1 = __importDefault(require("chalk"));
-class BaseModule {
+import chalk from 'chalk';
+export class BaseModule {
     name;
     version;
     description;
@@ -50,28 +44,28 @@ class BaseModule {
      * Log info message
      */
     logInfo(message) {
-        console.log(chalk_1.default.cyan(`[${this.name}]`) + chalk_1.default.white(` ${message}`));
+        console.log(chalk.cyan(`[${this.name}]`) + chalk.white(` ${message}`));
     }
     /**
      * Log success message
      */
     logSuccess(message) {
-        console.log(chalk_1.default.cyan(`[${this.name}]`) + chalk_1.default.green(` ✓ ${message}`));
+        console.log(chalk.cyan(`[${this.name}]`) + chalk.green(` ✓ ${message}`));
     }
     /**
      * Log error message
      */
     logError(message, error) {
-        console.error(chalk_1.default.cyan(`[${this.name}]`) + chalk_1.default.red(` ✗ ${message}`));
+        console.error(chalk.cyan(`[${this.name}]`) + chalk.red(` ✗ ${message}`));
         if (error) {
-            console.error(chalk_1.default.gray(`  Error: ${error instanceof Error ? error.message : error}`));
+            console.error(chalk.gray(`  Error: ${error instanceof Error ? error.message : error}`));
         }
     }
     /**
      * Log warning message
      */
     logWarning(message) {
-        console.log(chalk_1.default.cyan(`[${this.name}]`) + chalk_1.default.yellow(` ⚠ ${message}`));
+        console.log(chalk.cyan(`[${this.name}]`) + chalk.yellow(` ⚠ ${message}`));
     }
     /**
      * Create a successful result
@@ -105,5 +99,4 @@ class BaseModule {
         return true;
     }
 }
-exports.BaseModule = BaseModule;
 //# sourceMappingURL=base.module.js.map

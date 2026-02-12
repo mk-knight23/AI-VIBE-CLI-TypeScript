@@ -6,12 +6,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { CheckpointManager } from '../checkpoint-system/checkpoint-manager';
-import { TaskPlanner, TaskPlan, TaskStep } from '../../features/planning/task-planner';
-import { progressDisplay } from '../../ui/progress-bars/progress-display';
-import { multiModelManager } from '../ai-engine/multi-model-manager';
-import { semanticSearchEngine } from '../../features/search/semantic-search';
-import { ErrorAnalyzer, AnalyzedError } from '../../features/debugging/error-analyzer';
+import { CheckpointManager } from '../checkpoint-system/checkpoint-manager.js';
+import { TaskPlanner, TaskPlan, TaskStep } from '../../features/planning/task-planner.js';
+import { progressDisplay } from '../../ui/progress-bars/progress-display.js';
+import { multiModelManager } from '../ai-engine/multi-model-manager.js';
+import { semanticSearchEngine } from '../../features/search/semantic-search.js';
+import { ErrorAnalyzer, AnalyzedError } from '../../features/debugging/error-analyzer.js';
 
 /**
  * Agent execution status

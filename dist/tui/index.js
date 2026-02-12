@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Interactive CLI Engine (Agent Mode)
  *
@@ -10,69 +9,31 @@
  * - Approval gates for risky operations
  * - Sandbox execution with checkpoint support
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CLIEngine = void 0;
-const child_process = __importStar(require("child_process"));
-const chalk_1 = __importDefault(require("chalk"));
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const config_js_1 = require("../config.js");
-const system_prompt_js_1 = require("../cli/system-prompt.js");
-const ui_js_1 = require("../cli/ui.js");
-const index_js_1 = require("../approvals/index.js");
-const index_js_2 = require("../tools/index.js");
-const index_js_3 = require("../agents/index.js");
-const index_js_4 = require("../features/doctor/index.js");
-const command_generator_js_1 = require("../features/terminal/command-generator.js");
-const index_js_5 = require("../features/integration/index.js");
-const index_js_6 = require("../features/scaffolding/index.js");
-const index_js_7 = require("../features/generation/index.js");
-const index_js_8 = require("../features/visualization/index.js");
-const error_analyzer_js_1 = require("../features/debugging/error-analyzer.js");
-const refactor_feature_js_1 = require("../features/refactoring/refactor-feature.js");
-const cicd_manager_js_1 = require("../features/cicd/cicd-manager.js");
-const iac_generator_js_1 = require("../features/cicd/iac-generator.js");
-const audit_logger_js_1 = require("../agents/audit-logger.js");
+import * as child_process from 'child_process';
+import chalk from 'chalk';
+import * as fs from 'fs';
+import * as path from 'path';
+import { VibeConfigManager } from '../config.js';
+import { getSystemPrompt } from '../cli/system-prompt.js';
+import { prompt, promptYesNo } from '../cli/ui.js';
+import { approvalManager } from '../approvals/index.js';
+import { toolRegistry, sandbox, checkpointSystem } from '../tools/index.js';
+import { VibeAgentExecutor } from '../agents/index.js';
+import { vibeDoctor } from '../features/doctor/index.js';
+import { commandGenerator } from '../features/terminal/command-generator.js';
+import { githubIntegration } from '../features/integration/index.js';
+import { stackScaffolder } from '../features/scaffolding/index.js';
+import { documentationGenerator, testGenerator } from '../features/generation/index.js';
+import { projectVisualizer } from '../features/visualization/index.js';
+import { errorAnalyzer } from '../features/debugging/error-analyzer.js';
+import { refactorEngine } from '../features/refactoring/refactor-feature.js';
+import { cicdManager } from '../features/cicd/cicd-manager.js';
+import { iacGenerator } from '../features/cicd/iac-generator.js';
+import { agentAuditLogger } from '../agents/audit-logger.js';
 // ============================================================================
 // CLI ENGINE
 // ============================================================================
-class CLIEngine {
+export class CLIEngine {
     provider;
     memory;
     running = true;
@@ -85,8 +46,8 @@ class CLIEngine {
     constructor(provider, memory) {
         this.provider = provider;
         this.memory = memory;
-        this.configManager = new config_js_1.VibeConfigManager(provider);
-        this.agentExecutor = new index_js_3.VibeAgentExecutor(provider, memory);
+        this.configManager = new VibeConfigManager(provider);
+        this.agentExecutor = new VibeAgentExecutor(provider, memory);
         this.historyFile = path.join(process.cwd(), '.vibe_history');
         this.loadHistory();
     }
@@ -94,16 +55,16 @@ class CLIEngine {
     // MAIN ENTRY POINT
     // ============================================================================
     async start() {
-        this.displayWelcome();
         await this.configManager.runFirstTimeSetup();
+        this.displayWelcome();
         // Infinite REPL loop
         while (this.running) {
             try {
-                const input = await (0, ui_js_1.prompt)(chalk_1.default.cyan('vibe') + this.getModeIndicator() + ' > ');
+                const input = await prompt(chalk.hex('#3B82F6')('vibe') + this.getModeIndicator() + ' > ');
                 await this.handleInput(input);
             }
             catch (error) {
-                console.log(chalk_1.default.red('\nAn error occurred. Try again.\n'));
+                console.log(chalk.red('\nAn error occurred. Try again.\n'));
             }
         }
     }
@@ -125,7 +86,7 @@ class CLIEngine {
         // Exit commands
         const lower = trimmed.toLowerCase();
         if (lower === 'exit' || lower === 'quit') {
-            console.log(chalk_1.default.cyan('\n👋 Goodbye! Happy coding!\n'));
+            console.log(chalk.cyan('\n👋 Goodbye! Happy coding!\n'));
             this.running = false;
             return;
         }
@@ -138,19 +99,19 @@ class CLIEngine {
             return;
         }
         // AI call with mode-specific prompt
-        console.log(chalk_1.default.gray('\n' + '─'.repeat(process.stdout.columns - 1)));
+        console.log(chalk.gray('\n' + '─'.repeat(process.stdout.columns - 1)));
         await this.callAI(trimmed);
-        console.log(chalk_1.default.gray('─'.repeat(process.stdout.columns - 1) + '\n'));
+        console.log(chalk.gray('─'.repeat(process.stdout.columns - 1) + '\n'));
     }
     // ============================================================================
     // INTERNAL COMMANDS
     // ============================================================================
     async handleScaffoldCommand(args) {
-        console.log(chalk_1.default.cyan('\n🏗️  VIBE Project Scaffolder\n'));
+        console.log(chalk.cyan('\n🏗️  VIBE Project Scaffolder\n'));
         // In a real TUI we'd use more interactive prompts, but for now we'll use args or simple prompts
         let projectName = args;
         if (!projectName) {
-            projectName = await (0, ui_js_1.prompt)('Enter project name: ') || 'my-vibe-project';
+            projectName = await prompt('Enter project name: ') || 'my-vibe-project';
         }
         const options = {
             projectName,
@@ -163,80 +124,80 @@ class CLIEngine {
         };
         this.showThinkingAnimation(options.description ? 'Analyzing stack description...' : 'Scaffolding project...');
         const structure = options.description
-            ? await index_js_6.stackScaffolder.generateCustom(options, this.provider)
-            : await index_js_6.stackScaffolder.generate(options);
+            ? await stackScaffolder.generateCustom(options, this.provider)
+            : await stackScaffolder.generate(options);
         this.clearThinkingAnimation();
-        console.log(index_js_6.stackScaffolder.formatGenerationSummary(structure));
+        console.log(stackScaffolder.formatGenerationSummary(structure));
     }
     async handleTestCommand(args) {
         if (!args) {
-            console.log(chalk_1.default.yellow('\nPlease provide a file path. E.g., /test src/utils/math.ts\n'));
+            console.log(chalk.yellow('\nPlease provide a file path. E.g., /test src/utils/math.ts\n'));
             return;
         }
         this.showThinkingAnimation('Analyzing code and generating tests...');
-        const test = await index_js_7.testGenerator.generateForFile(args, {}, this.provider);
+        const test = await testGenerator.generateForFile(args, {}, this.provider);
         this.clearThinkingAnimation();
         if (test) {
-            console.log(index_js_7.testGenerator.formatGenerationSummary([test]));
-            const confirm = await (0, ui_js_1.promptYesNo)('Save this test file?');
+            console.log(testGenerator.formatGenerationSummary([test]));
+            const confirm = await promptYesNo('Save this test file?');
             if (confirm) {
-                const success = index_js_7.testGenerator.writeTestFile(test);
+                const success = testGenerator.writeTestFile(test);
                 if (success) {
-                    console.log(chalk_1.default.green(`\n✓ Test file saved to ${test.filePath}\n`));
+                    console.log(chalk.green(`\n✓ Test file saved to ${test.filePath}\n`));
                 }
                 else {
-                    console.log(chalk_1.default.red('\n✗ Failed to save test file.\n'));
+                    console.log(chalk.red('\n✗ Failed to save test file.\n'));
                 }
             }
         }
         else {
-            console.log(chalk_1.default.red(`\n✗ Could not generate tests for ${args}.\n`));
+            console.log(chalk.red(`\n✗ Could not generate tests for ${args}.\n`));
         }
     }
     async handleDocsCommand(args) {
         if (!args) {
-            console.log(chalk_1.default.yellow('\nPlease provide a file path. E.g., /docs src/core/engine.ts\n'));
+            console.log(chalk.yellow('\nPlease provide a file path. E.g., /docs src/core/engine.ts\n'));
             return;
         }
         this.showThinkingAnimation('Generating documentation...');
-        const explanation = await index_js_7.documentationGenerator.explainCode(args, this.provider);
+        const explanation = await documentationGenerator.explainCode(args, this.provider);
         this.clearThinkingAnimation();
-        console.log(chalk_1.default.bold(`\n📝 Documentation for ${path.basename(args)}\n`));
-        console.log(chalk_1.default.cyan('Summary:'), explanation.summary);
-        console.log(chalk_1.default.cyan('Purpose:'), explanation.purpose);
-        console.log(chalk_1.default.cyan('Key Concepts:'), explanation.keyConcepts.join(', '));
-        console.log('\n' + chalk_1.default.bold('Line-by-Line breakdown:'));
+        console.log(chalk.bold(`\n📝 Documentation for ${path.basename(args)}\n`));
+        console.log(chalk.cyan('Summary:'), explanation.summary);
+        console.log(chalk.cyan('Purpose:'), explanation.purpose);
+        console.log(chalk.cyan('Key Concepts:'), explanation.keyConcepts.join(', '));
+        console.log('\n' + chalk.bold('Line-by-Line breakdown:'));
         explanation.lineByLine?.slice(0, 5).forEach(line => {
-            console.log(`${chalk_1.default.gray(line.lineNumber)} ${line.line.padEnd(40)} ${chalk_1.default.italic(line.explanation)}`);
+            console.log(`${chalk.gray(line.lineNumber)} ${line.line.padEnd(40)} ${chalk.italic(line.explanation)}`);
         });
-        console.log(chalk_1.default.gray('...'));
+        console.log(chalk.gray('...'));
     }
     async handleVizCommand(args) {
         const dir = args || '.';
-        console.log(chalk_1.default.cyan(`\n📊 Visualizing ${path.resolve(dir)}...\n`));
+        console.log(chalk.cyan(`\n📊 Visualizing ${path.resolve(dir)}...\n`));
         this.showThinkingAnimation('Visualizing project structure...');
-        const structure = index_js_8.projectVisualizer.visualizeProject(dir, 'ascii');
+        const structure = projectVisualizer.visualizeProject(dir, 'ascii');
         this.clearThinkingAnimation();
         console.log(structure.content);
         this.showThinkingAnimation('Visualizing dependencies...');
-        const deps = index_js_8.projectVisualizer.visualizeDependencies(dir, 'ascii');
+        const deps = projectVisualizer.visualizeDependencies(dir, 'ascii');
         this.clearThinkingAnimation();
         console.log('\n' + deps.content);
         this.showThinkingAnimation('Analyzing architecture with AI...');
-        const analysis = await index_js_8.projectVisualizer.analyzeArchitectureWithAI(dir, this.provider);
+        const analysis = await projectVisualizer.analyzeArchitectureWithAI(dir, this.provider);
         this.clearThinkingAnimation();
-        console.log(chalk_1.default.bold('\n🏗️  Architectural Recommendations:'));
-        console.log(chalk_1.default.white(analysis));
+        console.log(chalk.bold('\n🏗️  Architectural Recommendations:'));
+        console.log(chalk.white(analysis));
     }
     async handleDebugCommand(args) {
         if (!args) {
-            console.log(chalk_1.default.yellow('\nPlease provide a file path or error message. E.g., /debug src/utils/math.ts\n'));
+            console.log(chalk.yellow('\nPlease provide a file path or error message. E.g., /debug src/utils/math.ts\n'));
             return;
         }
         this.showThinkingAnimation('Analyzing for bugs and anti-patterns...');
-        const analysis = await error_analyzer_js_1.errorAnalyzer.analyzeWithAI(args, this.provider);
+        const analysis = await errorAnalyzer.analyzeWithAI(args, this.provider);
         this.clearThinkingAnimation();
-        console.log(error_analyzer_js_1.errorAnalyzer.generateReport({
+        console.log(errorAnalyzer.generateReport({
             errors: [analysis],
             summary: { critical: 0, high: 0, medium: 0, low: 0, byCategory: {} },
             rootCauses: [analysis.rootCause?.filePath || 'Unknown'],
@@ -245,7 +206,7 @@ class CLIEngine {
     }
     async handleFixCommand(args) {
         if (!args) {
-            console.log(chalk_1.default.yellow('\nPlease describe the error to fix.\n'));
+            console.log(chalk.yellow('\nPlease describe the error to fix.\n'));
             return;
         }
         this.showThinkingAnimation('Analyzing error and proposing fix...');
@@ -259,23 +220,23 @@ class CLIEngine {
     }
     async handleRefactorCommand(args) {
         if (!args) {
-            console.log(chalk_1.default.yellow('\nPlease provide a file path to refactor.\n'));
+            console.log(chalk.yellow('\nPlease provide a file path to refactor.\n'));
             return;
         }
         this.showThinkingAnimation('Identifying refactoring patterns...');
-        const suggestions = await refactor_feature_js_1.refactorEngine.proposeRefactors(args, this.provider);
+        const suggestions = await refactorEngine.proposeRefactors(args, this.provider);
         this.clearThinkingAnimation();
         if (suggestions.length === 0) {
-            console.log(chalk_1.default.gray('\nNo obvious refactors found.\n'));
+            console.log(chalk.gray('\nNo obvious refactors found.\n'));
             return;
         }
         for (const suggestion of suggestions) {
-            console.log(refactor_feature_js_1.refactorEngine.formatSuggestion(suggestion));
-            const confirm = await (0, ui_js_1.promptYesNo)('Apply this refactor?');
+            console.log(refactorEngine.formatSuggestion(suggestion));
+            const confirm = await promptYesNo('Apply this refactor?');
             if (confirm) {
                 // Apply using MultiEditPrimitive logic or simple write for now
                 fs.writeFileSync(suggestion.filePath, fs.readFileSync(suggestion.filePath, 'utf-8').replace(suggestion.originalCode, suggestion.suggestedCode));
-                console.log(chalk_1.default.green('\n✓ Refactor applied!\n'));
+                console.log(chalk.green('\n✓ Refactor applied!\n'));
             }
         }
     }
@@ -286,48 +247,48 @@ class CLIEngine {
             { role: 'user', content: 'Scan the current codebase and tell me the "mood" or "vibe" (e.g., modern, legacy, messy, organized, energetic, stable) and why.' }
         ]);
         this.clearThinkingAnimation();
-        console.log(chalk_1.default.bold('\n✨ Project Mood:'));
-        console.log(chalk_1.default.white(response.content));
+        console.log(chalk.bold('\n✨ Project Mood:'));
+        console.log(chalk.white(response.content));
     }
     async handleCICDCommand(args) {
         if (!args) {
-            console.log(chalk_1.default.yellow('\nPlease describe the pipeline. E.g., /cicd GitHub Action for Next.js\n'));
+            console.log(chalk.yellow('\nPlease describe the pipeline. E.g., /cicd GitHub Action for Next.js\n'));
             return;
         }
         this.showThinkingAnimation('Designing CI/CD pipeline...');
-        const config = await cicd_manager_js_1.cicdManager.generatePipelineWithAI(args, this.provider);
+        const config = await cicdManager.generatePipelineWithAI(args, this.provider);
         this.clearThinkingAnimation();
-        console.log(cicd_manager_js_1.cicdManager.formatPipeline(config));
-        const confirm = await (0, ui_js_1.promptYesNo)('Generate workflow file?');
+        console.log(cicdManager.formatPipeline(config));
+        const confirm = await promptYesNo('Generate workflow file?');
         if (confirm) {
             const fileName = config.provider === 'github' ? '.github/workflows/vibe-ci.yml' : '.gitlab-ci.yml';
-            cicd_manager_js_1.cicdManager.writePipelineConfig(config, path.join(process.cwd(), fileName));
-            console.log(chalk_1.default.green(`\n✓ Workflow created at ${fileName}\n`));
+            cicdManager.writePipelineConfig(config, path.join(process.cwd(), fileName));
+            console.log(chalk.green(`\n✓ Workflow created at ${fileName}\n`));
         }
     }
     async handleIACCommand(args) {
         if (!args) {
-            console.log(chalk_1.default.yellow('\nPlease describe the infrastructure. E.g., /iac AWS S3 bucket for assets\n'));
+            console.log(chalk.yellow('\nPlease describe the infrastructure. E.g., /iac AWS S3 bucket for assets\n'));
             return;
         }
         this.showThinkingAnimation('Generating Infrastructure-as-Code...');
-        const plan = await iac_generator_js_1.iacGenerator.generatePlan(args, this.provider);
+        const plan = await iacGenerator.generatePlan(args, this.provider);
         this.clearThinkingAnimation();
-        console.log(iac_generator_js_1.iacGenerator.formatPlan(plan));
-        const confirm = await (0, ui_js_1.promptYesNo)('Save to file?');
+        console.log(iacGenerator.formatPlan(plan));
+        const confirm = await promptYesNo('Save to file?');
         if (confirm) {
             const fileName = `infra.${plan.format === 'terraform' ? 'tf' : 'yaml'}`;
             fs.writeFileSync(path.join(process.cwd(), fileName), plan.content);
-            console.log(chalk_1.default.green(`\n✓ IaC saved to ${fileName}\n`));
+            console.log(chalk.green(`\n✓ IaC saved to ${fileName}\n`));
         }
     }
     async handleCloudCommand(args) {
         this.showThinkingAnimation('Analyzing architecture and suggesting targets...');
-        const target = await cicd_manager_js_1.cicdManager.suggestDeploymentTarget(process.cwd(), this.provider);
+        const target = await cicdManager.suggestDeploymentTarget(process.cwd(), this.provider);
         this.clearThinkingAnimation();
-        console.log(chalk_1.default.bold('\n☁️  Cloud Recommendations:'));
-        console.log(chalk_1.default.cyan('Suggested Target: ') + target.type.toUpperCase());
-        console.log(chalk_1.default.cyan('Environment: ') + target.environment);
+        console.log(chalk.bold('\n☁️  Cloud Recommendations:'));
+        console.log(chalk.cyan('Suggested Target: ') + target.type.toUpperCase());
+        console.log(chalk.cyan('Environment: ') + target.environment);
         this.showThinkingAnimation('Consulting cloud best practices...');
         const advice = await this.provider.chat([
             { role: 'system', content: 'You are a senior cloud architect.' },
@@ -337,21 +298,21 @@ class CLIEngine {
         console.log('\n' + advice.content);
     }
     async handleLogsCommand(args) {
-        const logs = audit_logger_js_1.agentAuditLogger.getLogs();
-        console.log(chalk_1.default.bold('\n📋 Agent Audit Logs:'));
+        const logs = agentAuditLogger.getLogs();
+        console.log(chalk.bold('\n📋 Agent Audit Logs:'));
         if (logs.length === 0) {
-            console.log(chalk_1.default.gray('No logs found.'));
+            console.log(chalk.gray('No logs found.'));
             return;
         }
         logs.slice(-10).forEach(log => {
-            console.log(`${chalk_1.default.gray(log.timestamp)} [${log.approved ? '✅' : '❌'}] ${chalk_1.default.cyan(log.action)} -> ${log.result.slice(0, 100)}...`);
+            console.log(`${chalk.gray(log.timestamp)} [${log.approved ? '✅' : '❌'}] ${chalk.cyan(log.action)} -> ${log.result.slice(0, 100)}...`);
         });
     }
     async handleCostCommand(args) {
         const usage = this.provider.getUsage?.() || { totalTokens: 0, totalCost: 0 };
-        console.log(chalk_1.default.bold('\n💰 Session Token Usage:'));
-        console.log(chalk_1.default.cyan('Total Tokens: ') + usage.totalTokens.toLocaleString());
-        console.log(chalk_1.default.cyan('Estimated Cost: ') + `$${usage.totalCost.toFixed(4)}`);
+        console.log(chalk.bold('\n💰 Session Token Usage:'));
+        console.log(chalk.cyan('Total Tokens: ') + usage.totalTokens.toLocaleString());
+        console.log(chalk.cyan('Estimated Cost: ') + `$${usage.totalCost.toFixed(4)}`);
     }
     async handleReadinessCommand(args) {
         this.showThinkingAnimation('Running Enterprise Readiness Checklist...');
@@ -360,8 +321,8 @@ class CLIEngine {
             { role: 'user', content: 'Scan the project structure and tell me if it is enterprise-ready (security, scalability, observability, documentation).' }
         ]);
         this.clearThinkingAnimation();
-        console.log(chalk_1.default.bold('\n🏢 Enterprise Readiness Report:'));
-        console.log(chalk_1.default.white(response.content));
+        console.log(chalk.bold('\n🏢 Enterprise Readiness Report:'));
+        console.log(chalk.white(response.content));
     }
     async handleInternalCommand(input) {
         const cmd = input.toLowerCase().split(/\s+/)[0];
@@ -369,7 +330,7 @@ class CLIEngine {
         switch (cmd) {
             case '/exit':
             case '/quit':
-                console.log(chalk_1.default.cyan('\n👋 Goodbye! Happy coding!\n'));
+                console.log(chalk.cyan('\n👋 Goodbye! Happy coding!\n'));
                 this.running = false;
                 break;
             case '/help':
@@ -480,7 +441,7 @@ class CLIEngine {
                 await this.handleReadinessCommand(args);
                 break;
             default:
-                console.log(chalk_1.default.yellow(`\nUnknown command: ${cmd}\n`));
+                console.log(chalk.yellow(`\nUnknown command: ${cmd}\n`));
                 this.showHelp();
         }
     }
@@ -490,9 +451,9 @@ class CLIEngine {
     handleModeCommand(args) {
         const modes = ['agent', 'code', 'ask', 'debug'];
         if (!args) {
-            console.log(chalk_1.default.cyan(`
+            console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════╗
-║  Current Mode: ${chalk_1.default.white(this.currentMode.toUpperCase())}
+║  Current Mode: ${chalk.white(this.currentMode.toUpperCase())}
 ╠═══════════════════════════════════════════════════════════════╣
 ║  Available Modes:                                             ║
 ║    /mode agent   - Full execution (default)                   ║
@@ -506,11 +467,11 @@ class CLIEngine {
         const mode = args.toLowerCase();
         if (modes.includes(mode)) {
             this.currentMode = mode;
-            console.log(chalk_1.default.green(`\n✓ Switched to ${mode.toUpperCase()} mode\n`));
+            console.log(chalk.green(`\n✓ Switched to ${mode.toUpperCase()} mode\n`));
             this.showModeDescription(mode);
         }
         else {
-            console.log(chalk_1.default.red(`\nUnknown mode: ${args}\n`));
+            console.log(chalk.red(`\nUnknown mode: ${args}\n`));
         }
     }
     showModeDescription(mode) {
@@ -520,7 +481,7 @@ class CLIEngine {
             ask: 'Focus on answering questions. No automatic execution.',
             debug: 'Read and analyze code first. Offer fixes.',
         };
-        console.log(chalk_1.default.gray(`  ${descriptions[mode]}\n`));
+        console.log(chalk.gray(`  ${descriptions[mode]}\n`));
     }
     handleModeSwitching(input, lower) {
         // Quick mode switches
@@ -533,7 +494,7 @@ class CLIEngine {
         for (const [pattern, mode] of Object.entries(modePatterns)) {
             if (lower === pattern || lower.startsWith(pattern + ' ')) {
                 this.currentMode = mode;
-                console.log(chalk_1.default.green(`\n✓ ${mode.toUpperCase()} mode\n`));
+                console.log(chalk.green(`\n✓ ${mode.toUpperCase()} mode\n`));
                 this.showModeDescription(mode);
                 return true;
             }
@@ -542,10 +503,10 @@ class CLIEngine {
     }
     getModeIndicator() {
         const indicators = {
-            agent: chalk_1.default.gray(' [agent]'),
-            code: chalk_1.default.gray(' [code]'),
-            ask: chalk_1.default.gray(' [ask]'),
-            debug: chalk_1.default.gray(' [debug]'),
+            agent: chalk.gray(' [agent]'),
+            code: chalk.gray(' [code]'),
+            ask: chalk.gray(' [ask]'),
+            debug: chalk.gray(' [debug]'),
         };
         return indicators[this.currentMode];
     }
@@ -556,28 +517,28 @@ class CLIEngine {
         if (args) {
             const success = this.provider.setModel(args);
             if (success) {
-                console.log(chalk_1.default.green(`\n✓ Model set to ${this.provider.getCurrentModel()}\n`));
+                console.log(chalk.green(`\n✓ Model set to ${this.provider.getCurrentModel()}\n`));
             }
             else {
-                console.log(chalk_1.default.red(`\nUnknown model: ${args}\n`));
+                console.log(chalk.red(`\nUnknown model: ${args}\n`));
             }
         }
         else {
-            console.log(chalk_1.default.cyan(`\nCurrent model: ${this.provider.getCurrentModel()}\n`));
+            console.log(chalk.cyan(`\nCurrent model: ${this.provider.getCurrentModel()}\n`));
         }
     }
     handleUseCommand(args) {
         if (args) {
             const success = this.provider.setProvider(args);
             if (success) {
-                console.log(chalk_1.default.green(`\n✓ Switched to ${this.provider.getCurrentProvider()?.name}\n`));
+                console.log(chalk.green(`\n✓ Switched to ${this.provider.getCurrentProvider()?.name}\n`));
             }
             else {
-                console.log(chalk_1.default.red(`\nUnknown provider: ${args}\n`));
+                console.log(chalk.red(`\nUnknown provider: ${args}\n`));
             }
         }
         else {
-            console.log(chalk_1.default.cyan(`\nCurrent provider: ${this.provider.getCurrentProvider()?.name}\n`));
+            console.log(chalk.cyan(`\nCurrent provider: ${this.provider.getCurrentProvider()?.name}\n`));
         }
     }
     handleProviderModelSwitching(input, lower) {
@@ -587,10 +548,10 @@ class CLIEngine {
             const freeProvider = providers.find(p => p.freeTier);
             if (freeProvider) {
                 this.provider.setProvider(freeProvider.id);
-                console.log(chalk_1.default.green(`\n✓ Switched to ${freeProvider.name} (free tier)\n`));
+                console.log(chalk.green(`\n✓ Switched to ${freeProvider.name} (free tier)\n`));
             }
             else {
-                console.log(chalk_1.default.yellow('\n⚠ No free tier providers available.\n'));
+                console.log(chalk.yellow('\n⚠ No free tier providers available.\n'));
             }
             return true;
         }
@@ -611,7 +572,7 @@ class CLIEngine {
             if (lower.includes(kw)) {
                 const success = this.provider.setProvider(providerId);
                 if (success) {
-                    console.log(chalk_1.default.green(`\n✓ Switched to ${this.provider.getCurrentProvider()?.name}\n`));
+                    console.log(chalk.green(`\n✓ Switched to ${this.provider.getCurrentProvider()?.name}\n`));
                 }
                 return true;
             }
@@ -630,7 +591,7 @@ class CLIEngine {
             if (lower.includes(kw)) {
                 const success = this.provider.setModel(modelId);
                 if (success) {
-                    console.log(chalk_1.default.green(`\n✓ Model set to ${this.provider.getCurrentModel()}\n`));
+                    console.log(chalk.green(`\n✓ Model set to ${this.provider.getCurrentModel()}\n`));
                 }
                 return true;
             }
@@ -650,7 +611,7 @@ class CLIEngine {
         // Show execution stage
         this.showThinkingAnimation();
         // Build mode-specific system prompt
-        const systemPrompt = (0, system_prompt_js_1.getSystemPrompt)({
+        const systemPrompt = getSystemPrompt({
             mode: this.currentMode,
             projectContext: this.getProjectContext(),
         });
@@ -689,7 +650,7 @@ class CLIEngine {
         const task = {
             task: input,
             context: this.getProjectContextData(),
-            approvalMode: index_js_2.sandbox.getConfig().enabled ? 'prompt' : 'auto',
+            approvalMode: sandbox.getConfig().enabled ? 'prompt' : 'auto',
         };
         // Initialize stages for feedback
         const stages = [
@@ -714,7 +675,7 @@ class CLIEngine {
             this.displayResponse(result.output, input);
         }
         catch (error) {
-            console.log(chalk_1.default.red(`\nAgent execution failed: ${error instanceof Error ? error.message : 'Unknown error'}\n`));
+            console.log(chalk.red(`\nAgent execution failed: ${error instanceof Error ? error.message : 'Unknown error'}\n`));
         }
     }
     refreshStages(stages) {
@@ -726,7 +687,7 @@ class CLIEngine {
         return {
             cwd: process.cwd(),
             mode: this.currentMode,
-            git: index_js_5.githubIntegration.getCurrentRepository(),
+            git: githubIntegration.getCurrentRepository(),
         };
     }
     async streamAI(input, messages) {
@@ -746,7 +707,7 @@ class CLIEngine {
             }
         }
         catch (error) {
-            console.log(chalk_1.default.red('\n\n❌ Streaming failed. Falling back to non-streaming...'));
+            console.log(chalk.red('\n\n❌ Streaming failed. Falling back to non-streaming...'));
             const response = await this.provider.chat(messages);
             this.displayResponse(response.content, input);
         }
@@ -762,7 +723,7 @@ class CLIEngine {
         else if (this.currentMode === 'ask') {
             // Ask mode - show normal response
             console.log('');
-            console.log(chalk_1.default.white(content));
+            console.log(chalk.white(content));
             console.log('');
         }
         else {
@@ -770,7 +731,7 @@ class CLIEngine {
             const codeBlockCount = (content.match(/```/g) || []).length;
             if (codeBlockCount >= 2) {
                 // This looks like a code dump - warn user
-                console.log(chalk_1.default.yellow(`
+                console.log(chalk.yellow(`
 ⚠️  This response contains code but files may not have been created.
 
 If you want files created, try:
@@ -780,13 +741,13 @@ If you want files created, try:
 
 Files are created automatically in agent mode.
         `));
-                console.log(chalk_1.default.white(content.slice(0, 500) + '...'));
+                console.log(chalk.white(content.slice(0, 500) + '...'));
                 console.log('');
             }
             else {
                 // Normal response
                 console.log('');
-                console.log(chalk_1.default.white(content));
+                console.log(chalk.white(content));
                 console.log('');
             }
         }
@@ -796,11 +757,11 @@ Files are created automatically in agent mode.
         // Extract and display file tree if present
         const treeMatch = content.match(/([a-zA-Z0-9-_]+\/?[a-zA-Z0-9-_]*\n(?:├──|└──|   ).*)+/);
         if (treeMatch) {
-            console.log(chalk_1.default.cyan(treeMatch[0]));
+            console.log(chalk.cyan(treeMatch[0]));
         }
         else {
             // Just show the content
-            console.log(chalk_1.default.white(content));
+            console.log(chalk.white(content));
         }
         console.log('');
     }
@@ -811,7 +772,7 @@ Files are created automatically in agent mode.
         const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
         let i = 0;
         this.animationInterval = setInterval(() => {
-            process.stdout.write(`\r${chalk_1.default.cyan(frames[i])} ${chalk_1.default.gray(message)}`);
+            process.stdout.write(`\r${chalk.cyan(frames[i])} ${chalk.gray(message)}`);
             i = (i + 1) % frames.length;
         }, 80);
     }
@@ -824,76 +785,76 @@ Files are created automatically in agent mode.
         process.stdout.write('\r' + ' '.repeat(10) + '\r');
     }
     showExecutionStages(stages) {
-        console.log(chalk_1.default.cyan('\n⚡ Executing\n'));
+        console.log(chalk.cyan('\n⚡ Executing\n'));
         for (const stage of stages) {
             let line = '  ';
             switch (stage.status) {
                 case 'pending':
-                    line += chalk_1.default.gray('○');
+                    line += chalk.gray('○');
                     break;
                 case 'running':
-                    line += chalk_1.default.yellow('◐');
+                    line += chalk.yellow('◐');
                     break;
                 case 'completed':
-                    line += chalk_1.default.green('✓');
+                    line += chalk.green('✓');
                     break;
                 case 'failed':
-                    line += chalk_1.default.red('✗');
+                    line += chalk.red('✗');
                     break;
             }
             line += ` ${stage.icon} ${stage.name}`;
             if (stage.message) {
-                line += chalk_1.default.gray(` — ${stage.message}`);
+                line += chalk.gray(` — ${stage.message}`);
             }
             console.log(line);
         }
         console.log('');
     }
     async handleDoctorCommand() {
-        const results = await index_js_4.vibeDoctor.runDiagnostics();
-        index_js_4.vibeDoctor.displayReport(results);
+        const results = await vibeDoctor.runDiagnostics();
+        vibeDoctor.displayReport(results);
     }
     async handleCommitCommand() {
         this.showThinkingAnimation();
-        const message = await index_js_5.githubIntegration.generateSmartCommitMessage(this.provider);
+        const message = await githubIntegration.generateSmartCommitMessage(this.provider);
         this.clearThinkingAnimation();
-        console.log(chalk_1.default.cyan(`\n💡 Suggested Commit Message:`));
-        console.log(chalk_1.default.white(`   ${message}\n`));
-        const confirm = await (0, ui_js_1.promptYesNo)('Apply this commit?');
+        console.log(chalk.cyan(`\n💡 Suggested Commit Message:`));
+        console.log(chalk.white(`   ${message}\n`));
+        const confirm = await promptYesNo('Apply this commit?');
         if (confirm) {
-            const success = index_js_5.githubIntegration.commit(message);
+            const success = githubIntegration.commit(message);
             if (success) {
-                console.log(chalk_1.default.green('✓ Changes committed successfully.'));
+                console.log(chalk.green('✓ Changes committed successfully.'));
             }
             else {
-                console.log(chalk_1.default.red('✗ Commit failed. Are there staged changes?'));
+                console.log(chalk.red('✗ Commit failed. Are there staged changes?'));
             }
         }
     }
     async handleCmdCommand(args) {
         if (!args) {
-            console.log(chalk_1.default.yellow('\nPlease provide a natural language description. E.g., /cmd find all ts files\n'));
+            console.log(chalk.yellow('\nPlease provide a natural language description. E.g., /cmd find all ts files\n'));
             return;
         }
         this.showThinkingAnimation();
-        const result = await command_generator_js_1.commandGenerator.generate(args, {
+        const result = await commandGenerator.generate(args, {
             provider: this.provider,
             history: this.history.slice(-10)
         });
         this.clearThinkingAnimation();
-        console.log(chalk_1.default.cyan(`\n💻 Generated Command:`));
-        console.log(chalk_1.default.white(`   ${result.command}\n`));
-        console.log(chalk_1.default.gray(`   ${result.explanation}\n`));
-        const confirm = await (0, ui_js_1.promptYesNo)('Execute this command?');
+        console.log(chalk.cyan(`\n💻 Generated Command:`));
+        console.log(chalk.white(`   ${result.command}\n`));
+        console.log(chalk.gray(`   ${result.explanation}\n`));
+        const confirm = await promptYesNo('Execute this command?');
         if (confirm) {
-            const isSandboxStr = index_js_2.sandbox.getConfig().enabled ? ' (Sandbox)' : '';
-            console.log(chalk_1.default.yellow(`\n⚡ Executing${isSandboxStr}: ${result.command}\n`));
+            const isSandboxStr = sandbox.getConfig().enabled ? ' (Sandbox)' : '';
+            console.log(chalk.yellow(`\n⚡ Executing${isSandboxStr}: ${result.command}\n`));
             try {
-                if (index_js_2.sandbox.getConfig().enabled) {
-                    const res = await index_js_2.sandbox.executeCommand(result.command);
+                if (sandbox.getConfig().enabled) {
+                    const res = await sandbox.executeCommand(result.command);
                     console.log(res.output);
                     if (res.exitCode !== 0)
-                        console.log(chalk_1.default.red(`Exited with code ${res.exitCode}`));
+                        console.log(chalk.red(`Exited with code ${res.exitCode}`));
                 }
                 else {
                     const out = child_process.execSync(result.command, { encoding: 'utf-8' });
@@ -901,7 +862,7 @@ Files are created automatically in agent mode.
                 }
             }
             catch (error) {
-                console.log(chalk_1.default.red(`\nExecution failed: ${error instanceof Error ? error.message : 'Unknown error'}\n`));
+                console.log(chalk.red(`\nExecution failed: ${error instanceof Error ? error.message : 'Unknown error'}\n`));
             }
         }
     }
@@ -909,25 +870,30 @@ Files are created automatically in agent mode.
     // UI HELPERS
     // ============================================================================
     displayWelcome() {
-        console.log(chalk_1.default.cyan(`
-╔═════════════════════════════════════════════════════════════╗
-║                                                             ║
-║   ${chalk_1.default.white.bold('V I B E')}  ${chalk_1.default.green('v0.0.1.0.0')}                                    ║
-║   ${chalk_1.default.gray('AI-Powered Development Environment')}                       ║
-║                                                             ║
-║   ${chalk_1.default.white("I'm your AI development teammate.")}                       ║
-║   ${chalk_1.default.gray("Type naturally - I'll execute, not just chat.")}            ║
-║                                                             ║
-╚═════════════════════════════════════════════════════════════╝
-
-Type ${chalk_1.default.cyan('/help')} for commands or just tell me what you want to build.
-
-${chalk_1.default.gray('New in v0.0.1:')} ${chalk_1.default.white('/sandbox')} ${chalk_1.default.gray('|')} ${chalk_1.default.white('/checkpoint')} ${chalk_1.default.gray('|')} ${chalk_1.default.white('/approve')}
-${chalk_1.default.gray('Modes:')} ${chalk_1.default.white('/mode agent')} ${chalk_1.default.gray('|')} ${chalk_1.default.white('/mode code')} ${chalk_1.default.gray('|')} ${chalk_1.default.white('/mode ask')} ${chalk_1.default.gray('|')} ${chalk_1.default.white('/mode debug')}
+        const blue = chalk.hex('#3B82F6');
+        const slate = chalk.hex('#F1F5F9');
+        console.log(blue(`
+ ▟████▙      ▟████▙
+ █▛  ▜█      █▛  ▜█
+ █▌  ▐█      █▌  ▐█
+ █▙  ▟█  ▟█▙ █▙  ▟█  ▟██▙
+ ▜████▛  █▛▜█▜████▛  █▙▟█
+         █▌▐█        █▛▀▀
+         ▜█▛▘        ▜██▘
     `));
+        console.log(blue(' ╔' + '═'.repeat(60) + '╗'));
+        console.log(blue(' ║') + ' '.repeat(60) + blue('║'));
+        console.log(blue(' ║') + `   ${slate.bold('V I B E')}  ${chalk.green('v0.0.1 PRO')}                                ` + blue('║'));
+        console.log(blue(' ║') + `   ${chalk.gray('AI-Powered Development Environment')}                       ` + blue('║'));
+        console.log(blue(' ║') + ' '.repeat(60) + blue('║'));
+        console.log(blue(' ║') + `   ${slate("I'm your AI development teammate.")}                       ` + blue('║'));
+        console.log(blue(' ║') + `   ${chalk.gray("Type naturally - I'll execute, not just chat.")}            ` + blue('║'));
+        console.log(blue(' ║') + ' '.repeat(60) + blue('║'));
+        console.log(blue(' ╚' + '═'.repeat(60) + '╝'));
+        console.log(`\n Type ${blue('/help')} for commands or just tell me what you want to build.\n`);
     }
     showHelp() {
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  Commands                                                          ║
 ╠═══════════════════════════════════════════════════════════════════════╣
@@ -997,22 +963,22 @@ ${chalk_1.default.gray('Modes:')} ${chalk_1.default.white('/mode agent')} ${chal
     }
     showStatus() {
         const status = this.provider.getStatus();
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  Status                                                             ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  Provider: ${chalk_1.default.white(status.provider.padEnd(50))}║
-║  Model:    ${chalk_1.default.white(status.model.padEnd(50))}║
-║  Mode:     ${chalk_1.default.white(this.currentMode.padEnd(50))}║
+║  Provider: ${chalk.white(status.provider.padEnd(50))}║
+║  Model:    ${chalk.white(status.model.padEnd(50))}║
+║  Mode:     ${chalk.white(this.currentMode.padEnd(50))}║
 ║  Configured: ${status.configured}/${status.available} providers                              ║
 ╚═══════════════════════════════════════════════════════════════════════╝
     `));
     }
     showProviders() {
         const providers = this.provider.listProviders();
-        console.log(chalk_1.default.cyan('\nAvailable providers:\n'));
+        console.log(chalk.cyan('\nAvailable providers:\n'));
         providers.forEach((p) => {
-            const status = p.configured ? chalk_1.default.green('✓') : p.freeTier ? chalk_1.default.gray('○') : chalk_1.default.red('✗');
+            const status = p.configured ? chalk.green('✓') : p.freeTier ? chalk.gray('○') : chalk.red('✗');
             const name = p.freeTier ? `${p.name} (free)` : p.name;
             console.log(`  ${status} ${name.padEnd(20)} ${p.model}`);
         });
@@ -1028,7 +994,7 @@ ${chalk_1.default.gray('Modes:')} ${chalk_1.default.white('/mode agent')} ${chal
             { name: 'security', desc: 'Security scanning and audits' },
             { name: 'deployment', desc: 'Build and deploy applications' },
         ];
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  Core Modules                                                       ║
 ╠═══════════════════════════════════════════════════════════════════════╣
@@ -1045,7 +1011,7 @@ ${modules.map(m => `║  ${m.name.padEnd(18)} ${m.desc}`).join('\n')}
             { name: 'Gemini 1.5 Flash', provider: 'Google', desc: 'Free tier' },
             { name: 'Llama 3.1', provider: 'Ollama', desc: 'Local/offline' },
         ];
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  Available Models                                                    ║
 ╠═══════════════════════════════════════════════════════════════════════╣
@@ -1054,8 +1020,8 @@ ${models.map(m => `║  ${m.name.padEnd(20)} ${m.provider.padEnd(12)} ${m.desc}`
     `));
     }
     showTools() {
-        const tools = index_js_2.toolRegistry.list();
-        console.log(chalk_1.default.cyan(`
+        const tools = toolRegistry.list();
+        console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  Tools (VIBE uses these to execute your requests)                    ║
 ╠═══════════════════════════════════════════════════════════════════════╣
@@ -1077,28 +1043,28 @@ ${tools.filter((t) => t.category === 'code').map(t => `║    ${t.name.padEnd(18
     // APPROVAL & SANDBOX COMMANDS
     // ============================================================================
     showPendingApprovals() {
-        const pending = index_js_1.approvalManager.listPending();
+        const pending = approvalManager.listPending();
         if (pending.length === 0) {
-            console.log(chalk_1.default.green('\nNo pending approvals.\n'));
+            console.log(chalk.green('\nNo pending approvals.\n'));
         }
         else {
-            console.log(chalk_1.default.cyan('\nPending Approvals:\n'));
+            console.log(chalk.cyan('\nPending Approvals:\n'));
             for (const p of pending) {
                 console.log(`  [${p.risk.toUpperCase()}] ${p.description}`);
-                console.log(chalk_1.default.gray(`     Type: ${p.type}, Requested: ${p.requestedAt.toLocaleString()}\n`));
+                console.log(chalk.gray(`     Type: ${p.type}, Requested: ${p.requestedAt.toLocaleString()}\n`));
             }
         }
-        const status = index_js_1.approvalManager.getStatus();
-        console.log(chalk_1.default.gray(`
+        const status = approvalManager.getStatus();
+        console.log(chalk.gray(`
 Summary: ${status.approved} approved, ${status.denied} denied, ${status.pending} pending, ${status.autoApproved} auto-approved
     `));
     }
     toggleSandbox(args) {
         if (!args) {
-            const status = index_js_2.sandbox.getStatus();
-            console.log(chalk_1.default.cyan(`
+            const status = sandbox.getStatus();
+            console.log(chalk.cyan(`
 Sandbox Status:
-  Enabled: ${status.enabled ? chalk_1.default.green('YES') : chalk_1.default.red('NO')}
+  Enabled: ${status.enabled ? chalk.green('YES') : chalk.red('NO')}
   Max CPU: ${status.config.maxCpuTime}s
   Max Memory: ${status.config.maxMemory}MB
   Max File Size: ${status.config.maxFileSize}MB
@@ -1106,51 +1072,51 @@ Sandbox Status:
             return;
         }
         if (args === 'on' || args === 'enable' || args === 'true') {
-            index_js_2.sandbox.setEnabled(true);
-            console.log(chalk_1.default.green('\nSandbox enabled.\n'));
+            sandbox.setEnabled(true);
+            console.log(chalk.green('\nSandbox enabled.\n'));
         }
         else if (args === 'off' || args === 'disable' || args === 'false') {
-            index_js_2.sandbox.setEnabled(false);
-            console.log(chalk_1.default.yellow('\nSandbox disabled. Commands will run unsandboxed.\n'));
+            sandbox.setEnabled(false);
+            console.log(chalk.yellow('\nSandbox disabled. Commands will run unsandboxed.\n'));
         }
         else {
-            console.log(chalk_1.default.yellow('\nUsage: /sandbox [on|off]\n'));
+            console.log(chalk.yellow('\nUsage: /sandbox [on|off]\n'));
         }
     }
     createCheckpoint(args) {
         const description = args || 'Manual checkpoint';
-        const checkpoints = index_js_2.checkpointSystem.list();
-        const checkpointId = index_js_2.checkpointSystem.createSync('manual', description);
+        const checkpoints = checkpointSystem.list();
+        const checkpointId = checkpointSystem.createSync('manual', description);
         if (checkpointId) {
-            console.log(chalk_1.default.green(`\nCheckpoint created: ${checkpointId}\n`));
-            console.log(chalk_1.default.gray(`Total checkpoints: ${checkpoints.length + 1}\n`));
+            console.log(chalk.green(`\nCheckpoint created: ${checkpointId}\n`));
+            console.log(chalk.gray(`Total checkpoints: ${checkpoints.length + 1}\n`));
         }
         else {
-            console.log(chalk_1.default.red('\nFailed to create checkpoint.\n'));
+            console.log(chalk.red('\nFailed to create checkpoint.\n'));
         }
     }
     undoLastChange(args) {
-        const checkpoints = index_js_2.checkpointSystem.list();
+        const checkpoints = checkpointSystem.list();
         if (checkpoints.length === 0) {
-            console.log(chalk_1.default.yellow('\nNo checkpoints available to undo.\n'));
+            console.log(chalk.yellow('\nNo checkpoints available to undo.\n'));
             return;
         }
         // Try specific checkpoint or use most recent
         let checkpointId = args || checkpoints[checkpoints.length - 1]?.id;
         if (!checkpointId) {
-            console.log(chalk_1.default.yellow('\nNo checkpoint specified and no checkpoints available.\n'));
+            console.log(chalk.yellow('\nNo checkpoint specified and no checkpoints available.\n'));
             return;
         }
-        const success = index_js_2.checkpointSystem.restoreSync(checkpointId);
+        const success = checkpointSystem.restoreSync(checkpointId);
         if (success) {
-            console.log(chalk_1.default.green(`\nChanges restored from checkpoint: ${checkpointId}\n`));
+            console.log(chalk.green(`\nChanges restored from checkpoint: ${checkpointId}\n`));
         }
         else {
-            console.log(chalk_1.default.red(`\nFailed to restore checkpoint: ${checkpointId}\n`));
+            console.log(chalk.red(`\nFailed to restore checkpoint: ${checkpointId}\n`));
         }
     }
     showRiskLevels() {
-        console.log(chalk_1.default.cyan(`
+        console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  Risk Levels & Approval Requirements                                 ║
 ╠════════════════════════════════════════════╦══════════════════════════╣
@@ -1169,8 +1135,8 @@ Use /autoapprove [low|medium|high|off] to configure.
     toggleAutoApprove(args) {
         const levels = ['low', 'medium', 'high', 'off'];
         if (!args || !levels.includes(args.toLowerCase())) {
-            const status = index_js_1.approvalManager.getStatus();
-            console.log(chalk_1.default.cyan(`
+            const status = approvalManager.getStatus();
+            console.log(chalk.cyan(`
 Auto-Approve Settings:
   Current: ${status.preferences.autoApproveLowRisk ? 'LOW' : 'MEDIUM'}
   Use /autoapprove [low|medium|high|off] to configure
@@ -1178,21 +1144,21 @@ Auto-Approve Settings:
             return;
         }
         if (args === 'off') {
-            index_js_1.approvalManager.setAutoApprove(false);
-            console.log(chalk_1.default.yellow('\nAuto-approve disabled. All operations require approval.\n'));
+            approvalManager.setAutoApprove(false);
+            console.log(chalk.yellow('\nAuto-approve disabled. All operations require approval.\n'));
         }
         else {
-            index_js_1.approvalManager.setAutoApprove(true);
-            console.log(chalk_1.default.green(`\nAuto-approve enabled for ${args.toUpperCase()} risk operations.\n`));
+            approvalManager.setAutoApprove(true);
+            console.log(chalk.green(`\nAuto-approve enabled for ${args.toUpperCase()} risk operations.\n`));
         }
     }
     showMemory() {
         const memories = this.memory.getAll();
         if (memories.length === 0) {
-            console.log(chalk_1.default.cyan('\nNo memories stored.\n'));
+            console.log(chalk.cyan('\nNo memories stored.\n'));
         }
         else {
-            console.log(chalk_1.default.cyan('\nStored memories:\n'));
+            console.log(chalk.cyan('\nStored memories:\n'));
             memories.forEach((m, i) => {
                 console.log(`  ${i + 1}. ${m.key}: ${m.value}`);
             });
@@ -1202,11 +1168,11 @@ Auto-Approve Settings:
     showProviderNotConfigured() {
         const freeModels = this.provider.getFreeTierModels();
         const localProviders = this.provider.getLocalProviders();
-        console.log(chalk_1.default.yellow(`
+        console.log(chalk.yellow(`
 ⚠️  AI provider not configured.
 
 To use VIBE:
-• Run ${chalk_1.default.cyan('/config')} to set up an API key
+• Run ${chalk.cyan('/config')} to set up an API key
 • Or use a free provider: ${freeModels.map(f => f.name).join(', ') || 'None'}
 • Or use local: ${localProviders.join(', ') || 'None'}
     `));
@@ -1214,13 +1180,13 @@ To use VIBE:
     showAIError(response, currentProvider) {
         const freeModels = this.provider.getFreeTierModels();
         const localProviders = this.provider.getLocalProviders();
-        console.log(chalk_1.default.red(`
+        console.log(chalk.red(`
 ❌ AI Error
 
 Reason: ${response.content || response.error || 'Unknown error'}
 
 What to do:
-• Run ${chalk_1.default.cyan('/config')} to configure
+• Run ${chalk.cyan('/config')} to configure
 • Try a free provider: ${freeModels.map(f => f.name).join(', ') || 'None'}
 • Use local provider: ${localProviders.join(', ') || 'None'}
 • Check your network connection
@@ -1313,5 +1279,4 @@ Provider: ${currentProvider}
         }
     }
 }
-exports.CLIEngine = CLIEngine;
 //# sourceMappingURL=index.js.map

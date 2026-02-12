@@ -1,4 +1,3 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Agents Module
  *
@@ -16,46 +15,11 @@
  *
  * Version: 0.0.1
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.VibeAgentSystem = exports.agentExecutor = exports.ContextAgent = exports.LearningAgent = exports.RefactorAgent = exports.DebuggerAgent = exports.VibeAgentExecutor = exports.ReviewerAgent = exports.ExecutorAgent = exports.PlannerAgent = exports.AgentExecutionContext = void 0;
-const crypto = __importStar(require("crypto"));
-const router_js_1 = require("../providers/router.js");
-const index_js_1 = require("../memory/index.js");
-const index_js_2 = require("../tools/index.js");
-const index_js_3 = require("../approvals/index.js");
+import * as crypto from 'crypto';
+import { VibeProviderRouter } from '../providers/router.js';
+import { VibeMemoryManager } from '../memory/index.js';
+import { toolRegistry, checkpointSystem, sandbox } from '../tools/index.js';
+import { approvalManager } from '../approvals/index.js';
 /**
  * Base agent with common functionality
  */
@@ -90,7 +54,7 @@ class BaseAgent {
 // ============================================================================
 // AGENT EXECUTION CONTEXT
 // ============================================================================
-class AgentExecutionContext {
+export class AgentExecutionContext {
     workingDir;
     dryRun = false;
     sessionId;
@@ -102,7 +66,7 @@ class AgentExecutionContext {
         this.sessionId = options.sessionId || crypto.randomUUID();
         this.dryRun = options.dryRun || false;
         // Load available tools
-        for (const tool of index_js_2.toolRegistry.list()) {
+        for (const tool of toolRegistry.list()) {
             this.tools.set(tool.name, tool);
         }
     }
@@ -117,11 +81,11 @@ class AgentExecutionContext {
         const context = {
             workingDir: this.workingDir,
             dryRun: this.dryRun,
-            sandbox: index_js_2.sandbox.getConfig().enabled,
+            sandbox: sandbox.getConfig().enabled,
             sessionId: this.sessionId,
             approvalSystem: {
                 async request(description, operations, risk) {
-                    return index_js_3.approvalManager.request(description, operations, risk);
+                    return approvalManager.request(description, operations, risk);
                 },
             },
         };
@@ -130,17 +94,16 @@ class AgentExecutionContext {
         return result;
     }
     async createCheckpoint(description) {
-        return index_js_2.checkpointSystem.createSync(this.sessionId, description) || null;
+        return checkpointSystem.createSync(this.sessionId, description) || null;
     }
     async restoreCheckpoint(checkpointId) {
-        return index_js_2.checkpointSystem.restoreSync(checkpointId);
+        return checkpointSystem.restoreSync(checkpointId);
     }
 }
-exports.AgentExecutionContext = AgentExecutionContext;
 // ============================================================================
 // PLANNER AGENT
 // ============================================================================
-class PlannerAgent extends BaseAgent {
+export class PlannerAgent extends BaseAgent {
     name = 'planner';
     description = 'Creates execution plans for complex tasks';
     phases = ['plan', 'propose'];
@@ -204,7 +167,7 @@ Only respond with the JSON, no other text.
     `.trim();
     }
     getAvailableTools() {
-        return index_js_2.toolRegistry.list()
+        return toolRegistry.list()
             .map(t => `- ${t.name}: ${t.description} (risk: ${t.riskLevel})`)
             .join('\n');
     }
@@ -249,11 +212,10 @@ Only respond with the JSON, no other text.
         return lines.join('\n');
     }
 }
-exports.PlannerAgent = PlannerAgent;
 // ============================================================================
 // EXECUTOR AGENT
 // ============================================================================
-class ExecutorAgent extends BaseAgent {
+export class ExecutorAgent extends BaseAgent {
     router;
     name = 'executor';
     description = 'Executes tools and commands';
@@ -337,11 +299,10 @@ class ExecutorAgent extends BaseAgent {
         return { tool: 'shell_exec', args: { command: task.task } };
     }
 }
-exports.ExecutorAgent = ExecutorAgent;
 // ============================================================================
 // REVIEWER AGENT
 // ============================================================================
-class ReviewerAgent extends BaseAgent {
+export class ReviewerAgent extends BaseAgent {
     router;
     name = 'reviewer';
     description = 'Reviews and validates code changes';
@@ -411,11 +372,10 @@ Explain what was done and why. Keep it concise and actionable.
         return response?.content || 'Execution completed.';
     }
 }
-exports.ReviewerAgent = ReviewerAgent;
 // ============================================================================
 // AGENT EXECUTOR (ORCHESTRATOR)
 // ============================================================================
-class VibeAgentExecutor {
+export class VibeAgentExecutor {
     agents = new Map();
     defaultProvider;
     constructor(provider, memory) {
@@ -426,8 +386,8 @@ class VibeAgentExecutor {
         this.registerAgent(new ReviewerAgent(provider));
         this.registerAgent(new DebuggerAgent(provider));
         this.registerAgent(new RefactorAgent(provider));
-        this.registerAgent(new LearningAgent(provider, memory || new index_js_1.VibeMemoryManager()));
-        this.registerAgent(new ContextAgent(provider, memory || new index_js_1.VibeMemoryManager()));
+        this.registerAgent(new LearningAgent(provider, memory || new VibeMemoryManager()));
+        this.registerAgent(new ContextAgent(provider, memory || new VibeMemoryManager()));
     }
     /**
      * Register an agent
@@ -515,7 +475,7 @@ class VibeAgentExecutor {
         const plan = planResult.artifacts?.[0] ? JSON.parse(planResult.artifacts[0]) : null;
         // Step 3: APPROVE (if needed)
         if (plan && plan.estimatedRisk !== 'low' && task.approvalMode === 'prompt') {
-            const approved = await index_js_3.approvalManager.request(`Execute plan with ${plan.steps.length} steps`, plan.steps.map(s => `${s.tool}: ${s.description}`), plan.estimatedRisk);
+            const approved = await approvalManager.request(`Execute plan with ${plan.steps.length} steps`, plan.steps.map(s => `${s.tool}: ${s.description}`), plan.estimatedRisk);
             if (!approved) {
                 allSteps.push({
                     id: crypto.randomUUID(),
@@ -588,12 +548,10 @@ ${review.output}
      * Get available tools from all agents
      */
     getAvailableTools() {
-        return index_js_2.toolRegistry.list();
+        return toolRegistry.list();
     }
 }
-exports.VibeAgentExecutor = VibeAgentExecutor;
-exports.VibeAgentSystem = VibeAgentExecutor;
-class DebuggerAgent extends BaseAgent {
+export class DebuggerAgent extends BaseAgent {
     router;
     name = 'debugger';
     description = 'Analyzes errors and suggests fixes';
@@ -660,8 +618,7 @@ Respond with JSON: {rootCause, suggestedFix, relevantFiles: string[], fixConfide
         };
     }
 }
-exports.DebuggerAgent = DebuggerAgent;
-class RefactorAgent extends BaseAgent {
+export class RefactorAgent extends BaseAgent {
     router;
     name = 'refactor';
     description = 'Identifies patterns and refactors code';
@@ -722,8 +679,7 @@ Respond with JSON: {patterns: string[], changes: [{file, description, before, af
         };
     }
 }
-exports.RefactorAgent = RefactorAgent;
-class LearningAgent extends BaseAgent {
+export class LearningAgent extends BaseAgent {
     router;
     memory;
     name = 'learn';
@@ -793,8 +749,7 @@ Respond with JSON: {knowledgeGained, patternsLearned: string[], suggestions: str
         };
     }
 }
-exports.LearningAgent = LearningAgent;
-class ContextAgent extends BaseAgent {
+export class ContextAgent extends BaseAgent {
     router;
     memory;
     name = 'context';
@@ -859,9 +814,9 @@ Respond with JSON: {relevantContext: string[], indexedFiles, semanticMatches: [{
         };
     }
 }
-exports.ContextAgent = ContextAgent;
 // ============================================================================
 // EXPORTS
 // ============================================================================
-exports.agentExecutor = new VibeAgentExecutor(new router_js_1.VibeProviderRouter(), new index_js_1.VibeMemoryManager());
+export const agentExecutor = new VibeAgentExecutor(new VibeProviderRouter(), new VibeMemoryManager());
+export { VibeAgentExecutor as VibeAgentSystem };
 //# sourceMappingURL=index.js.map

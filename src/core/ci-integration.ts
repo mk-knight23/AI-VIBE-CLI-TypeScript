@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { secretsManager } from '../security/secrets-manager';
+import { secretsManager } from '../security/secrets-manager.js';
 
 export class CIIntegration {
     async triggerGitHubAction(owner: string, repo: string, workflowId: string, ref: string = 'main'): Promise<any> {

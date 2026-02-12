@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Tool Execution Engine
  * Safe, sandboxed execution with approval gates and rollback support
  */
-import type { IApprovalSystem, MultiEditResult, EditOperation } from '../types';
+import type { IApprovalSystem, MultiEditResult, EditOperation } from '../types.js';
 export interface ToolResult {
     success: boolean;
     output: string;

@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Code Assistant Module
  * AI-powered code generation, completion, refactoring, and explanation
  */
-import { BaseModule, ModuleResult } from '../base.module';
+import { BaseModule, ModuleResult } from '../base.module.js';
 export declare class CodeAssistantModule extends BaseModule {
     private provider;
     private config;

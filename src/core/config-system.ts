@@ -3,9 +3,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import dotenv from 'dotenv';
+import { cosmiconfigSync, CosmiconfigResult } from 'cosmiconfig';
+import { VibeError, errors } from '../utils/errors.js';
+import { createLogger } from '../utils/pino-logger.js';
 
 // Load .env files
 dotenv.config();
+
+const logger = createLogger('config');
 
 const ModelConfigSchema = z.object({
     defaultTier: z.enum(['fast', 'balanced', 'reasoning', 'max']).default('balanced'),
@@ -96,8 +101,11 @@ export class ConfigManager {
                 const globalRaw = fs.readFileSync(this.globalConfigPath, 'utf-8');
                 const globalParsed = JSON.parse(globalRaw);
                 config = { ...config, ...globalParsed };
+                logger.debug({ path: this.globalConfigPath }, 'Loaded global config');
             }
-        } catch (e) { }
+        } catch (e) {
+            logger.warn({ error: e, path: this.globalConfigPath }, 'Failed to load global config');
+        }
 
         // 2. Project config
         try {
@@ -105,8 +113,11 @@ export class ConfigManager {
                 const projectRaw = fs.readFileSync(this.configPath, 'utf-8');
                 const projectParsed = JSON.parse(projectRaw);
                 config = { ...config, ...projectParsed };
+                logger.debug({ path: this.configPath }, 'Loaded project config');
             }
-        } catch (e) { }
+        } catch (e) {
+            logger.warn({ error: e, path: this.configPath }, 'Failed to load project config');
+        }
 
         // Migration: Handle legacy format where 'model' was a string or 'provider' existed
         const anyConfig = config as any;
@@ -142,6 +153,63 @@ export class ConfigManager {
     public getEnv(key: string): string | undefined {
         return process.env[key];
     }
+
+    public getConfigPath(): string {
+        return this.configPath;
+    }
+
+    public getGlobalConfigPath(): string {
+        return this.globalConfigPath;
+    }
 }
 
 export const configManager = ConfigManager.getInstance();
+
+/**
+ * Initialize configuration on startup
+ * Loads config from all sources with proper error handling
+ */
+export function initializeConfig(): { success: true; config: VibeConfig } | { success: false; error: VibeError } {
+    try {
+        const cm = ConfigManager.getInstance();
+        const config = cm.getConfig();
+        logger.debug({ configPath: cm.getConfigPath() }, 'Configuration loaded');
+        return { success: true, config };
+    } catch (error) {
+        logger.error({ error }, 'Failed to initialize configuration');
+        return {
+            success: false,
+            error: errors.configInvalid('Failed to load configuration'),
+        };
+    }
+}
+
+/**
+ * Search for configuration using cosmiconfig
+ * Returns the first valid config found or null
+ */
+export function searchConfig(): CosmiconfigResult | null {
+    const explorer = cosmiconfigSync('vibe', {
+        searchPlaces: [
+            'package.json',
+            '.viberc',
+            '.viberc.json',
+            '.viberc.yaml',
+            '.viberc.yml',
+            '.viberc.js',
+            '.viberc.cjs',
+            'vibe.config.js',
+            'vibe.config.cjs',
+            'vibe.config.json',
+            'vibe.config.yaml',
+            'vibe.config.yml',
+        ],
+    });
+
+    try {
+        return explorer.search();
+    } catch (error) {
+        logger.warn({ error }, 'Error searching for config');
+        return null;
+    }
+}

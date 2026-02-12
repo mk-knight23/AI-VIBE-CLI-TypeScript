@@ -2,7 +2,7 @@
  * VIBE-CLI v0.0.1 - Context Module
  * MCP-based context management for AI agents
  */
-import type { ProjectContext, FileContext, GitContext, ContextEntry } from '../types';
+import type { ProjectContext, FileContext, GitContext, ContextEntry } from '../types.js';
 export type { ProjectContext, FileContext, GitContext, ContextEntry };
 export { VibeContextManager as VibeContext };
 export declare class VibeContextManager {

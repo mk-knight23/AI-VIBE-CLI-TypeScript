@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { BaseModule, ModuleInfo } from '../modules/base.module';
+import { BaseModule, ModuleInfo } from '../modules/base.module.js';
 
 export interface ModuleLoadResult {
   name: string;

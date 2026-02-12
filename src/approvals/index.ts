@@ -2,5 +2,5 @@
  * VIBE-CLI v0.0.1 - Approvals Index
  */
 
-export { ApprovalManager, VibeApprovalManager, approvalManager } from './manager';
-export type { ApprovalRequest } from './manager';
+export { ApprovalManager, VibeApprovalManager, approvalManager } from './manager.js';
+export type { ApprovalRequest } from './manager.js';

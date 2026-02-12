@@ -5,8 +5,8 @@
  * Selects best model per task type (completion, planning, refactoring, reasoning).
  */
 
-import type { IProviderRouter } from '../types';
-import type { ProviderResponse } from '../types';
+import type { IProviderRouter } from '../types.js';
+import type { ProviderResponse } from '../types.js';
 
 export interface CompletionOptions {
   modelTier?: 'fast' | 'balanced' | 'reasoning' | 'max';

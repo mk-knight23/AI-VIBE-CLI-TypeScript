@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { progressDisplay } from '../../ui/progress-bars/progress-display';
+import { progressDisplay } from '../../ui/progress-bars/progress-display.js';
 
 /**
  * Test framework type
@@ -497,7 +497,7 @@ Respond with the code ONLY.`;
 
     const ext = path.extname(sourcePath);
     if (ext === '.ts') {
-      imports.push(`import { ${path.basename(sourcePath, '.ts')} } from './${path.basename(sourcePath, '.ts')}';`);
+      imports.push(`import { ${path.basename(sourcePath, '.ts')} } from './${path.basename(sourcePath, '.ts')}.js';`);
     }
 
     return imports;

@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { MultiFileHandler, FileChange } from '../../core/file-editor/multi-file-handler';
+import { MultiFileHandler, FileChange } from '../../core/file-editor/multi-file-handler.js';
 
 /**
  * Local diff result interface

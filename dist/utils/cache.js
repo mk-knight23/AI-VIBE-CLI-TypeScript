@@ -1,12 +1,8 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Cache Utility
  * In-memory caching with TTL support
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.LRUCache = exports.Cache = void 0;
-exports.createCache = createCache;
-class Cache {
+export class Cache {
     store = new Map();
     defaultTTL;
     maxSize;
@@ -131,17 +127,16 @@ class Cache {
         return oldest;
     }
 }
-exports.Cache = Cache;
 /**
  * Create a cache instance with sensible defaults
  */
-function createCache(options) {
+export function createCache(options) {
     return new Cache(options);
 }
 /**
  * LRU Cache implementation
  */
-class LRUCache extends Cache {
+export class LRUCache extends Cache {
     accessOrder = [];
     set(key, value, ttl) {
         // Remove from access order if exists
@@ -168,5 +163,4 @@ class LRUCache extends Cache {
         return this.accessOrder[0];
     }
 }
-exports.LRUCache = LRUCache;
 //# sourceMappingURL=cache.js.map

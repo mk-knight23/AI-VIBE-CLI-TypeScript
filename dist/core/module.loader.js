@@ -1,51 +1,12 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - Module Loader
  * Loads and manages VIBE modules
  */
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ModuleLoader = void 0;
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const chalk_1 = __importDefault(require("chalk"));
-const base_module_1 = require("../modules/base.module");
-class ModuleLoader {
+import * as fs from 'fs';
+import * as path from 'path';
+import chalk from 'chalk';
+import { BaseModule } from '../modules/base.module.js';
+export class ModuleLoader {
     modules = new Map();
     modulesDir;
     loadedCount = 0;
@@ -60,11 +21,11 @@ class ModuleLoader {
         this.modules.clear();
         this.loadedCount = 0;
         this.failedCount = 0;
-        console.log(chalk_1.default.cyan('\n─── Loading Modules ───\n'));
+        console.log(chalk.cyan('\n─── Loading Modules ───\n'));
         // Check if modules directory exists
         if (!fs.existsSync(this.modulesDir)) {
-            console.log(chalk_1.default.yellow(`Modules directory not found: ${this.modulesDir}`));
-            console.log(chalk_1.default.gray('  Running with core functionality only.\n'));
+            console.log(chalk.yellow(`Modules directory not found: ${this.modulesDir}`));
+            console.log(chalk.gray('  Running with core functionality only.\n'));
             return this.modules;
         }
         // Get all subdirectories
@@ -78,12 +39,12 @@ class ModuleLoader {
             await this.loadModule(moduleName, modulePath);
         }
         // Summary
-        console.log(chalk_1.default.cyan('\n─── Module Load Summary ───\n'));
-        console.log(chalk_1.default.green(`  ✓ Loaded: ${this.loadedCount}`));
+        console.log(chalk.cyan('\n─── Module Load Summary ───\n'));
+        console.log(chalk.green(`  ✓ Loaded: ${this.loadedCount}`));
         if (this.failedCount > 0) {
-            console.log(chalk_1.default.red(`  ✗ Failed: ${this.failedCount}`));
+            console.log(chalk.red(`  ✗ Failed: ${this.failedCount}`));
         }
-        console.log(chalk_1.default.gray(`  Total: ${this.modules.size} modules\n`));
+        console.log(chalk.gray(`  Total: ${this.modules.size} modules\n`));
         return this.modules;
     }
     /**
@@ -112,7 +73,7 @@ class ModuleLoader {
                 delete require.cache[require.resolve(requirePath)];
             }
             // Dynamic import
-            const moduleExports = await Promise.resolve(`${requirePath}`).then(s => __importStar(require(s)));
+            const moduleExports = await import(requirePath);
             // Get the module class (default export or named export)
             const ModuleClass = moduleExports.default || moduleExports[name.charAt(0).toUpperCase() + name.slice(1) + 'Module'] || moduleExports[name];
             if (!ModuleClass) {
@@ -121,26 +82,26 @@ class ModuleLoader {
             }
             // Instantiate module
             const module = new ModuleClass();
-            if (!(module instanceof base_module_1.BaseModule)) {
+            if (!(module instanceof BaseModule)) {
                 this.logSkip(name, 'Module does not extend BaseModule');
                 return;
             }
             // Register module
             this.modules.set(name, module);
             this.loadedCount++;
-            console.log(`  ${chalk_1.default.green('✓')} ${chalk_1.default.white(name.padEnd(20))} v${module.getVersion()}`);
+            console.log(`  ${chalk.green('✓')} ${chalk.white(name.padEnd(20))} v${module.getVersion()}`);
         }
         catch (error) {
             this.failedCount++;
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.log(`  ${chalk_1.default.red('✗')} ${chalk_1.default.white(name.padEnd(20))} - ${chalk_1.default.red(errorMessage)}`);
+            console.log(`  ${chalk.red('✗')} ${chalk.white(name.padEnd(20))} - ${chalk.red(errorMessage)}`);
         }
     }
     /**
      * Log module skip
      */
     logSkip(name, reason) {
-        console.log(`  ${chalk_1.default.gray('○')} ${chalk_1.default.white(name.padEnd(20))} - ${chalk_1.default.gray(reason)}`);
+        console.log(`  ${chalk.gray('○')} ${chalk.white(name.padEnd(20))} - ${chalk.gray(reason)}`);
     }
     /**
      * Get a specific module by name
@@ -221,5 +182,4 @@ class ModuleLoader {
         this.failedCount = 0;
     }
 }
-exports.ModuleLoader = ModuleLoader;
 //# sourceMappingURL=module.loader.js.map

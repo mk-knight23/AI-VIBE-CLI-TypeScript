@@ -1,64 +1,87 @@
-"use strict";
 /**
  * VIBE-CLI v0.0.1 - MCP Manager
  * Model Context Protocol backbone for structured context
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.mcpManager = exports.VibeMCPManager = void 0;
-const index_js_1 = require("@modelcontextprotocol/sdk/client/index.js");
-const stdio_js_1 = require("@modelcontextprotocol/sdk/client/stdio.js");
-const config_system_1 = require("../core/config-system");
-const structured_logger_1 = require("../utils/structured-logger");
-const index_1 = require("../tools/registry/index");
-const events_1 = require("events");
-const logger = new structured_logger_1.Logger("VibeMCPManager");
-class VibeMCPManager extends events_1.EventEmitter {
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { configManager } from "../core/config-system.js";
+import { createLogger } from "../utils/pino-logger.js";
+import { toolRegistry } from "../tools/registry/index.js";
+import { EventEmitter } from 'events';
+const logger = createLogger("VibeMCPManager");
+export class VibeMCPManager extends EventEmitter {
     connections = new Map();
+    maxRetries = 5;
+    heartbeatInterval = null;
     constructor() {
         super();
     }
     async initialize() {
-        const config = config_system_1.configManager.getConfig();
+        const config = configManager.getConfig();
         const servers = config.mcpServers || {};
         for (const [name, serverConfig] of Object.entries(servers)) {
             if (serverConfig.disabled)
                 continue;
             try {
-                await this.connectToServer(name, serverConfig);
+                await this.connectWithRetry(name, serverConfig);
             }
             catch (error) {
-                logger.error(`Failed to connect to MCP server ${name}: ${error.message}`);
+                logger.error(`Failed to connect to MCP server ${name} after multiple retries: ${error.message}`);
+            }
+        }
+        this.startHeartbeat();
+    }
+    async connectWithRetry(name, config, retry = 0) {
+        try {
+            await this.connectToServer(name, config);
+        }
+        catch (error) {
+            if (retry < this.maxRetries) {
+                const delay = Math.min(1000 * Math.pow(2, retry), 30000);
+                logger.warn(`Retrying connection to ${name} in ${delay}ms (Attempt ${retry + 1}/${this.maxRetries})`);
+                setTimeout(() => {
+                    this.connectWithRetry(name, config, retry + 1);
+                }, delay);
+            }
+            else {
+                throw error;
             }
         }
     }
     async connectToServer(name, config) {
         logger.info(`Connecting to MCP server: ${name} (${config.command})`);
-        const env = {};
-        for (const [key, value] of Object.entries(process.env)) {
-            if (value !== undefined)
-                env[key] = value;
-        }
+        const env = { ...process.env };
         if (config.env) {
             Object.assign(env, config.env);
         }
-        const transport = new stdio_js_1.StdioClientTransport({
+        const transport = new StdioClientTransport({
             command: config.command,
             args: config.args,
             env: env
         });
-        const client = new index_js_1.Client({
+        const client = new Client({
             name: "vibe-ai-teammate",
             version: "0.0.2",
         }, {
             capabilities: {},
         });
-        await client.connect(transport);
-        this.connections.set(name, { client, transport, name });
+        // Set timeout for connection
+        const connectPromise = client.connect(transport);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 10000));
+        await Promise.race([connectPromise, timeoutPromise]);
+        this.connections.set(name, {
+            client,
+            transport,
+            name,
+            config,
+            retryCount: 0,
+            lastHeartbeat: new Date()
+        });
         // Register tools from this server
         try {
             const { tools } = await client.listTools();
             for (const tool of tools) {
-                index_1.toolRegistry.register({
+                toolRegistry.register({
                     name: `${name}_${tool.name}`,
                     description: tool.description || "",
                     category: "code",
@@ -89,7 +112,29 @@ class VibeMCPManager extends events_1.EventEmitter {
         }
         this.emit('connect', { server: name });
     }
+    startHeartbeat() {
+        if (this.heartbeatInterval)
+            return;
+        this.heartbeatInterval = setInterval(async () => {
+            for (const [name, conn] of this.connections.entries()) {
+                try {
+                    // Ping server by listing tools (lightweight enough)
+                    await conn.client.listTools();
+                    conn.lastHeartbeat = new Date();
+                }
+                catch (error) {
+                    logger.error(`Heartbeat failed for MCP server ${name}. Attempting reconnect...`);
+                    this.connections.delete(name);
+                    this.connectWithRetry(name, conn.config);
+                }
+            }
+        }, 60000); // Check every minute
+    }
     async shutdown() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
         for (const connection of this.connections.values()) {
             await connection.transport.close();
         }
@@ -101,8 +146,14 @@ class VibeMCPManager extends events_1.EventEmitter {
     isConnected(name) {
         return this.connections.has(name);
     }
+    getStatus() {
+        return Array.from(this.connections.values()).map(c => ({
+            name: c.name,
+            lastHeartbeat: c.lastHeartbeat,
+            status: 'online'
+        }));
+    }
 }
-exports.VibeMCPManager = VibeMCPManager;
 // Export singleton
-exports.mcpManager = new VibeMCPManager();
+export const mcpManager = new VibeMCPManager();
 //# sourceMappingURL=index.js.map

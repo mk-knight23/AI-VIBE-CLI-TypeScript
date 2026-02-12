@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { themeManager } from './themes/theme-manager';
+import { themeManager } from './themes/theme-manager.js';
 
 export class HelpSystem {
     static show(context?: string): void {
