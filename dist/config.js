@@ -153,11 +153,11 @@ export class VibeConfigManager {
         const providerInfo = this.provider.listProviders().find(p => p.id === providerId);
         if (!providerInfo)
             return;
-        const config = this.provider.getProvider(providerId);
+        const config = this.provider.getAdapter(providerId);
         if (!config)
             return;
         // If provider doesn't need API key (like Ollama), just set it
-        if (!config.requiresApiKey) {
+        if (!config.getConfig().requiresApiKey) {
             this.provider.setProvider(providerId);
             console.log(chalk.green(`\n✓ Provider set to ${providerInfo.name}\n`));
             return;
@@ -202,11 +202,11 @@ Note: The key will be tested on your first request.
             console.log(chalk.red(`Provider "${providerName}" not found.\n`));
             return false;
         }
-        const config = this.provider.getProvider(provider.id);
+        const config = this.provider.getAdapter(provider.id);
         if (!config)
             return false;
         // If no API key needed
-        if (!config.requiresApiKey) {
+        if (!config.getConfig().requiresApiKey) {
             this.provider.setProvider(provider.id);
             console.log(chalk.green(`✓ Provider set to ${provider.name}\n`));
             return true;
@@ -279,7 +279,7 @@ Note: The key will be tested on your first request.
     `));
         for (const p of providers) {
             const statusIcon = p.configured ? chalk.green('✓') : p.freeTier ? chalk.gray('○') : chalk.red('✗');
-            const line = `  ${statusIcon} ${p.name.padEnd(18)} ${p.model}`;
+            const line = `  ${statusIcon} ${p.name.padEnd(18)} ${p.defaultModel}`;
             console.log(line);
         }
         console.log(chalk.cyan(`

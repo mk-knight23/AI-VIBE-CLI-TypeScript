@@ -115,7 +115,7 @@ export class CommandHandler {
 
             // For now, use the generateCustom with a mock-like provider that uses our completion primitive
             const mockProvider = {
-                chat: async (messages: any[]) => {
+                chat: async (messages: Array<{ role: string; content: string }>) => {
                     const prompt = messages.map(m => m.content).join('\n');
                     const result = await completion.execute({ prompt });
                     return { content: result.data.text };
@@ -129,8 +129,9 @@ export class CommandHandler {
                 auth: 'none',
                 description
             }, mockProvider);
-        } catch (error: any) {
-            console.log(chalk.red(`Scaffolding failed: ${error.message}`));
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.log(chalk.red(`Scaffolding failed: ${message}`));
         }
     }
 
@@ -145,8 +146,9 @@ export class CommandHandler {
             } else {
                 result.forEach(err => console.log(errorAnalyzer.formatError(err)));
             }
-        } catch (error: any) {
-            console.log(chalk.red(`Analysis failed: ${error.message}`));
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.log(chalk.red(`Analysis failed: ${message}`));
         }
     }
 
@@ -219,14 +221,14 @@ export class CommandHandler {
 
     private async handleCommit(args: string[]) {
         const completion = this.primitiveMap.get('completion') as CompletionPrimitive;
-        const options: any = {};
+        const options: Record<string, string> = {};
         if (args.includes('-m')) options.message = args[args.indexOf('-m') + 1];
         await generateCommit([], { completion }, options);
     }
 
     private async handlePR(args: string[]) {
         const completion = this.primitiveMap.get('completion') as CompletionPrimitive;
-        const options: any = {};
+        const options: Record<string, string> = {};
         if (args.includes('--base')) options.base = args[args.indexOf('--base') + 1];
         await generatePR([], { completion }, options);
     }
@@ -262,7 +264,7 @@ export class CommandHandler {
                 break;
             case 'install':
                 // For TUI, we'll pass a mock program or simplified install
-                await installPlugin(nameOrPath, {} as any);
+                await installPlugin(nameOrPath, {} as Record<string, unknown>);
                 break;
             case 'uninstall':
                 uninstallPlugin(nameOrPath);

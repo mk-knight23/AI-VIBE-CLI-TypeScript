@@ -1,9 +1,20 @@
-import { simpleGit } from 'simple-git';
+import { simpleGit, LogResult, DefaultLogFields } from 'simple-git';
 import { StateManager } from './state-manager.js';
 import { createLogger } from '../utils/pino-logger.js';
 
 const git = simpleGit();
 const logger = createLogger('checkpoint-system');
+
+interface CheckpointState {
+    commit: string;
+    timestamp: string;
+}
+
+interface CheckpointEntry {
+    hash: string;
+    message: string;
+    date: string;
+}
 
 export class CheckpointSystem {
     constructor(private state: StateManager) { }
@@ -24,29 +35,30 @@ export class CheckpointSystem {
             this.state.set(`checkpoint_${name}`, { commit, timestamp });
 
             return commit.trim();
-        } catch (e: any) {
-            logger.error(`Checkpoint failed: ${e.message}`);
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            logger.error(`Checkpoint failed: ${message}`);
             throw e;
         }
     }
 
     async rollback(name?: string): Promise<boolean> {
         try {
-            const log: any = await git.log();
+            const log: LogResult<DefaultLogFields> = await git.log();
             let targetHash = '';
 
             if (name) {
-                const stored = this.state.get<any>(`checkpoint_${name}`);
+                const stored = this.state.get<CheckpointState>(`checkpoint_${name}`);
                 if (stored) {
                     targetHash = stored.commit;
                 } else {
                     // Try to find in git log
-                    const entry = log.all.find((c: any) => c.message.includes(`VIBE_CHECKPOINT: ${name}`));
+                    const entry = log.all.find(c => c.message.includes(`VIBE_CHECKPOINT: ${name}`));
                     if (entry) targetHash = entry.hash;
                 }
             } else {
                 // Rollback to very last VIBE_CHECKPOINT
-                const entry = log.all.find((c: any) => c.message.includes('VIBE_CHECKPOINT'));
+                const entry = log.all.find(c => c.message.includes('VIBE_CHECKPOINT'));
                 if (entry) targetHash = entry.hash;
             }
 
@@ -59,11 +71,11 @@ export class CheckpointSystem {
         }
     }
 
-    async list(): Promise<any[]> {
-        const log: any = await git.log();
+    async list(): Promise<CheckpointEntry[]> {
+        const log: LogResult<DefaultLogFields> = await git.log();
         return log.all
-            .filter((c: any) => c.message.includes('VIBE_CHECKPOINT'))
-            .map((c: any) => ({
+            .filter(c => c.message.includes('VIBE_CHECKPOINT'))
+            .map(c => ({
                 hash: c.hash,
                 message: c.message.replace('VIBE_CHECKPOINT: ', ''),
                 date: c.date,

@@ -491,11 +491,12 @@ Be concise and practical.`;
         summary: 'Tests passed',
         output,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { stdout?: Buffer; message?: string };
       return {
         success: false,
         summary: 'Tests failed',
-        output: error.stdout?.toString() || error.message,
+        output: err.stdout?.toString() || err.message || String(error),
         error: 'Test execution failed',
       };
     }
@@ -553,10 +554,11 @@ Be concise and practical.`;
             success: true,
             summary: `Committed: ${commitMatch[1]}`,
           };
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
           return {
             success: false,
-            error: error.message,
+            error: message,
             suggestion: 'Check git configuration and try again',
           };
         }
@@ -579,7 +581,7 @@ Be concise and practical.`;
         success: true,
         summary: result.data?.summary || 'Security scan complete',
         output: JSON.stringify(result.data?.vulnerabilities || [], null, 2),
-        changes: result.data?.vulnerabilities?.map((v: any) => ({
+        changes: result.data?.vulnerabilities?.map((v: { location?: { file?: string } }) => ({
           file: v.location?.file || 'unknown',
           type: 'modified' as const,
         })),

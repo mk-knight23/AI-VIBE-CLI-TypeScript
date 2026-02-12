@@ -1,68 +1,28 @@
 /**
- * VIBE-CLI v0.0.1 - Provider Router
- * Universal interface for AI providers (OpenAI, Anthropic, Google, xAI, Ollama)
+ * VIBE CLI - Provider Router
+ *
+ * Backward-compatible wrapper around UnifiedProviderRouter.
+ * All consumers import from this file as `VibeProviderRouter`.
+ * The actual implementation lives in unified.router.ts.
  */
-import type { ProviderConfig, ProviderResponse, IProviderRouter } from '../types.js';
-export declare class VibeProviderRouter implements IProviderRouter {
-    private providers;
-    private defaultProvider;
-    private currentProvider;
-    private currentModel;
-    private userConfig;
-    private configDir;
-    private usageHistory;
-    constructor();
-    getUsage(): {
-        totalTokens: number;
-        totalCost: number;
-    };
-    private initializeProviders;
-    private loadUserConfig;
-    private saveUserConfig;
-    private getApiKey;
+import { UnifiedProviderRouter } from './unified.router.js';
+import type { RouterConfig, UserConfig, FallbackStrategy, RouterStats } from './unified.router.js';
+export type { RouterConfig, UserConfig, FallbackStrategy, RouterStats };
+/**
+ * VibeProviderRouter — the canonical provider router for the VIBE CLI.
+ *
+ * Extends UnifiedProviderRouter with backward-compatible method aliases
+ * that existing consumers depend on. New code should prefer the
+ * UnifiedProviderRouter method names directly.
+ */
+export declare class VibeProviderRouter extends UnifiedProviderRouter {
+    constructor(config?: RouterConfig);
     /**
-     * Chat completion - implements IProviderRouter
-     */
-    chat(messages: Array<{
-        role: string;
-        content: string;
-    }>, options?: {
-        model?: string;
-        temperature?: number;
-        maxTokens?: number;
-    }): Promise<ProviderResponse>;
-    /**
-     * MiniMax API call - OpenAI-compatible with reasoning support
-     */
-    private callMiniMax;
-    private callOpenAI;
-    private callAnthropic;
-    private callGoogle;
-    private callOllama;
-    private callOpenAICompatible;
-    /**
-     * Complete a prompt - implements IProviderRouter
-     */
-    complete(prompt: string): Promise<ProviderResponse>;
-    /**
-     * Stream chat completion
-     */
-    streamChat(messages: Array<{
-        role: string;
-        content: string;
-    }>, options?: {
-        model?: string;
-        temperature?: number;
-    }): AsyncGenerator<string>;
-    private executeChat;
-    private streamOpenAI;
-    private streamAnthropic;
-    /**
-     * Select model for task - implements IProviderRouter
+     * @deprecated Use `selectModelForTask` instead
      */
     selectModel(task: string): string;
     /**
-     * Get provider status
+     * Get provider status (legacy shape expected by older consumers)
      */
     getStatus(): {
         provider: string;
@@ -71,78 +31,27 @@ export declare class VibeProviderRouter implements IProviderRouter {
         configured: number;
     };
     /**
-     * Get available providers
+     * Get API key for a provider from env
      */
-    getAvailableProviders(): string[];
+    getApiKey(provider: string): string | undefined;
     /**
-     * Check if a provider is configured
+     * Get usage statistics (legacy shape)
      */
-    isProviderConfigured(provider: string): boolean;
+    getUsage(): {
+        totalTokens: number;
+        totalCost: number;
+    };
     /**
-     * Set current provider
-     */
-    setProvider(provider: string): boolean;
-    /**
-     * Set current model
-     */
-    setModel(model: string): boolean;
-    /**
-     * Get provider info
-     */
-    getProvider(provider: string): ProviderConfig | undefined;
-    /**
-     * Get current provider info
-     */
-    getCurrentProvider(): ProviderConfig | undefined;
-    /**
-     * Get current model
+     * Get current model name
      */
     getCurrentModel(): string;
     /**
-     * List all providers
+     * Get available provider names
      */
-    listProviders(): Array<{
-        id: string;
-        name: string;
-        configured: boolean;
-        model: string;
-        freeTier: boolean;
-    }>;
+    getAvailableProviders(): string[];
     /**
-     * Set API key for a provider
+     * Check if a specific provider is configured
      */
-    setApiKey(provider: string, apiKey: string): boolean;
-    /**
-     * Get configuration directory
-     */
-    getConfigDir(): string;
-    /**
-     * Get all free tier models across providers
-     */
-    getFreeTierModels(): Array<{
-        provider: string;
-        model: string;
-        name: string;
-    }>;
-    /**
-     * Get all configured (paid) providers
-     */
-    getConfiguredProviders(): string[];
-    /**
-     * Get local providers (no API key required)
-     */
-    getLocalProviders(): string[];
-    /**
-     * Try providers in fallback order: free → paid → local
-     * Returns the first working provider response or an error
-     */
-    chatWithFallback(messages: Array<{
-        role: string;
-        content: string;
-    }>, options?: {
-        model?: string;
-        temperature?: number;
-        maxTokens?: number;
-    }): Promise<ProviderResponse>;
+    isProviderAvailable(provider: string): boolean;
 }
 //# sourceMappingURL=router.d.ts.map

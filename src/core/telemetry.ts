@@ -10,7 +10,7 @@ import { createLogger } from '../utils/pino-logger.js';
 import { VIBE_VERSION } from '../version.js';
 
 const logger = createLogger('telemetry');
-const TELEMETRY_ENDPOINT = 'http://localhost:3000/api/telemetry';
+const TELEMETRY_ENDPOINT = process.env.VIBE_TELEMETRY_URL || 'https://telemetry.vibe-cli.dev/api/telemetry';
 
 export class TelemetryService {
     private configManager: VibeConfigManager;

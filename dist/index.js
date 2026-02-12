@@ -9,7 +9,8 @@ export * from './utils/pino-logger.js';
 export * from './infrastructure/adapters/types.js';
 export * from './infrastructure/adapters/router.js';
 // Enhanced Components
-export * from './providers/enhanced-router.js';
+export * from './providers/router.js';
+export * from './providers/unified.router.js';
 export * from './mcp/enhanced-manager.js';
 export * from './cli/enhanced-command-handler.js';
 export * from './cli/enhanced-interactive.js';

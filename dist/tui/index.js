@@ -691,14 +691,16 @@ export class CLIEngine {
         };
     }
     async streamAI(input, messages) {
-        const generator = this.provider.streamChat(messages);
         this.clearThinkingAnimation();
         process.stdout.write('\n');
         let fullContent = '';
         try {
-            for await (const chunk of generator) {
+            const generator = this.provider.streamChat(messages, (chunk) => {
                 process.stdout.write(chunk);
                 fullContent += chunk;
+            });
+            for await (const _ of generator) {
+                // callback handles output
             }
             process.stdout.write('\n\n');
             // Post-process if needed (e.g. check for code dumps)
@@ -980,7 +982,7 @@ Files are created automatically in agent mode.
         providers.forEach((p) => {
             const status = p.configured ? chalk.green('✓') : p.freeTier ? chalk.gray('○') : chalk.red('✗');
             const name = p.freeTier ? `${p.name} (free)` : p.name;
-            console.log(`  ${status} ${name.padEnd(20)} ${p.model}`);
+            console.log(`  ${status} ${name.padEnd(20)} ${p.defaultModel}`);
         });
         console.log('');
     }
@@ -1173,7 +1175,7 @@ Auto-Approve Settings:
 
 To use VIBE:
 • Run ${chalk.cyan('/config')} to set up an API key
-• Or use a free provider: ${freeModels.map(f => f.name).join(', ') || 'None'}
+• Or use a free provider: ${freeModels.map(f => f.model.id).join(', ') || 'None'}
 • Or use local: ${localProviders.join(', ') || 'None'}
     `));
     }
@@ -1187,7 +1189,7 @@ Reason: ${response.content || response.error || 'Unknown error'}
 
 What to do:
 • Run ${chalk.cyan('/config')} to configure
-• Try a free provider: ${freeModels.map(f => f.name).join(', ') || 'None'}
+• Try a free provider: ${freeModels.map(f => f.model.id).join(', ') || 'None'}
 • Use local provider: ${localProviders.join(', ') || 'None'}
 • Check your network connection
 

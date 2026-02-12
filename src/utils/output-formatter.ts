@@ -7,12 +7,15 @@ import chalk from 'chalk';
 
 export type OutputFormat = 'json' | 'csv' | 'table' | 'text' | 'markdown' | 'yaml';
 
+/** Generic record type for formatter input data */
+type DataRecord = Record<string, unknown>;
+
 export interface TableColumn {
     header: string;
     key: string;
     width?: number;
     align?: 'left' | 'center' | 'right';
-    format?: (value: any) => string;
+    format?: (value: unknown) => string;
 }
 
 export interface FormatOptions {
@@ -40,7 +43,7 @@ export class OutputFormatter {
         this.options[key] = value;
     }
 
-    format(data: any): string {
+    format(data: unknown): string {
         if (this.options.outputFile) {
             const fs = require('fs');
             fs.writeFileSync(this.options.outputFile, this.toString(data));
@@ -50,36 +53,34 @@ export class OutputFormatter {
         return this.toString(data);
     }
 
-    toString(data: any): string {
-        if (!Array.isArray(data)) {
-            data = [data];
-        }
+    toString(data: unknown): string {
+        const records = Array.isArray(data) ? data as DataRecord[] : [data as DataRecord];
 
         switch (this.options.format) {
             case 'json':
-                return this.toJSON(data);
+                return this.toJSON(records);
             case 'csv':
-                return this.toCSV(data);
+                return this.toCSV(records);
             case 'table':
-                return this.toTable(data);
+                return this.toTable(records);
             case 'markdown':
-                return this.toMarkdown(data);
+                return this.toMarkdown(records);
             case 'yaml':
-                return this.toYAML(data);
+                return this.toYAML(records);
             case 'text':
             default:
-                return this.toText(data);
+                return this.toText(records);
         }
     }
 
-    private toJSON(data: any): string {
+    private toJSON(data: DataRecord[]): string {
         if (this.options.pretty) {
             return JSON.stringify(data, null, 2);
         }
         return JSON.stringify(data);
     }
 
-    private toCSV(data: any[]): string {
+    private toCSV(data: DataRecord[]): string {
         if (data.length === 0) return '';
 
         const keys = this.getAllKeys(data);
@@ -100,7 +101,7 @@ export class OutputFormatter {
         return lines.join('\n');
     }
 
-    private toTable(data: any[], columns?: TableColumn[]): string {
+    private toTable(data: DataRecord[], columns?: TableColumn[]): string {
         if (data.length === 0) return 'No data available';
 
         if (columns) {
@@ -111,7 +112,6 @@ export class OutputFormatter {
         const colWidths = this.calculateColumnWidths(data, keys);
 
         const horizontalLine = this.createTableLine(colWidths, '┌', '─', '┬', '┐');
-        const headerLine = this.createTableLine(colWidths, '│', ' ', '│', '│');
         const separatorLine = this.createTableLine(colWidths, '├', '─', '┼', '┤');
         const bottomLine = this.createTableLine(colWidths, '└', '─', '┴', '┘');
 
@@ -135,7 +135,7 @@ export class OutputFormatter {
         return lines.join('\n');
     }
 
-    private customTable(data: any[], columns: TableColumn[]): string {
+    private customTable(data: DataRecord[], columns: TableColumn[]): string {
         const colWidths = columns.map(col => {
             const headerLen = (col.width || col.header.length);
             const maxValueLen = Math.max(
@@ -171,7 +171,7 @@ export class OutputFormatter {
         return lines.join('\n');
     }
 
-    private toMarkdown(data: any[]): string {
+    private toMarkdown(data: DataRecord[]): string {
         if (data.length === 0) return 'No data available';
 
         const keys = this.getAllKeys(data);
@@ -192,12 +192,12 @@ export class OutputFormatter {
         return lines.join('\n');
     }
 
-    private toYAML(data: any): string {
+    private toYAML(data: DataRecord[]): string {
         const yaml = require('js-yaml');
         return yaml.dump(data, { indent: 2, lineWidth: -1 });
     }
 
-    private toText(data: any[]): string {
+    private toText(data: DataRecord[]): string {
         if (data.length === 0) return 'No data available';
 
         const keys = this.getAllKeys(data);
@@ -214,7 +214,7 @@ export class OutputFormatter {
         return '';
     }
 
-    private getAllKeys(data: any[]): string[] {
+    private getAllKeys(data: DataRecord[]): string[] {
         const keys = new Set<string>();
         for (const item of data) {
             this.collectKeys(item, '', keys);
@@ -222,11 +222,11 @@ export class OutputFormatter {
         return Array.from(keys);
     }
 
-    private collectKeys(obj: any, prefix: string, keys: Set<string>): void {
+    private collectKeys(obj: unknown, prefix: string, keys: Set<string>): void {
         if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-            for (const [k, v] of Object.entries(obj)) {
+            for (const [k, v] of Object.entries(obj as DataRecord)) {
                 const fullKey = prefix ? `${prefix}.${k}` : k;
-                if (v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length > 0) {
+                if (v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v as DataRecord).length > 0) {
                     this.collectKeys(v, fullKey, keys);
                 } else {
                     keys.add(fullKey);
@@ -235,11 +235,11 @@ export class OutputFormatter {
         }
     }
 
-    private getNestedValue(obj: any, path: string): any {
-        return path.split('.').reduce((current, key) => current?.[key], obj);
+    private getNestedValue(obj: DataRecord, path: string): unknown {
+        return path.split('.').reduce<unknown>((current, key) => (current as DataRecord)?.[key], obj);
     }
 
-    private calculateColumnWidths(data: any[], keys: string[]): number[] {
+    private calculateColumnWidths(data: DataRecord[], keys: string[]): number[] {
         return keys.map(key => {
             const headerLen = key.length;
             const maxValueLen = Math.max(
@@ -279,7 +279,7 @@ export class OutputFormatter {
     }
 }
 
-export function formatOutput(data: any, format: OutputFormat = 'table'): string {
+export function formatOutput(data: unknown, format: OutputFormat = 'table'): string {
     const formatter = new OutputFormatter({ format });
     return formatter.toString(data);
 }
@@ -288,17 +288,17 @@ export function createTable(columns: TableColumn[]): OutputFormatter {
     return new OutputFormatter({ format: 'table' });
 }
 
-export function exportToJSON(data: any, filePath?: string): string {
+export function exportToJSON(data: unknown, filePath?: string): string {
     const formatter = new OutputFormatter({ format: 'json', outputFile: filePath });
     return formatter.format(data);
 }
 
-export function exportToCSV(data: any[], filePath?: string, headers: boolean = true): string {
+export function exportToCSV(data: DataRecord[], filePath?: string, headers: boolean = true): string {
     const formatter = new OutputFormatter({ format: 'csv', outputFile: filePath, headers });
     return formatter.format(data);
 }
 
-export function exportToMarkdown(data: any[], filePath?: string): string {
+export function exportToMarkdown(data: DataRecord[], filePath?: string): string {
     const formatter = new OutputFormatter({ format: 'markdown', outputFile: filePath });
     return formatter.format(data);
 }

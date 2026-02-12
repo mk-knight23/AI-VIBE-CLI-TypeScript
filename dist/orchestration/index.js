@@ -409,10 +409,11 @@ Be concise and practical.`;
             };
         }
         catch (error) {
+            const err = error;
             return {
                 success: false,
                 summary: 'Tests failed',
-                output: error.stdout?.toString() || error.message,
+                output: err.stdout?.toString() || err.message || String(error),
                 error: 'Test execution failed',
             };
         }
@@ -467,9 +468,10 @@ Be concise and practical.`;
                     };
                 }
                 catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
                     return {
                         success: false,
-                        error: error.message,
+                        error: message,
                         suggestion: 'Check git configuration and try again',
                     };
                 }

@@ -1,10 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { pathToFileURL } from 'url';
+import { createLogger } from '../utils/pino-logger.js';
+
+const logger = createLogger('PluginManager');
 
 export interface VibePlugin {
     name: string;
     version: string;
-    onInit?: (context: any) => void;
+    onInit?: (context: Record<string, unknown>) => void;
     commands?: Record<string, (args: string[]) => Promise<void>>;
     hooks?: {
         beforeAI?: (input: string) => string;
@@ -22,11 +26,22 @@ export class PluginManager {
         for (const item of items) {
             if (item.endsWith('.js')) {
                 try {
-                    const plugin = require(path.resolve(pluginsDir, item));
+                    const filePath = path.resolve(pluginsDir, item);
+                    const fileUrl = pathToFileURL(filePath).href;
+                    const mod = await import(fileUrl);
+                    const plugin: VibePlugin = mod.default || mod;
+
+                    if (!plugin.name || !plugin.version) {
+                        logger.warn({ file: item }, 'Plugin missing name or version, skipping');
+                        continue;
+                    }
+
                     this.plugins.push(plugin);
                     if (plugin.onInit) plugin.onInit({});
-                } catch (e) {
-                    console.error(`Failed to load plugin ${item}:`, e);
+                    logger.info({ plugin: plugin.name, version: plugin.version }, 'Plugin loaded');
+                } catch (e: unknown) {
+                    const message = e instanceof Error ? e.message : String(e);
+                    logger.error({ file: item, error: message }, 'Failed to load plugin');
                 }
             }
         }
@@ -48,5 +63,9 @@ export class PluginManager {
             }
         });
         return current;
+    }
+
+    getPlugins(): VibePlugin[] {
+        return [...this.plugins];
     }
 }
