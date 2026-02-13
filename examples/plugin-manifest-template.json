@@ -1,0 +1,31 @@
+{
+  "name": "example-plugin",
+  "version": "1.0.0",
+  "description": "An example VIBE CLI plugin demonstrating proper security configuration",
+  "author": "Your Name <you@example.com>",
+  "license": "MIT",
+  "main": "index.js",
+  "vibeVersion": "^0.0.2",
+  "permissions": {
+    "filesystem": {
+      "read": ["*.txt", "data/**/*.json"],
+      "write": ["output/*.txt"]
+    },
+    "network": {
+      "allowed": ["api.example.com"]
+    },
+    "commands": {
+      "allowed": ["npm", "git", "node"],
+      "blocked": ["rm", "dd", "sudo", "su", "chmod", "chown"]
+    },
+    "system": {
+      "env": false,
+      "subprocess": true
+    },
+    "vibe": {
+      "config": "read",
+      "commands": true,
+      "database": false
+    }
+  }
+}

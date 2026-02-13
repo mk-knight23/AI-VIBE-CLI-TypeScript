@@ -1,0 +1,7 @@
+{
+  "algorithm": "sha256",
+  "signature": "PLACEHOLDER_SIGNATURE_HASH",
+  "timestamp": 1234567890000,
+  "signer": "your-email@example.com",
+  "notes": "This is a placeholder. Real signatures are generated using 'vibe plugin sign'"
+}
