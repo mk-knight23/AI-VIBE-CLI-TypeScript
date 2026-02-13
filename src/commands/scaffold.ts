@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Scaffold Command
+ * VIBE-CLI v0.0.2 - Scaffold Command
  * Generate projects and components using AI-powered scaffolding
  */
 
@@ -214,20 +214,31 @@ export async function scaffold(
   try {
     // Parse arguments
     const [templateType, ...nameParts] = args;
-    const targetName = nameParts.join(' ') || '.';
+    let targetName = nameParts.join(' ') || '.';
 
     if (!templateType) {
       showScaffoldHelp();
       return { success: true };
     }
 
-    // Check if template exists
-    const template = TEMPLATES[templateType as keyof typeof TEMPLATES];
-    if (!template) {
+    // Validate template type against allowed templates
+    const validTemplates = Object.keys(TEMPLATES);
+    if (!validTemplates.includes(templateType)) {
       console.log(chalk.red(`\n❌ Template "${templateType}" not found.\n`));
       console.log(chalk.gray('Run "vibe scaffold" to see available templates.\n'));
       return { success: false, error: `Template not found: ${templateType}` };
     }
+
+    // Validate and sanitize target name to prevent path traversal
+    // Allow only alphanumeric characters, hyphens, underscores, and dots
+    const sanitizedTargetName = targetName.replace(/[^a-zA-Z0-9._-]/g, '');
+    if (sanitizedTargetName !== targetName && targetName !== '.') {
+      console.log(chalk.yellow(`\n⚠️  Target name contains invalid characters. Using: ${sanitizedTargetName}\n`));
+    }
+    targetName = sanitizedTargetName || '.';
+
+    // Check if template exists
+    const template = TEMPLATES[templateType as keyof typeof TEMPLATES];
 
     console.log(chalk.cyan(`\n🚀 Scaffolding ${template.name}...\n`));
 

@@ -4,6 +4,9 @@
  */
 
 import * as readline from 'readline';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 import { EnhancedCommandHandler } from './enhanced-command-handler.js';
 
 export interface InteractiveConfig {
@@ -28,6 +31,7 @@ export class EnhancedInteractiveMode {
     private config: InteractiveConfig;
     private currentInput: string = '';
     private readonly rl: readline.Interface;
+    private readonly historyPath: string;
 
     constructor(
         commandHandler: EnhancedCommandHandler,
@@ -40,6 +44,8 @@ export class EnhancedInteractiveMode {
             commandCount: 0
         };
 
+        this.historyPath = path.join(os.homedir(), '.vibe', 'history.json');
+
         this.config = {
             welcomeMessage: this.getDefaultWelcome(),
             prompt: 'vibe',
@@ -49,10 +55,37 @@ export class EnhancedInteractiveMode {
             commands: config?.commands || new Map()
         };
 
+        this.loadHistory();
+
         this.rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
         });
+    }
+
+    private loadHistory(): void {
+        try {
+            if (fs.existsSync(this.historyPath)) {
+                const data = JSON.parse(fs.readFileSync(this.historyPath, 'utf-8'));
+                if (Array.isArray(data)) {
+                    this.history = data.slice(-this.config.historySize);
+                }
+            }
+        } catch (error) {
+            // Ignore history loading errors
+        }
+    }
+
+    private saveHistory(): void {
+        try {
+            const dbDir = path.dirname(this.historyPath);
+            if (!fs.existsSync(dbDir)) {
+                fs.mkdirSync(dbDir, { recursive: true });
+            }
+            fs.writeFileSync(this.historyPath, JSON.stringify(this.history, null, 2));
+        } catch (error) {
+            // Ignore history saving errors
+        }
     }
 
     private getDefaultWelcome(): string {
@@ -215,10 +248,16 @@ Type 'help' for available commands, 'exit' to quit.
     }
 
     private addToHistory(input: string): void {
+        // Don't add duplicate or exit command
+        if (input.trim().toLowerCase() === 'exit' || (this.history.length > 0 && this.history[this.history.length - 1] === input)) {
+            return;
+        }
+
         this.history.push(input);
         if (this.history.length > this.config.historySize) {
             this.history.shift();
         }
+        this.saveHistory();
     }
 
     private showHelp(): void {
@@ -296,6 +335,7 @@ Usage Statistics:
     }
 
     private async shutdown(): Promise<void> {
+        this.saveHistory();
         console.log('\nGoodbye! 👋');
         this.rl.close();
     }

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Git History Analyzer
+ * VIBE-CLI v0.0.2 - Git History Analyzer
  * Analyze commit history for patterns and insights
  */
 

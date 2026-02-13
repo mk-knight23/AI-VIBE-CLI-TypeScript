@@ -1,9 +1,9 @@
 /**
- * VIBE-CLI v0.0.1 - Tool Execution Engine
+ * VIBE-CLI v0.0.2 - Tool Execution Engine
  * Safe, sandboxed execution with approval gates and rollback support
  */
 
-import * as child_process from 'child_process';
+import { execFile, execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
@@ -51,18 +51,19 @@ export class VibeToolExecutor {
   }
 
   /**
-   * Execute a shell command directly
+   * Execute a shell command directly using array-based arguments (prevents injection)
    */
-  async executeShell(command: string): Promise<ToolResult> {
+  async executeShell(command: string, args: string[] = []): Promise<ToolResult> {
     const startTime = Date.now();
-    
+
     try {
-      const output = child_process.execSync(command, {
+      const output = execFileSync(command, args, {
         encoding: 'utf-8',
         timeout: 60000,
         maxBuffer: 10 * 1024 * 1024,
+        shell: false, // Prevent shell injection
       });
-      
+
       return {
         success: true,
         output,
@@ -149,43 +150,48 @@ export class VibeToolExecutor {
   }
 
   /**
-   * Run a shell command
+   * Run a shell command using execFile (prevents command injection)
    */
   private async runCommand(
     config: ToolConfig,
     context: ExecutionContext
   ): Promise<ToolResult> {
+    const startTime = Date.now();
+
     return new Promise((resolve) => {
-      const startTime = Date.now();
-      
-      const options: child_process.ExecSyncOptions = {
-        cwd: context.workingDir || config.workingDir || process.cwd(),
-        timeout: config.timeout || 60000,
-        maxBuffer: 10 * 1024 * 1024, // 10MB
-      };
-      
-      if (config.env) {
-        options.env = { ...process.env, ...config.env };
-      }
-      
-      try {
-        const fullCommand = [config.command, ...(config.args || [])].join(' ');
-        const output = child_process.execSync(fullCommand, options);
-        
-        resolve({
-          success: true,
-          output: output.toString(),
-          duration: Date.now() - startTime,
-        });
-      } catch (error: any) {
-        resolve({
-          success: false,
-          output: error.stdout?.toString() || '',
-          error: error.message,
-          exitCode: error.status,
-          duration: Date.now() - startTime,
-        });
-      }
+      const cwd = context.workingDir || config.workingDir || process.cwd();
+      const timeout = config.timeout || 60000;
+      const env = config.env ? { ...process.env, ...config.env } : process.env;
+
+      execFile(
+        config.command,
+        config.args || [],
+        {
+          cwd,
+          timeout,
+          env,
+          maxBuffer: 10 * 1024 * 1024,
+          shell: false, // Critical: prevents shell injection
+        },
+        (error, stdout, stderr) => {
+          const output = stdout + stderr;
+          if (error) {
+            resolve({
+              success: false,
+              output,
+              error: error.message,
+              exitCode: error.code as number,
+              duration: Date.now() - startTime,
+            });
+          } else {
+            resolve({
+              success: true,
+              output,
+              duration: Date.now() - startTime,
+            });
+          }
+        }
+      );
     });
   }
 
@@ -196,7 +202,7 @@ export class VibeToolExecutor {
     config: ToolConfig,
     _context: ExecutionContext
   ): Promise<boolean> {
-    const riskType: ApprovalType = config.riskLevel === 'high' ? 'deploy' : 'shell';
+    const riskType: ApprovalType = config.riskLevel === 'high' ? 'command_execute' : 'command_execute';
     const risk: ApprovalRisk = config.riskLevel as ApprovalRisk || 'medium';
     
     const details: ApprovalDetails = {
@@ -289,12 +295,22 @@ export class VibeToolExecutor {
    * Apply a single edit operation
    */
   private async applyEdit(op: EditOperation, _context: ExecutionContext): Promise<EditResult> {
-    const filePath = path.isAbsolute(op.file) ? op.file : path.join(process.cwd(), op.file);
+    const targetFile = op.file || op.path;
+    if (!targetFile) {
+      return {
+        success: false,
+        file: undefined,
+        changes: [],
+        error: 'No file specified in operation',
+      };
+    }
+
+    const filePath = path.isAbsolute(targetFile) ? targetFile : path.join(process.cwd(), targetFile);
 
     if (!fs.existsSync(filePath)) {
       return {
         success: false,
-        file: op.file,
+        file: targetFile,
         changes: [],
         error: 'File not found',
       };
@@ -346,13 +362,13 @@ export class VibeToolExecutor {
 
       return {
         success: true,
-        file: op.file,
+        file: targetFile,
         changes,
       };
     } catch (error) {
       return {
         success: false,
-        file: op.file,
+        file: targetFile,
         changes: [],
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -440,7 +456,7 @@ export class VibeToolExecutor {
 }
 
 /**
- * VIBE-CLI v0.0.1 - Checkpoint System
+ * VIBE-CLI v0.0.2 - Checkpoint System
  * Version control for file system operations
  */
 export class VibeCheckpointSystem {
@@ -547,7 +563,7 @@ export class VibeCheckpointSystem {
     }
     
     try {
-      const output = child_process.execSync('git ls-files -m', {
+      const output = execFileSync('git', ['ls-files', '-m'], {
         cwd: process.cwd(),
         encoding: 'utf-8',
       });
@@ -562,7 +578,7 @@ export class VibeCheckpointSystem {
    */
   private getAllTrackedFiles(): string[] {
     try {
-      const output = child_process.execSync('git ls-files', {
+      const output = execFileSync('git', ['ls-files'], {
         cwd: process.cwd(),
         encoding: 'utf-8',
       });

@@ -1,11 +1,12 @@
 /**
- * VIBE-CLI v0.0.1 - State Serializer
+ * VIBE-CLI v0.0.2 - State Serializer
  * Serializes and deserializes code state with gzip compression
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as zlib from 'zlib';
+import * as crypto from 'crypto';
 import { promisify } from 'util';
 
 const gzip = promisify(zlib.gzip);
@@ -112,8 +113,8 @@ export class StateSerializer {
         output = Buffer.from(JSON.stringify(dataObj, null, 2), 'utf-8');
       }
 
-      // Calculate checksum
-      const checksum = this.calculateChecksum(output);
+      // Calculate HMAC for integrity (P2-021)
+      const checksum = this.calculateHMAC(output);
 
       const metadata: SerializedMetadata = {
         version: this.version,
@@ -163,11 +164,11 @@ export class StateSerializer {
         const metadataBuffer = data.slice(4, 4 + headerLength);
         const parsedMetadata = JSON.parse(metadataBuffer.toString('utf-8'));
 
-        // Verify checksum
+        // Verify HMAC for integrity (P2-021)
         const compressedData = data.slice(4 + headerLength);
-        const checksum = this.calculateChecksum(compressedData);
+        const checksum = this.calculateHMAC(compressedData);
         if (checksum !== parsedMetadata.checksum) {
-          return { success: false, error: 'Checksum mismatch - data may be corrupted' };
+          return { success: false, error: 'Integrity verification failed - data may be tampered with' };
         }
 
         const decompressed = await gunzip(compressedData);
@@ -249,16 +250,11 @@ export class StateSerializer {
   }
 
   /**
-   * Calculate simple checksum for data integrity
+   * Calculate HMAC for data integrity and authenticity
    */
-  private calculateChecksum(data: Buffer): string {
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      const char = data[i];
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return Math.abs(hash).toString(16);
+  private calculateHMAC(data: Buffer): string {
+    const secret = process.env.VIBE_CHECKPOINT_SECRET || process.env.VIBE_API_KEY || 'vibe-default-secret';
+    return crypto.createHmac('sha256', secret).update(data).digest('hex');
   }
 
   /**

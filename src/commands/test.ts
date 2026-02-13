@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Test Command
+ * VIBE-CLI v0.0.2 - Test Command
  * Generate comprehensive unit tests for code files
  */
 

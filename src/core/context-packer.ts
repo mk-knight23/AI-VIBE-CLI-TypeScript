@@ -12,17 +12,25 @@ export class ContextWindowPacker {
         const sorted = snippets.sort((a, b) => b.relevance - a.relevance);
 
         // 2. Pack up to limit
-        let packed = '';
+        const packedParts: string[] = [];
         let currentLength = 0;
 
         for (const snip of sorted) {
             const estimatedTokens = Math.ceil(snip.content.length / 4);
-            if (currentLength + estimatedTokens > this.MAX_TOKENS) break;
 
-            packed += `\n--- START SNIPPET: ${snip.id} ---\n${snip.content}\n--- END SNIPPET ---\n`;
+            // Bounds check to prevent integer overflow (P4-101)
+            if (currentLength > Number.MAX_SAFE_INTEGER - estimatedTokens) {
+                break;
+            }
+
+            if (currentLength + estimatedTokens > this.MAX_TOKENS) {
+                break;
+            }
+
+            packedParts.push(`\n--- START SNIPPET: ${snip.id} ---\n${snip.content}\n--- END SNIPPET ---\n`);
             currentLength += estimatedTokens;
         }
 
-        return packed;
+        return packedParts.join('');
     }
 }

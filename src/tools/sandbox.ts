@@ -15,7 +15,7 @@
  * Version: 0.0.1
  */
 
-import * as child_process from 'child_process';
+import { execFile, execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -62,7 +62,7 @@ export interface SandboxContext {
 // ============================================================================
 
 const DEFAULT_CONFIG: SandboxConfig = {
-  enabled: false, // Disabled by default for compatibility
+  enabled: true, // Enabled by default for security
   allowedPaths: [], // Current project only
   blockedPaths: [
     '/etc', '/usr', '/bin', '/sbin', '/boot', '/lib', '/lib64',
@@ -107,14 +107,33 @@ export class Sandbox {
 
   constructor(config: Partial<SandboxConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.tempDir = path.join(os.tmpdir(), 'vibe-sandbox');
-    this.ensureTempDir();
+    // Create unique temp directory to prevent symlink attacks (P2-023)
+    this.tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vibe-sandbox-'));
+    // Set restrictive permissions (0o700 = owner read/write/execute only)
+    fs.chmodSync(this.tempDir, 0o700);
+
+    // Register cleanup handlers for process exit
+    this.setupExitHandlers();
   }
 
-  private ensureTempDir(): void {
-    if (!fs.existsSync(this.tempDir)) {
-      fs.mkdirSync(this.tempDir, { recursive: true });
-    }
+  /**
+   * Setup exit handlers to ensure cleanup on process termination (P4-102)
+   */
+  private setupExitHandlers(): void {
+    const cleanupHandler = () => this.cleanup();
+
+    // Handle normal exit
+    process.on('exit', cleanupHandler);
+
+    // Handle termination signals
+    process.on('SIGINT', cleanupHandler);
+    process.on('SIGTERM', cleanupHandler);
+
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      this.cleanup();
+      throw error; // Re-throw after cleanup
+    });
   }
 
   /**
@@ -201,7 +220,44 @@ export class Sandbox {
   }
 
   /**
+   * Parse command string into command and arguments safely
+   * Handles quoted arguments properly
+   */
+  private parseCommand(command: string): { cmd: string; args: string[] } {
+    const parts: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    let quoteChar = '';
+
+    for (let i = 0; i < command.length; i++) {
+      const char = command[i];
+
+      if (!inQuotes && (char === '"' || char === "'")) {
+        inQuotes = true;
+        quoteChar = char;
+      } else if (inQuotes && char === quoteChar) {
+        inQuotes = false;
+        quoteChar = '';
+      } else if (!inQuotes && /\s/.test(char)) {
+        if (current) {
+          parts.push(current);
+          current = '';
+        }
+      } else {
+        current += char;
+      }
+    }
+
+    if (current) {
+      parts.push(current);
+    }
+
+    return { cmd: parts[0] || '', args: parts.slice(1) };
+  }
+
+  /**
    * Execute a command in sandbox
+   * Uses execFile for security (no shell interpolation)
    */
   async executeCommand(
     command: string,
@@ -216,9 +272,16 @@ export class Sandbox {
     const cwd = options.cwd || process.cwd();
     const timeout = options.timeout || this.config.maxCpuTime * 1000;
 
-    // Check if sandbox is enabled
-    if (!this.config.enabled) {
-      return this.executeUnsafe(command, cwd, options.env, timeout);
+    // Parse command safely
+    const { cmd, args } = this.parseCommand(command);
+
+    if (!cmd) {
+      return {
+        success: false,
+        output: '',
+        error: 'Empty command',
+        duration: Date.now() - startTime,
+      };
     }
 
     // Security scan the command
@@ -235,11 +298,11 @@ export class Sandbox {
     }
 
     // Validate command
-    if (!this.isCommandAllowed(command)) {
+    if (!this.isCommandAllowed(cmd)) {
       return {
         success: false,
         output: '',
-        error: `Command blocked: ${command}`,
+        error: `Command blocked: ${cmd}`,
         duration: Date.now() - startTime,
       };
     }
@@ -259,94 +322,47 @@ export class Sandbox {
     if (options.dryRun) {
       return {
         success: true,
-        output: `[SANDBOX] Would execute: ${command}`,
+        output: `[SANDBOX] Would execute: ${cmd} ${args.join(' ')}`,
         duration: Date.now() - startTime,
       };
     }
 
-    // Execute in sandbox
-    try {
-      // Merge environment variables
-      const env = {
-        ...process.env,
-        ...this.config.environmentVars,
-        ...options.env,
-        SANDBOX: 'true',
-        SANDBOX_SESSION: this.tempDir,
-      };
-
-      // Execute with resource limits
-      const result = child_process.execSync(command, {
-        encoding: 'utf-8',
-        timeout,
-        cwd,
-        env,
-        maxBuffer: this.config.maxFileSize * 1024 * 1024,
-      });
-
-      return {
-        success: true,
-        output: result,
-        duration: Date.now() - startTime,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        output: error.stdout?.toString() || '',
-        error: error.message,
-        exitCode: error.status,
-        duration: Date.now() - startTime,
-      };
-    }
-  }
-
-  /**
-   * Unsafe execution (when sandbox is disabled)
-   */
-  private executeUnsafe(
-    command: string,
-    cwd: string,
-    env?: Record<string, string>,
-    timeout?: number
-  ): Promise<SandboxResult> {
-    const startTime = Date.now();
-
+    // Execute in sandbox using execFile (no shell, prevents command injection)
     return new Promise((resolve) => {
       try {
-        const mergedEnv = {
+        // Merge environment variables
+        const env = {
           ...process.env,
           ...this.config.environmentVars,
-          ...env,
+          ...options.env,
+          SANDBOX: 'true',
+          SANDBOX_SESSION: this.tempDir,
         };
 
-        const proc = child_process.exec(command, {
+        execFile(cmd, args, {
           encoding: 'utf-8',
           timeout,
           cwd,
-          env: mergedEnv,
+          env,
           maxBuffer: this.config.maxFileSize * 1024 * 1024,
-        });
-
-        let output = '';
-        proc.stdout?.on('data', (data) => { output += data; });
-        proc.stderr?.on('data', (data) => { output += data; });
-
-        proc.on('close', (code) => {
-          resolve({
-            success: code === 0,
-            output,
-            exitCode: code || undefined,
-            duration: Date.now() - startTime,
-          });
-        });
-
-        proc.on('error', (error) => {
-          resolve({
-            success: false,
-            output: '',
-            error: error.message,
-            duration: Date.now() - startTime,
-          });
+          shell: false, // Critical: prevents shell injection
+        }, (error, stdout, stderr) => {
+          const output = stdout + stderr;
+          if (error) {
+            resolve({
+              success: false,
+              output,
+              error: error.message,
+              exitCode: error.code as number,
+              duration: Date.now() - startTime,
+            });
+          } else {
+            resolve({
+              success: true,
+              output,
+              duration: Date.now() - startTime,
+            });
+          }
         });
       } catch (error: any) {
         resolve({

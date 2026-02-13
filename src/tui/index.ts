@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Interactive CLI Engine (Agent Mode)
+ * VIBE-CLI v0.0.2 - Interactive CLI Engine (Agent Mode)
  *
  * ENFORCES EXECUTION OVER EXPLANATION
  * - Mode system: agent/code/ask/debug
@@ -1048,7 +1048,7 @@ Files are created automatically in agent mode.
 
     console.log(blue(' ╔' + '═'.repeat(60) + '╗'));
     console.log(blue(' ║') + ' '.repeat(60) + blue('║'));
-    console.log(blue(' ║') + `   ${slate.bold('V I B E')}  ${chalk.green('v0.0.1 PRO')}                                ` + blue('║'));
+    console.log(blue(' ║') + `   ${slate.bold('V I B E')}  ${chalk.green('v0.0.2 PRO')}                                ` + blue('║'));
     console.log(blue(' ║') + `   ${chalk.gray('AI-Powered Development Environment')}                       ` + blue('║'));
     console.log(blue(' ║') + ' '.repeat(60) + blue('║'));
     console.log(blue(' ║') + `   ${slate("I'm your AI development teammate.")}                       ` + blue('║'));

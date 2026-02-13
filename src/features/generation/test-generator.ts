@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Test Generator
+ * VIBE-CLI v0.0.2 - Test Generator
  * Automated test generation with coverage improvement
  */
 

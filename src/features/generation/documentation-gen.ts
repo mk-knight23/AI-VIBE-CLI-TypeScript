@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Documentation Generator
+ * VIBE-CLI v0.0.2 - Documentation Generator
  * Generate code explanations, docstrings, and API documentation
  */
 

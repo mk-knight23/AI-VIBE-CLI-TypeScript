@@ -5,11 +5,8 @@
 export { VIBE_VERSION } from './version.js';
 
 // Core
-export * from './core/config-system.js';
-export * from './utils/pino-logger.js';
-
-// Adapters
-export * from './infrastructure/adapters/types.js';
+export * from './types.js';
+export { ConfigManager, configManager, initializeConfig, searchConfig } from './core/config-system.js';
 export * from './infrastructure/adapters/router.js';
 
 // Enhanced Components

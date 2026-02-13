@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Dependency Graph Builder
+ * VIBE-CLI v0.0.2 - Dependency Graph Builder
  * Build and analyze dependency graphs for codebases
  */
 

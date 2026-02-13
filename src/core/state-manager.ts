@@ -1,20 +1,15 @@
-import Database from 'better-sqlite3';
+import { connectionManager } from './database/connection-manager.js';
+import SQLite from 'better-sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 
 export class StateManager {
-    private db: Database.Database;
+    private db: SQLite.Database;
 
     constructor(storagePath?: string) {
         const dbPath = storagePath || path.join(os.homedir(), '.vibe', 'state.db');
-        const dbDir = path.dirname(dbPath);
-
-        if (!fs.existsSync(dbDir)) {
-            fs.mkdirSync(dbDir, { recursive: true });
-        }
-
-        this.db = new Database(dbPath);
+        this.db = connectionManager.getConnection(dbPath);
         this.init();
     }
 

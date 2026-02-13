@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Core Engine
+ * VIBE-CLI v0.0.2 - Core Engine
  * Main orchestrator for the CLI
  */
 
@@ -95,7 +95,7 @@ export class VibeCoreEngine {
       // Step 5: Initialize Agent System
       console.log(chalk.gray('  5/6 Initializing agent system...'));
       this.agentExecutor = new VibeAgentExecutor(this.provider, this.memory);
-      console.log(chalk.green(`    ✓ Agent System: v0.0.1 ready`));
+      console.log(chalk.green(`    ✓ Agent System: v0.0.2 ready`));
 
       // Step 6: Create session
       console.log(chalk.gray('  6/6 Creating session...'));

@@ -1,11 +1,36 @@
 /**
- * VIBE-CLI v0.0.1 - Semantic Indexer
+ * VIBE-CLI v0.0.2 - Semantic Indexer
  * Build semantic index for intelligent code retrieval
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+
+/**
+ * Regex patterns - defined once at module level to avoid recompilation
+ */
+const REGEX_PATTERNS = {
+  SINGLE_LINE_COMMENT: /\/\/.*$/gm,
+  BLOCK_COMMENT: /\/\*[\s\S]*?\*\//g,
+  STRINGS: /['"`][^'"`]*['"`]/g,
+  WHITESPACE: /\s+/g,
+  WORD_SPLIT: /[^a-zA-Z0-9_]+/g,
+} as const;
+
+/**
+ * Stop words - defined once at module level to avoid recreation
+ */
+const STOP_WORDS = new Set([
+  'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+  'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
+  'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+  'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need',
+  'this', 'that', 'these', 'those', 'it', 'its', 'if', 'then', 'else',
+  'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few',
+  'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only',
+  'own', 'same', 'so', 'than', 'too', 'very', 'just', 'also',
+]);
 
 /**
  * Indexed item
@@ -49,6 +74,9 @@ export class SemanticIndexer {
   private index: Map<string, IndexedItem> = new Map();
   private invertedIndex: Map<string, Set<string>> = new Map();
   private fileContentCache: Map<string, string> = new Map();
+  private indexAccessOrder: string[] = [];
+  private readonly maxIndexSize = 5000;
+  private readonly maxCacheSize = 100;
   private config: SemanticIndexConfig;
 
   constructor(config?: Partial<SemanticIndexConfig>) {
@@ -80,6 +108,10 @@ export class SemanticIndexer {
 
     // Cache content
     this.fileContentCache.set(filePath, content);
+    if (this.fileContentCache.size > this.maxCacheSize) {
+      const firstKey = this.fileContentCache.keys().next().value;
+      if (firstKey) this.fileContentCache.delete(firstKey);
+    }
 
     const items: IndexedItem[] = [];
     const ext = path.extname(filePath).toLowerCase();
@@ -265,7 +297,32 @@ export class SemanticIndexer {
    * Add item to index
    */
   private addToIndex(item: IndexedItem): void {
+    if (this.index.has(item.id)) {
+      const idx = this.indexAccessOrder.indexOf(item.id);
+      if (idx > -1) this.indexAccessOrder.splice(idx, 1);
+    }
+
     this.index.set(item.id, item);
+    this.indexAccessOrder.push(item.id);
+
+    // Enforce limits
+    if (this.index.size > this.maxIndexSize) {
+      const lruId = this.indexAccessOrder.shift();
+      if (lruId) {
+        const removedItem = this.index.get(lruId);
+        if (removedItem) {
+          // Remove from inverted index
+          for (const token of removedItem.tokens) {
+            const set = this.invertedIndex.get(token);
+            if (set) {
+              set.delete(lruId);
+              if (set.size === 0) this.invertedIndex.delete(token);
+            }
+          }
+        }
+        this.index.delete(lruId);
+      }
+    }
 
     // Build inverted index
     for (const token of item.tokens) {
@@ -282,13 +339,13 @@ export class SemanticIndexer {
   private tokenize(content: string): string[] {
     // Remove comments and strings
     const cleaned = content
-      .replace(/\/\/.*$/gm, '') // Remove single-line comments
-      .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
-      .replace(/['"`][^'"`]*['"`]/g, '') // Remove strings
-      .replace(/\s+/g, ' '); // Normalize whitespace
+      .replace(REGEX_PATTERNS.SINGLE_LINE_COMMENT, '') // Remove single-line comments
+      .replace(REGEX_PATTERNS.BLOCK_COMMENT, '') // Remove block comments
+      .replace(REGEX_PATTERNS.STRINGS, '') // Remove strings
+      .replace(REGEX_PATTERNS.WHITESPACE, ' '); // Normalize whitespace
 
     // Split into words
-    const words = cleaned.toLowerCase().split(/[^a-zA-Z0-9_]+/);
+    const words = cleaned.toLowerCase().split(REGEX_PATTERNS.WORD_SPLIT);
 
     // Filter and return unique tokens
     return [...new Set(
@@ -305,18 +362,7 @@ export class SemanticIndexer {
    * Check if word is a stop word
    */
   private isStopWord(word: string): boolean {
-    const stopWords = new Set([
-      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
-      'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-      'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need',
-      'this', 'that', 'these', 'those', 'it', 'its', 'if', 'then', 'else',
-      'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few',
-      'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only',
-      'own', 'same', 'so', 'than', 'too', 'very', 'just', 'also',
-    ]);
-
-    return stopWords.has(word);
+    return STOP_WORDS.has(word);
   }
 
   /**

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Security Analyzer
+ * VIBE-CLI v0.0.2 - Security Analyzer
  * OWASP vulnerability detection, secrets scanning, and security patterns
  */
 

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Quality Checker
+ * VIBE-CLI v0.0.2 - Quality Checker
  * Code complexity, maintainability, and coverage analysis
  */
 

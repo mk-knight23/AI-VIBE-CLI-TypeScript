@@ -1,31 +1,46 @@
-export enum CircuitState {
-    CLOSED,
-    OPEN,
-    HALF_OPEN
+/**
+ * Circuit Breaker Pattern Implementation
+ * Prevents cascading failures by detecting failures and preventing further calls
+ */
+
+export interface CircuitBreakerConfig {
+    failureThreshold: number;  // Number of failures before opening circuit
+    resetTimeout: number;     // Time in ms before attempting to close
+    halfOpenRequests?: number; // Number of requests to allow when half-open
 }
 
-export interface CircuitBreakerOptions {
-    failureThreshold: number;
-    resetTimeoutMs: number;
-    name: string;
-}
+export type CircuitBreakerState = 'closed' | 'open' | 'half-open';
 
 export class CircuitBreaker {
-    private state: CircuitState = CircuitState.CLOSED;
-    private failureCount: number = 0;
-    private lastFailureTime?: number;
-    private options: CircuitBreakerOptions;
+    private state: CircuitBreakerState = 'closed';
+    private failures: number = 0;
+    private lastFailure: number = 0;
+    private halfOpenAttempts: number = 0;
 
-    constructor(options: CircuitBreakerOptions) {
-        this.options = options;
+    constructor(private config: CircuitBreakerConfig) { }
+
+    getState(): CircuitBreakerState {
+        return this.state;
     }
 
-    public async execute<T>(fn: () => Promise<T>): Promise<T> {
-        if (this.state === CircuitState.OPEN) {
-            if (this.shouldAttemptReset()) {
-                this.state = CircuitState.HALF_OPEN;
+    isOpen(): boolean {
+        return this.state === 'open';
+    }
+
+    isClosed(): boolean {
+        return this.state === 'closed';
+    }
+
+    isHalfOpen(): boolean {
+        return this.state === 'half-open';
+    }
+
+    async execute<T>(fn: () => Promise<T>): Promise<T> {
+        if (this.state === 'open') {
+            if (Date.now() - this.lastFailure >= this.config.resetTimeout) {
+                this.transitionTo('half-open');
             } else {
-                throw new Error(`Circuit Breaker "${this.options.name}" is OPEN`);
+                throw new Error('Circuit breaker is open');
             }
         }
 
@@ -39,25 +54,58 @@ export class CircuitBreaker {
         }
     }
 
-    private onSuccess() {
-        this.failureCount = 0;
-        this.state = CircuitState.CLOSED;
+    recordSuccess(): void {
+        this.onSuccess();
     }
 
-    private onFailure() {
-        this.failureCount++;
-        this.lastFailureTime = Date.now();
-        if (this.failureCount >= this.options.failureThreshold) {
-            this.state = CircuitState.OPEN;
+    recordFailure(): void {
+        this.onFailure();
+    }
+
+    private onSuccess(): void {
+        this.failures = 0;
+
+        if (this.state === 'half-open') {
+            this.transitionTo('closed');
         }
     }
 
-    private shouldAttemptReset(): boolean {
-        if (!this.lastFailureTime) return true;
-        return Date.now() - this.lastFailureTime > this.options.resetTimeoutMs;
+    private onFailure(): void {
+        this.failures++;
+        this.lastFailure = Date.now();
+
+        if (this.failures >= this.config.failureThreshold) {
+            this.transitionTo('open');
+        }
     }
 
-    public getState(): CircuitState {
-        return this.state;
+    private transitionTo(newState: CircuitBreakerState): void {
+        const oldState = this.state;
+        this.state = newState;
+
+        if (newState === 'half-open') {
+            this.halfOpenAttempts = 0;
+        }
+
+        console.log(`Circuit breaker transitioned: ${oldState} → ${newState}`);
+    }
+
+    reset(): void {
+        this.state = 'closed';
+        this.failures = 0;
+        this.lastFailure = 0;
+        this.halfOpenAttempts = 0;
+    }
+
+    getMetrics(): {
+        state: CircuitBreakerState;
+        failures: number;
+        lastFailure: number | null;
+    } {
+        return {
+            state: this.state,
+            failures: this.failures,
+            lastFailure: this.lastFailure || null
+        };
     }
 }

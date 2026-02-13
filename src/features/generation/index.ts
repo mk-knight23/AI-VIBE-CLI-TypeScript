@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Generation Features Exports
+ * VIBE-CLI v0.0.2 - Generation Features Exports
  */
 
 export * from './documentation-gen.js';

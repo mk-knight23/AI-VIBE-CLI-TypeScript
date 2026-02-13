@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Workflow Automation Engine
+ * VIBE-CLI v0.0.2 - Workflow Automation Engine
  * Create, execute, and manage multi-step workflows
  */
 

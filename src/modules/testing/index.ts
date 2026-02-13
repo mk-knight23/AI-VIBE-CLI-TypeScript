@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Testing Module
+ * VIBE-CLI v0.0.2 - Testing Module
  * Test generation, execution, and coverage analysis
  */
 

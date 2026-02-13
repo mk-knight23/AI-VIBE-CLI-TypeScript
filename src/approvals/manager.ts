@@ -225,7 +225,7 @@ export class ApprovalManager {
     description: string,
     operations: string[],
     risk: RiskLevel,
-    type: ApprovalType = 'file-write'
+    type: ApprovalType = 'file_write'
   ): Promise<boolean> {
     // Check auto-approve setting
     if (this.autoApprove) {
@@ -352,7 +352,7 @@ export class ApprovalManager {
     description: string,
     operations: Array<{ file: string; oldContent: string; newContent: string }>,
     risk: RiskLevel,
-    type: ApprovalType = 'file-write'
+    type: ApprovalType = 'file_write'
   ): Promise<boolean> {
     // Check auto-approve
     if (this.autoApprove) {
@@ -412,7 +412,7 @@ export class ApprovalManager {
       'Execute shell command',
       [command],
       risk,
-      'shell'
+      'command_execute'
     );
   }
 

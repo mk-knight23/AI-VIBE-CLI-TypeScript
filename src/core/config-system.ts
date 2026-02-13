@@ -100,7 +100,7 @@ export class ConfigManager {
             if (fs.existsSync(this.globalConfigPath)) {
                 const globalRaw = fs.readFileSync(this.globalConfigPath, 'utf-8');
                 const globalParsed = JSON.parse(globalRaw);
-                config = { ...config, ...globalParsed };
+                config = { ...config, ...this.sanitizeConfig(globalParsed) };
                 logger.debug({ path: this.globalConfigPath }, 'Loaded global config');
             }
         } catch (e) {
@@ -112,7 +112,7 @@ export class ConfigManager {
             if (fs.existsSync(this.configPath)) {
                 const projectRaw = fs.readFileSync(this.configPath, 'utf-8');
                 const projectParsed = JSON.parse(projectRaw);
-                config = { ...config, ...projectParsed };
+                config = { ...config, ...this.sanitizeConfig(projectParsed) };
                 logger.debug({ path: this.configPath }, 'Loaded project config');
             }
         } catch (e) {
@@ -135,6 +135,31 @@ export class ConfigManager {
         }
 
         return VibeConfigSchema.parse(anyConfig);
+    }
+
+    /**
+     * Sanitize config object to prevent prototype pollution (P2-025)
+     * Removes keys that could modify Object prototype
+     */
+    private sanitizeConfig(obj: any): any {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.sanitizeConfig(item));
+        }
+
+        const sanitized: any = {};
+        for (const key of Object.keys(obj)) {
+            // Skip prototype pollution keys
+            if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+                logger.warn({ key }, 'Removed potentially dangerous config key');
+                continue;
+            }
+            sanitized[key] = this.sanitizeConfig(obj[key]);
+        }
+        return sanitized;
     }
 
     public getConfig(): VibeConfig {

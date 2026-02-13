@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - UI Exports
+ * VIBE-CLI v0.0.2 - UI Exports
  */
 
 export * from './progress-bars/progress-display.js';

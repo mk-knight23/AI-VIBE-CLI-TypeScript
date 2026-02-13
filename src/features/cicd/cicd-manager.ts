@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - CI/CD Integration
+ * VIBE-CLI v0.0.2 - CI/CD Integration
  * Automate deployment pipelines
  */
 

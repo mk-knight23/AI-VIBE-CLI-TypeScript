@@ -40,7 +40,6 @@ import { telemetry } from '../core/telemetry.js';
 import { DatabaseManager } from '../core/database/database-manager.js';
 import { RunRepository } from '../core/database/repositories/run-repository.js';
 import { v4 as uuidv4 } from 'uuid';
-import { runTUI } from '../presentation/tui/run.js';
 
 // New structured logger
 const logger = createLogger('cli');
@@ -156,6 +155,7 @@ export async function run() {
         .action(async (taskArgs, options) => {
             if (options.tui) {
                 await initMCP();
+                const { runTUI } = await import('../presentation/tui/run.js');
                 await runTUI(orchestrator, mcpManager);
                 return;
             }
@@ -188,11 +188,11 @@ export async function run() {
             const runId = uuidv4();
             runRepo.createRun({
                 runId,
-                user: { id: process.env.USER || 'anonymous' },
+                user: { id: process.env.USER || 'anonymous', role: 'admin' },
                 workspace: { path: process.cwd() },
-                configSnapshot: {}, // TODO: Load actual config snapshot
+                configSnapshot: {} as Record<string, unknown>, // TODO: Load actual config snapshot
                 timestamp: new Date().toISOString()
-            } as any);
+            });
 
             orchestrator.setCurrentRunId(runId);
 
@@ -247,6 +247,7 @@ export async function run() {
 
     // Scaffolding command
     program
+        .command('scaffold')
         .description('Generate projects and components')
         .argument('[template...]', 'Template type and name (e.g., "nextjs my-app" or "react-component Button")')
         .action(async (args) => {
@@ -257,7 +258,7 @@ export async function run() {
                 execution: primitiveMap.get('execution') as ExecutionPrimitive,
                 search: primitiveMap.get('search') as SearchPrimitive,
             };
-            await scaffold(args, primitives);
+            await scaffold(args || [], primitives);
         });
 
     // Test generation command
@@ -410,7 +411,10 @@ export async function run() {
         .action(async () => {
             const router = new VibeProviderRouter();
             const manager = ConfigManager.getInstance();
-            await (manager as any).runFirstTimeSetup(); // Fallback if method exists
+            // Use optional chaining instead of type assertion (P4-100)
+            if ('runFirstTimeSetup' in manager && typeof manager.runFirstTimeSetup === 'function') {
+                await manager.runFirstTimeSetup();
+            }
         });
 
     program

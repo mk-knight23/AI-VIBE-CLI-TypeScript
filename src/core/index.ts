@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Core Engine
+ * VIBE-CLI v0.0.2 - Core Engine
  * Main initialization and orchestration
  */
 

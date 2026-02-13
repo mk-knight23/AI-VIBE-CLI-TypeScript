@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Refactor Engine
+ * VIBE-CLI v0.0.2 - Refactor Engine
  * Pattern recognition and code transformation logic.
  */
 

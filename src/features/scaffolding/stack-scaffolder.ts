@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Full-Stack Scaffolder
+ * VIBE-CLI v0.0.2 - Full-Stack Scaffolder
  * Generate complete applications from templates
  */
 

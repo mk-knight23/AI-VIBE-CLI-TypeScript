@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - GitHub Integration
+ * VIBE-CLI v0.0.2 - GitHub Integration
  * PR reviews, issues, actions, and repository management
  */
 

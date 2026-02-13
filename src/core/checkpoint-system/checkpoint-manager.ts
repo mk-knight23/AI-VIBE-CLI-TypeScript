@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Checkpoint Manager
+ * VIBE-CLI v0.0.2 - Checkpoint Manager
  * Enhanced checkpoint and rollback system with named checkpoints, diff support, and history tracking
  */
 
@@ -208,75 +208,99 @@ export class CheckpointManager {
     sessionId: string,
     options: CreateCheckpointOptions
   ): Promise<Checkpoint> {
-    const {
-      name,
-      description = '',
-      priority = 'normal',
-      tags = [],
-      branch,
-      commitHash,
-      customData,
-    } = options;
+    const lockPath = path.join(this.storageDir, 'checkpoint.lock');
+    let lockFd: number | null = null;
 
-    const checkpointId = `chk-${Date.now()}-${uuidv4().slice(0, 8)}`;
-
-    // Get all modified files
-    const modifiedFiles = this.getModifiedFiles();
-    const fileContents = await this.readFiles(modifiedFiles);
-
-    // Serialize state
-    const serializeResult = await stateSerializer.serialize(fileContents, {
-      format: 'json-gzip',
-      includeMetadata: true,
-    });
-
-    if (!serializeResult.success || !serializeResult.data) {
-      throw new Error(`Failed to serialize checkpoint: ${serializeResult.error}`);
-    }
-
-    // Create checkpoint directory
-    const checkpointDir = path.join(this.storageDir, checkpointId);
-    fs.mkdirSync(checkpointDir, { recursive: true });
-
-    // Save compressed data
-    const dataPath = path.join(checkpointDir, 'state.json.gz');
-    fs.writeFileSync(dataPath, serializeResult.data);
-
-    // Create metadata
-    const checkpoint: Checkpoint = {
-      id: checkpointId,
-      name,
-      description,
-      sessionId,
-      createdAt: new Date(),
-      priority,
-      status: 'active',
-      fileCount: serializeResult.metadata?.fileCount ?? 0,
-      totalSize: serializeResult.metadata?.totalSize ?? 0,
-      compressedSize: serializeResult.metadata?.compressedSize ?? 0,
-      storagePath: checkpointDir,
-      metadata: {
-        workingDirectory: process.cwd(),
-        branch: branch ?? this.getCurrentBranch(),
-        commitHash: commitHash ?? this.getCurrentCommit(),
-        tags,
+    try {
+      // Basic file locking (P2-019)
+      lockFd = fs.openSync(lockPath, 'wx');
+      
+      const {
+        name,
+        description = '',
+        priority = 'normal',
+        tags = [],
+        branch,
+        commitHash,
         customData,
-      },
-    };
+      } = options;
 
-    // Save metadata
-    const metadataPath = path.join(checkpointDir, 'metadata.json');
-    fs.writeFileSync(metadataPath, JSON.stringify(checkpoint, null, 2));
+      const checkpointId = `chk-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
-    // Track in memory
-    this.checkpoints.set(checkpointId, checkpoint);
+      // Get all modified files
+      const modifiedFiles = this.getModifiedFiles();
+      const fileContents = await this.readFiles(modifiedFiles);
 
-    if (!this.sessionCheckpoints.has(sessionId)) {
-      this.sessionCheckpoints.set(sessionId, []);
+      // Serialize state
+      const serializeResult = await stateSerializer.serialize(fileContents, {
+        format: 'json-gzip',
+        includeMetadata: true,
+      });
+
+      if (!serializeResult.success || !serializeResult.data) {
+        throw new Error(`Failed to serialize checkpoint: ${serializeResult.error}`);
+      }
+
+      // Create checkpoint directory
+      const checkpointDir = path.join(this.storageDir, checkpointId);
+      fs.mkdirSync(checkpointDir, { recursive: true });
+
+      // Save compressed data
+      const dataPath = path.join(checkpointDir, 'state.json.gz');
+      fs.writeFileSync(dataPath, serializeResult.data);
+
+      // Create metadata
+      const checkpoint: Checkpoint = {
+        id: checkpointId,
+        name,
+        description,
+        sessionId,
+        createdAt: new Date(),
+        priority,
+        status: 'active',
+        fileCount: serializeResult.metadata?.fileCount ?? 0,
+        totalSize: serializeResult.metadata?.totalSize ?? 0,
+        compressedSize: serializeResult.metadata?.compressedSize ?? 0,
+        storagePath: checkpointDir,
+        metadata: {
+          workingDirectory: process.cwd(),
+          branch: branch ?? this.getCurrentBranch(),
+          commitHash: commitHash ?? this.getCurrentCommit(),
+          tags,
+          customData,
+        },
+      };
+
+      // Save metadata atomically using temporary file and rename (P2-019)
+      const metadataPath = path.join(checkpointDir, 'metadata.json');
+      const tempMetadataPath = metadataPath + '.tmp';
+      fs.writeFileSync(tempMetadataPath, JSON.stringify(checkpoint, null, 2));
+      fs.renameSync(tempMetadataPath, metadataPath);
+
+      // Track in memory
+      this.checkpoints.set(checkpointId, checkpoint);
+
+      if (!this.sessionCheckpoints.has(sessionId)) {
+        this.sessionCheckpoints.set(sessionId, []);
+      }
+      this.sessionCheckpoints.get(sessionId)!.push(checkpointId);
+
+      return checkpoint;
+    } catch (error) {
+      if ((error as any).code === 'EEXIST') {
+        throw new Error('Another checkpoint operation is in progress');
+      }
+      throw error;
+    } finally {
+      if (lockFd !== null) {
+        fs.closeSync(lockFd);
+        try {
+          fs.unlinkSync(lockPath);
+        } catch {
+          // Ignore
+        }
+      }
     }
-    this.sessionCheckpoints.get(sessionId)!.push(checkpointId);
-
-    return checkpoint;
   }
 
   /**

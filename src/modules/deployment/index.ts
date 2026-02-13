@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Deployment Module
+ * VIBE-CLI v0.0.2 - Deployment Module
  * Build, deploy, CI/CD setup, and monitoring
  */
 

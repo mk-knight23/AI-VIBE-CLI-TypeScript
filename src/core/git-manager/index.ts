@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Git Manager Exports
+ * VIBE-CLI v0.0.2 - Git Manager Exports
  */
 
 export * from './git-manager.js';

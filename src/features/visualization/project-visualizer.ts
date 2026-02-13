@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Project Visualizer
+ * VIBE-CLI v0.0.2 - Project Visualizer
  * Visual codebase understanding and dependency maps
  */
 

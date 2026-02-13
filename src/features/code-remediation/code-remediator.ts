@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Code Remediation
+ * VIBE-CLI v0.0.2 - Code Remediation
  * Automated security vulnerability fixes and code improvements
  */
 

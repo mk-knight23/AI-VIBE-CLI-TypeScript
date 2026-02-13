@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Code Assistant Module
+ * VIBE-CLI v0.0.2 - Code Assistant Module
  * AI-powered code generation, completion, refactoring, and explanation
  */
 

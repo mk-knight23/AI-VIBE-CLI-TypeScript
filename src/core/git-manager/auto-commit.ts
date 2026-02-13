@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Auto Commit Generator
+ * VIBE-CLI v0.0.2 - Auto Commit Generator
  * Semantic commit message generation based on staged changes
  */
 

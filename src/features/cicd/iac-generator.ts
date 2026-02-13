@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - IaC Generator
+ * VIBE-CLI v0.0.2 - IaC Generator
  * AI-driven Infrastructure-as-Code generation (Terraform, CloudFormation).
  */
 

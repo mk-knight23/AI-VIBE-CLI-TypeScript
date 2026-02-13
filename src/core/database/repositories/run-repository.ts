@@ -6,17 +6,19 @@ export class RunRepository {
     constructor(private dbManager: DatabaseManager) { }
 
     public createRun(context: RunContext) {
-        const stmt = this.dbManager.getClient().prepare(`
-            INSERT INTO runs (id, user_id, workspace_path, status, config_snapshot)
-            VALUES (?, ?, ?, ?, ?)
-        `);
-        stmt.run(
-            context.runId,
-            context.user.id,
-            context.workspace.path,
-            'started',
-            JSON.stringify(context.configSnapshot)
-        );
+        this.dbManager.transaction(() => {
+            const stmt = this.dbManager.getClient().prepare(`
+                INSERT INTO runs (id, user_id, workspace_path, status, config_snapshot)
+                VALUES (?, ?, ?, ?, ?)
+            `);
+            stmt.run(
+                context.runId,
+                context.user.id,
+                context.workspace.path,
+                'started',
+                JSON.stringify(context.configSnapshot)
+            );
+        });
     }
 
     public updateRunStatus(runId: string, status: string) {
@@ -25,19 +27,21 @@ export class RunRepository {
     }
 
     public createStep(runId: string, step: WorkflowStep, input: any) {
-        const stmt = this.dbManager.getClient().prepare(`
-            INSERT INTO workflow_steps (id, run_id, step_number, primitive, task, status, input)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `);
-        stmt.run(
-            step.id,
-            runId,
-            step.step,
-            step.primitive,
-            step.task,
-            'pending',
-            JSON.stringify(input)
-        );
+        this.dbManager.transaction(() => {
+            const stmt = this.dbManager.getClient().prepare(`
+                INSERT INTO workflow_steps (id, run_id, step_number, primitive, task, status, input)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `);
+            stmt.run(
+                step.id,
+                runId,
+                step.step,
+                step.primitive,
+                step.task,
+                'pending',
+                JSON.stringify(input)
+            );
+        });
     }
 
     public updateStepResult(stepId: string, output: any, status: 'success' | 'failed', error?: string, durationMs?: number) {

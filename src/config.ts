@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Configuration & BYOK (Bring Your Own Key) Manager
+ * VIBE-CLI v0.0.2 - Configuration & BYOK (Bring Your Own Key) Manager
  * Handles API key input, secure storage, and provider configuration
  */
 
@@ -55,7 +55,7 @@ export class VibeConfigManager {
       console.log(chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║   ${chalk.white.bold('V I B E')}  ${chalk.green('v0.0.1.0.0')}                                    ║
+║   ${chalk.white.bold('V I B E')}  ${chalk.green('v0.0.2.0.0')}                                    ║
 ║   ${chalk.gray('AI-Powered Development Environment')}                       ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝

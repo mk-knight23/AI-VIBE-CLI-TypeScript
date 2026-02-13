@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Fix Command
+ * VIBE-CLI v0.0.2 - Fix Command
  * Autonomous bug detection, analysis, and fixing
  */
 

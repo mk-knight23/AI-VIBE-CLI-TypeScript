@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - AST Analyzer
+ * VIBE-CLI v0.0.2 - AST Analyzer
  * Parse AST and extract code definitions
  */
 

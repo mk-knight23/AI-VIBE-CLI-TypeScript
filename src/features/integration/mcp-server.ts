@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - MCP Server
+ * VIBE-CLI v0.0.2 - MCP Server
  * Model Context Protocol server for tool integration
  */
 

@@ -13,14 +13,22 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy package files
 COPY package*.json ./
-RUN npm install
 
+# Use npm ci for deterministic builds (P2-040)
+# Clean cache to reduce image size
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy source and build
 COPY . .
 RUN npm run build
 
 # Runtime stage
 FROM node:20-slim
+
+# Create non-root user for security (P2-041)
+RUN groupadd -r vibe && useradd -r -g vibe -d /home/vibe -m -s /bin/bash vibe
 
 WORKDIR /app
 
@@ -29,13 +37,20 @@ RUN apt-get update && apt-get install -y \
     libsecret-1-0 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from:builder /app/dist ./dist
-COPY --from:builder /app/bin ./bin
-COPY --from:builder /app/package*.json ./
-COPY --from:builder /app/node_modules ./node_modules
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/bin ./bin
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+
+# Set proper ownership
+RUN chown -R vibe:vibe /app
 
 # Add vibe to path
 RUN ln -s /app/bin/vibe.js /usr/local/bin/vibe
+
+# Switch to non-root user
+USER vibe
 
 # Default workspace
 VOLUME /workspace

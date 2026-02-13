@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Multi-File Handler
+ * VIBE-CLI v0.0.2 - Multi-File Handler
  * Coherent multi-file editing with cross-file consistency
  */
 
@@ -772,10 +772,36 @@ export class MultiFileHandler {
   /**
    * Apply a single file change
    */
+  /**
+   * Validate path is within allowed directory (prevents path traversal)
+   */
+  private validatePath(filePath: string, options: ApplyChangesOptions): { valid: boolean; error?: string } {
+    const targetDir = options.targetPath ? path.resolve(options.targetPath) : process.cwd();
+    const absolutePath = path.resolve(targetDir, filePath);
+
+    // Ensure the resolved path is within the target directory
+    if (!absolutePath.startsWith(targetDir + path.sep) && absolutePath !== targetDir) {
+      return { valid: false, error: `Path traversal detected: ${filePath} is outside target directory` };
+    }
+
+    // Block paths with .. sequences
+    if (filePath.includes('..')) {
+      return { valid: false, error: `Invalid path: ${filePath} contains parent directory references` };
+    }
+
+    return { valid: true };
+  }
+
   private async applyFileChange(
     change: FileChange,
     options: ApplyChangesOptions
   ): Promise<{ created: boolean; modified: boolean; deleted: boolean }> {
+    // Validate path for traversal attacks
+    const pathValidation = this.validatePath(change.file, options);
+    if (!pathValidation.valid) {
+      throw new Error(pathValidation.error);
+    }
+
     const absolutePath = options.targetPath
       ? path.join(options.targetPath, change.file)
       : path.join(process.cwd(), change.file);

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Checkpoint Commands
+ * VIBE-CLI v0.0.2 - Checkpoint Commands
  * CLI commands for checkpoint and rollback operations
  */
 

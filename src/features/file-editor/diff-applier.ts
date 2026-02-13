@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Diff Applier
+ * VIBE-CLI v0.0.2 - Diff Applier
  * Diff preview and application for multi-file edits
  */
 

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Security Module
+ * VIBE-CLI v0.0.2 - Security Module
  * Vulnerability scanning, dependency auditing, and security fixes
  */
 

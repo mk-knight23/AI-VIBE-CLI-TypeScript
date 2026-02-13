@@ -3,6 +3,7 @@
  */
 
 import { Command } from 'commander';
+import { PluginPermissions } from '../core/plugin-system/security.js';
 
 export interface PluginManifest {
   name: string;
@@ -13,16 +14,8 @@ export interface PluginManifest {
   main: string;
   vibeVersion: string;
   dependencies?: string[];
-  permissions?: PluginPermission[];
+  permissions?: PluginPermissions; // Updated to use detailed permissions
 }
-
-export type PluginPermission =
-  | 'filesystem:read'
-  | 'filesystem:write'
-  | 'network'
-  | 'shell'
-  | 'git'
-  | 'config:read';
 
 export interface VibePlugin {
   name: string;

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Git Conflict Resolver
+ * VIBE-CLI v0.0.2 - Git Conflict Resolver
  * Detect and resolve merge conflicts with AI-suggested resolutions
  */
 

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Shared Readline Interface
+ * VIBE-CLI v0.0.2 - Shared Readline Interface
  *
  * SINGLETON: Only one readline interface for the entire application.
  * Prevents duplicate input / character echo issues.

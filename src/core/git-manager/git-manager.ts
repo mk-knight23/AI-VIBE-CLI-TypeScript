@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Git Manager
+ * VIBE-CLI v0.0.2 - Git Manager
  * Unified git operations interface
  */
 

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 Orchestrator
+ * VIBE-CLI v0.0.2 Orchestrator
  * Multi-agent orchestration for intent-driven execution
  */
 

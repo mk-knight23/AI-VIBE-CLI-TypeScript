@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Agent Orchestrator
+ * VIBE-CLI v0.0.2 - Agent Orchestrator
  * Autonomous agent that executes tasks independently with self-healing
  */
 
