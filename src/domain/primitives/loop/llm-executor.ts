@@ -7,7 +7,7 @@
 
 import { CompletionPrimitive } from '../completion.js';
 import { createLogger } from '../../../utils/pino-logger.js';
-import { configManager } from '../../../infrastructure/config/config-system.js';
+import { configManager } from '../../../core/config-system.js';
 
 const logger = createLogger('llm-executor');
 

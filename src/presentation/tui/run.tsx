@@ -1,5 +1,5 @@
 import { OrchestrationPrimitive } from '../../domain/primitives/orchestration.js';
-import { EnhancedMCPManager } from '../../infrastructure/mcp/enhanced-manager.js';
+import { EnhancedMCPManager } from '../../mcp/enhanced-manager.js';
 import { App } from './App.js';
 import React from 'react';
 

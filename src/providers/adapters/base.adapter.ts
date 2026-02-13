@@ -17,6 +17,7 @@ export interface ProviderOptions {
   temperature?: number;
   maxTokens?: number;
   stream?: boolean;
+  systemPrompt?: string;
 }
 
 export interface StreamCallback {

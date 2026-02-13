@@ -96,4 +96,25 @@ export class VibeProviderRouter extends UnifiedProviderRouter {
     isProviderAvailable(provider: string): boolean {
         return this.isProviderConfigured(provider);
     }
+
+    // ── Backward-compatible methods for legacy code ─────────────────────────
+
+    /**
+     * @deprecated Use `chat` or `complete` instead
+     */
+    async completion(prompt: string, options?: ProviderOptions): Promise<ProviderResponse> {
+        return this.complete(prompt, options);
+    }
+
+    /**
+     * @deprecated Use `streamChat` instead - requires ChatMessage[] not prompt string
+     */
+    async *stream(_prompt: string, _options?: ProviderOptions): AsyncGenerator<string> {
+        throw new Error('stream() is deprecated. Use streamChat() with ChatMessage[] instead.');
+    }
 }
+
+/**
+ * Singleton instance for backward compatibility
+ */
+export const providerRouter = new VibeProviderRouter();

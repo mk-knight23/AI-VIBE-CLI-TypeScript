@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { LLMProvider, ProviderOptions, ProviderResponse, ProviderError } from './types.js';
-import { configManager } from '../config/config-system.js';
+import { configManager } from '../../core/config-system.js';
 
 export class AnthropicProvider implements LLMProvider {
     public id = 'anthropic';

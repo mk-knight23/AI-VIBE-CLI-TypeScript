@@ -3,7 +3,7 @@ import { Box, Text } from 'ink';
 import { Header } from './Header.js';
 import { Sidebar } from './Sidebar.js';
 import { OrchestrationPrimitive } from '../../domain/primitives/orchestration.js';
-import { EnhancedMCPManager } from '../../infrastructure/mcp/enhanced-manager.js';
+import { EnhancedMCPManager } from '../../mcp/enhanced-manager.js';
 
 export interface AppProps {
     orchestrator: OrchestrationPrimitive;
