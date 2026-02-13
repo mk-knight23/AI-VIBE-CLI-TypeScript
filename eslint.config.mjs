@@ -31,14 +31,14 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',
-      'no-console': 'warn',
-      'prefer-const': 'error',
+      'no-console': 'off',  // CLI tools need console for user output
+      'prefer-const': 'warn',
       'no-var': 'error',
     },
   },

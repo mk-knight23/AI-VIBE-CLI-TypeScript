@@ -1,7 +1,6 @@
-import * as crypto from 'crypto';
 import { VibeProviderRouter } from '../providers/router.js';
 import { VibeMemoryManager } from '../memory/index.js';
-import { toolRegistry, sandbox } from '../tools/index.js';
+import { toolRegistry, sandbox as _sandbox } from '../tools/index.js';
 import { approvalManager } from '../approvals/index.js';
 import { AgentTask, AgentResult, AgentStep, VibeAgent, ExecutionPlan } from './types.js';
 import { AgentExecutionContext } from './context.js';

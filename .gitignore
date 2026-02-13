@@ -68,10 +68,18 @@ temp/
 # Test Artifacts
 # ===============================
 test-results/
+test-command-output/
+test-fix-output/
 playwright-report/
 jest-cache/
 .nyc_output/
 coverage-final.json
+
+# ===============================
+# Ralph Test Sessions
+# ===============================
+.ralph/
+.ralph-test-sessions/
 
 # ===============================
 # CLI Generated Files

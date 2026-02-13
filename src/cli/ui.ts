@@ -9,7 +9,7 @@ import readline from 'readline';
 
 let completer: readline.Completer = (line: string) => [[], line];
 
-export let rl = readline.createInterface({
+export const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   terminal: true,

@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import { randomUUID } from 'crypto';
 import { BaseAgent } from './base-agent.js';
 import { AgentTask, AgentStep, AgentPhase, ExecutionPlan } from './types.js';
 import { AgentExecutionContext } from './context.js';
@@ -19,7 +19,7 @@ export class PlannerAgent extends BaseAgent {
     context: AgentExecutionContext,
     steps: AgentStep[]
   ): Promise<{ success: boolean; output: string; artifacts?: string[] }> {
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     // Generate plan using LLM
     const prompt = this.buildPlanningPrompt(task);
@@ -41,12 +41,12 @@ export class PlannerAgent extends BaseAgent {
     const plan = this.parsePlan(response.content, availableTools);
 
     steps.push({
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       phase: 'plan',
       action: 'Generate execution plan',
       result: `Created plan with ${plan.steps.length} steps`,
       timestamp: new Date(),
-      duration: Date.now() - startTime,
+      duration: Date.now() - _startTime,
     });
 
     return {
@@ -88,7 +88,7 @@ Only respond with the JSON, no other text.
       .join('\n');
   }
 
-  private parsePlan(content: string, availableTools: string): ExecutionPlan {
+  private parsePlan(content: string, _availableTools: string): ExecutionPlan {
     try {
       // Try to extract JSON from response
       const jsonMatch = content.match(/\{[\s\S]*\}/);

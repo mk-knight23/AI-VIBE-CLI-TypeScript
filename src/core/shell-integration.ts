@@ -412,7 +412,7 @@ export class ShellIntegration {
       return;
     }
 
-    let content = fs.readFileSync(rcPath, 'utf-8');
+    const content = fs.readFileSync(rcPath, 'utf-8');
 
     // Remove VIBE-CLI completion section
     const lines = content.split('\n');

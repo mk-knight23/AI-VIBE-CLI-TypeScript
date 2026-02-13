@@ -1281,7 +1281,7 @@ Sandbox Status:
     }
 
     // Try specific checkpoint or use most recent
-    let checkpointId = args || checkpoints[checkpoints.length - 1]?.id;
+    const checkpointId = args || checkpoints[checkpoints.length - 1]?.id;
 
     if (!checkpointId) {
       console.log(chalk.yellow('\nNo checkpoint specified and no checkpoints available.\n'));

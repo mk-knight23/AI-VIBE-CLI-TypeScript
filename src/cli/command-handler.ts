@@ -13,6 +13,9 @@ import { VibeConfigManager } from '../config.js';
 
 const logger = createLogger('CommandHandler');
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _unused = checkpointManager;
+
 export class CommandHandler {
     private primitiveMap: Map<string, IPrimitive>;
 

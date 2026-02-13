@@ -1,4 +1,3 @@
-import * as crypto from 'crypto';
 import { VibeProviderRouter } from '../providers/router.js';
 import { AgentTask, AgentResult, AgentStep, AgentPhase, VibeAgent } from './types.js';
 import { AgentExecutionContext } from './context.js';
@@ -14,7 +13,7 @@ export abstract class BaseAgent implements VibeAgent {
   protected constructor(protected provider: VibeProviderRouter) { }
 
   async execute(task: AgentTask, context: AgentExecutionContext): Promise<AgentResult> {
-    const startTime = Date.now();
+    const _startTime = Date.now();
     const steps: AgentStep[] = [];
 
     try {

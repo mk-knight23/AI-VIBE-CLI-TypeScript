@@ -1,4 +1,3 @@
-import * as crypto from 'crypto';
 import { BaseAgent } from './base-agent.js';
 import { AgentTask, AgentStep, AgentPhase } from './types.js';
 import { AgentExecutionContext } from './context.js';
@@ -18,7 +17,7 @@ export class ExecutorAgent extends BaseAgent {
     context: AgentExecutionContext,
     steps: AgentStep[]
   ): Promise<{ success: boolean; output: string; error?: string; artifacts?: string[] }> {
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     // Create checkpoint if requested
     if (task.checkpoint !== false) {
