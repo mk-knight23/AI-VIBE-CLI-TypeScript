@@ -32,9 +32,8 @@ export class OrchestrationPrimitive extends EventEmitter implements IPrimitive {
     private getCircuitBreaker(primitiveName: string): CircuitBreaker {
         if (!this.circuitBreakers.has(primitiveName)) {
             this.circuitBreakers.set(primitiveName, new CircuitBreaker({
-                name: `primitive-${primitiveName}`,
                 failureThreshold: 3,
-                resetTimeoutMs: 30000 // 30 seconds
+                resetTimeout: 30000 // 30 seconds
             }));
         }
         return this.circuitBreakers.get(primitiveName)!;

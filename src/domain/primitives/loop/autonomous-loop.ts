@@ -1,21 +1,13 @@
 /**
  * Autonomous Development Loop Primitive
  *
- * Core primitive for autonomous development loops inspired by Ralph-Claude-Code.
- * Implements intelligent exit detection, rate limiting, circuit breaking, and session management.
- *
- * Key Features:
- * - Dual-condition exit gate (requires BOTH exit signal AND completion indicator)
- * - Rate limiting (100 calls/hour default)
- * - Circuit breaker for stuck loop detection
- * - Session continuity across invocations
- * - Real-time monitoring and logging
+ * Core primitive for autonomous development loops.
+ * Simplified implementation using consolidated utilities.
  */
 
-import { ResponseAnalyzer } from './response-analyzer-v2.js';
-import { RateLimiter } from './rate-limiter.js';
-import { CircuitBreaker } from './circuit-breaker.js';
-import { SessionManager } from '../../session/session-manager.js';
+import { ResponseAnalyzer } from './response-analyzer.js';
+import { RateLimiter } from '../../../utils/rate-limiter.js';
+import { CircuitBreaker } from '../../../core/resilience/circuit-breaker.js';
 import { AutonomousLoopConfig, DEFAULT_AUTONOMOUS_CONFIG, LoopState, LoopResult } from './autonomous-config.js';
 import { PrimitiveResult, IPrimitive } from '../types.js';
 import { createLogger } from '../../../utils/pino-logger.js';
@@ -35,19 +27,9 @@ export class AutonomousLoopPrimitive implements IPrimitive {
   name = 'Autonomous Development Loop';
 
   private analyzer: ResponseAnalyzer;
-  private rateLimiter: RateLimiter;
-  private circuitBreaker: CircuitBreaker;
-  private sessionManager: SessionManager;
 
   constructor() {
     this.analyzer = new ResponseAnalyzer();
-    this.rateLimiter = new RateLimiter();
-    this.circuitBreaker = new CircuitBreaker({
-      failureThreshold: 3,
-      successThreshold: 2,
-      timeoutMs: 60000,
-    });
-    this.sessionManager = new SessionManager();
   }
 
   /**
@@ -57,21 +39,6 @@ export class AutonomousLoopPrimitive implements IPrimitive {
     const config = { ...DEFAULT_AUTONOMOUS_CONFIG, ...options.config };
 
     logger.info({ task: options.task, config }, 'Starting autonomous development loop');
-
-    // Initialize or resume session
-    let sessionId = config.sessionId;
-    if (sessionId) {
-      await this.sessionManager.resumeSession(sessionId);
-      logger.info({ sessionId }, 'Resumed session');
-    } else {
-      const session = await this.sessionManager.createSession({
-        projectId: process.cwd(),
-        task: options.task,
-        objectives: ['Complete the autonomous development task'],
-      });
-      sessionId = session.id;
-      logger.info({ sessionId }, 'Created new session');
-    }
 
     // Initialize loop state
     const state: LoopState = {
@@ -90,28 +57,30 @@ export class AutonomousLoopPrimitive implements IPrimitive {
     const startTime = Date.now();
     const errors: string[] = [];
 
+    // Create rate limiter and circuit breaker for this execution
+    const rateLimiter = new RateLimiter({
+      maxRequests: 100,
+      windowMs: 60 * 60 * 1000, // 1 hour
+    });
+
+    const circuitBreaker = new CircuitBreaker({
+      failureThreshold: 3,
+      resetTimeout: 60000,
+    });
+
     try {
       // Main autonomous loop
       while (this.shouldContinue(state, config)) {
         // Check rate limit
-        const rateStatus = this.rateLimiter.canMakeCall();
-        if (!rateStatus.allowed) {
-          logger.warn({
-            callsThisHour: rateStatus.callsThisHour,
-            windowResetTime: rateStatus.windowResetTime,
-          }, 'Rate limit reached, waiting...');
-
-          await this.rateLimiter.waitForAvailability();
+        if (rateLimiter.isRateLimited()) {
+          logger.warn('Rate limit reached, waiting...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
         }
 
         // Check circuit breaker
-        if (!this.circuitBreaker.canExecute()) {
-          const stats = this.circuitBreaker.getStats();
-          logger.error({
-            state: stats.state,
-            failures: stats.totalFailures,
-          }, 'Circuit breaker is OPEN, stopping loop');
-
+        if (circuitBreaker.isOpen()) {
+          logger.error('Circuit breaker is OPEN, stopping loop');
           state.isStuck = true;
           break;
         }
@@ -119,77 +88,52 @@ export class AutonomousLoopPrimitive implements IPrimitive {
         // Increment iteration
         state.iteration++;
 
-        // Build context from session
-        const context = await this.buildContext(sessionId!, state);
+        try {
+          // Execute iteration
+          const response = await circuitBreaker.execute(async () => {
+            state.apiCallsThisHour++;
+            state.lastApiCall = new Date();
 
-        // Execute iteration through circuit breaker
-        const response = await this.circuitBreaker.execute(async () => {
-          this.rateLimiter.recordCall();
-          state.apiCallsThisHour = this.rateLimiter.getStatus().callsThisHour;
-          state.lastApiCall = new Date();
+            logger.info({
+              iteration: state.iteration,
+              maxIterations: config.maxIterations,
+            }, `Iteration ${state.iteration}`);
 
-          logger.info({
-            iteration: state.iteration,
-            maxIterations: config.maxIterations,
-          }, `Iteration ${state.iteration}`);
+            return await options.executor(state.iteration, '');
+          });
 
-          return await options.executor(state.iteration, context);
-        });
+          // Analyze response
+          const analysis = this.analyzer.analyze(response);
 
-        // Analyze response
-        const analysis = this.analyzer.analyze(response);
+          // Update state based on analysis
+          state.shouldExit = analysis.isComplete && analysis.hasExitSignal;
+          state.isStuck = analysis.stuckIndicators && analysis.stuckIndicators.length >= 2;
 
-        // Update state based on analysis
-        state.exitSignalsFound = analysis.exitSignals;
-        state.completionIndicators = analysis.completionIndicators;
-        state.stuckIndicators = analysis.stuckIndicators;
-        state.shouldExit = analysis.shouldExit;
-        state.isStuck = analysis.stuckIndicators.length >= 2;
+          // Call iteration callback
+          if (options.onIteration) {
+            options.onIteration(state, response);
+          }
 
-        // Log iteration results
-        if (config.logLevel === 'verbose' || config.logLevel === 'debug') {
-          logger.debug({
-            hasExitSignal: analysis.hasExitSignal,
-            hasCompletion: analysis.hasCompletionIndicator,
-            shouldExit: analysis.shouldExit,
-            confidence: analysis.confidence,
-            actionItems: analysis.actionItems,
-            stuckIndicators: analysis.stuckIndicators,
-          }, 'Iteration analysis');
-        }
+          // Check for stuck loop
+          if (state.isStuck) {
+            logger.error({ iteration: state.iteration }, 'Loop appears stuck, stopping');
+            break;
+          }
 
-        // Add iteration to session
-        await this.sessionManager.addIteration({
-          response,
-          actionItems: analysis.actionItems,
-          completion: analysis.confidence,
-          durationMs: 0, // TODO: track actual duration
-          errors: state.stuckIndicators,
-        });
+          // Check for exit
+          if (state.shouldExit) {
+            logger.info('Exit conditions met, completing loop');
+            state.isComplete = true;
+            break;
+          }
+        } catch (error) {
+          logger.error({ error, iteration: state.iteration }, 'Iteration failed');
+          errors.push(error instanceof Error ? error.message : 'Unknown error');
 
-        // Call iteration callback
-        if (options.onIteration) {
-          options.onIteration(state, response);
-        }
-
-        // Check for stuck loop
-        if (state.isStuck) {
-          logger.error({
-            stuckIndicators: state.stuckIndicators,
-            iteration: state.iteration,
-          }, 'Loop appears stuck, stopping');
-          break;
-        }
-
-        // Check for exit
-        if (state.shouldExit) {
-          logger.info({
-            exitSignals: state.exitSignalsFound,
-            completions: state.completionIndicators,
-            confidence: analysis.confidence,
-          }, 'Exit conditions met, completing loop');
-          state.isComplete = true;
-          break;
+          if (errors.length >= 3) {
+            logger.error('Too many errors, stopping loop');
+            break;
+          }
         }
 
         // Cooldown between iterations
@@ -199,29 +143,14 @@ export class AutonomousLoopPrimitive implements IPrimitive {
       }
 
       // Build result
-      const durationMs = Date.now() - startTime;
       const result: LoopResult = {
-        success: state.isComplete,
-        iterations: state.iteration,
-        durationMs,
-        reason: this.getExitReason(state),
+        success: state.isComplete || errors.length === 0,
         state,
-        errors,
+        durationMs: Date.now() - startTime,
+        iterationsCompleted: state.iteration,
+        errors: errors.length > 0 ? errors : undefined,
       };
 
-      // Complete session
-      await this.sessionManager.completeSession(
-        `Loop completed: ${result.reason}`
-      );
-
-      logger.info({
-        success: result.success,
-        iterations: result.iterations,
-        durationMs: result.durationMs,
-        reason: result.reason,
-      }, 'Autonomous loop finished');
-
-      // Call completion callback
       if (options.onComplete) {
         options.onComplete(result);
       }
@@ -229,25 +158,12 @@ export class AutonomousLoopPrimitive implements IPrimitive {
       return {
         success: result.success,
         data: result,
-        error: result.success ? undefined : result.reason,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      errors.push(errorMessage);
-
-      logger.error({ error: errorMessage }, 'Autonomous loop failed');
-
+      logger.error({ error }, 'Autonomous loop failed');
       return {
         success: false,
-        error: errorMessage,
-        data: {
-          success: false,
-          iterations: state.iteration,
-          durationMs: Date.now() - startTime,
-          reason: `Error: ${errorMessage}`,
-          state,
-          errors,
-        },
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -256,60 +172,21 @@ export class AutonomousLoopPrimitive implements IPrimitive {
    * Determine if loop should continue
    */
   private shouldContinue(state: LoopState, config: AutonomousLoopConfig): boolean {
-    // Check max iterations
-    if (state.iteration >= config.maxIterations) {
-      logger.info('Max iterations reached');
+    // Check iteration limit
+    if (state.iteration >= config.maxIterations!) {
+      logger.info({ maxIterations: config.maxIterations }, 'Max iterations reached');
       return false;
     }
 
     // Check max duration
-    const elapsed = Date.now() - state.startTime.getTime();
-    if (elapsed >= config.maxDurationMs) {
-      logger.info('Max duration reached');
-      return false;
-    }
-
-    // Check if complete
-    if (state.isComplete) {
-      return false;
-    }
-
-    // Check if stuck
-    if (state.isStuck) {
-      return false;
+    if (config.maxDurationMs) {
+      const elapsed = Date.now() - state.startTime.getTime();
+      if (elapsed >= config.maxDurationMs) {
+        logger.info({ elapsed, maxDuration: config.maxDurationMs }, 'Max duration reached');
+        return false;
+      }
     }
 
     return true;
-  }
-
-  /**
-   * Build context for iteration
-   */
-  private async buildContext(sessionId: string, state: LoopState): Promise<string> {
-    const context = this.sessionManager.getContext();
-    return context;
-  }
-
-  /**
-   * Get exit reason
-   */
-  private getExitReason(state: LoopState): string {
-    if (state.isComplete) {
-      return 'Task completed successfully';
-    }
-    if (state.isStuck) {
-      return `Loop stuck: ${state.stuckIndicators.slice(0, 3).join(', ')}`;
-    }
-    if (state.iteration >= 100) {
-      return 'Maximum iterations reached';
-    }
-    return 'Loop terminated';
-  }
-
-  /**
-   * Get current configuration
-   */
-  getConfig(): typeof DEFAULT_AUTONOMOUS_CONFIG {
-    return DEFAULT_AUTONOMOUS_CONFIG;
   }
 }

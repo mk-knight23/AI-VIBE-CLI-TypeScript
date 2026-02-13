@@ -9,6 +9,7 @@ import { configManager } from "../core/config-system.js";
 import { createLogger } from "../utils/pino-logger.js";
 import { EventEmitter } from 'events';
 import { LRUCache } from "../utils/lru-cache.js";
+import type { MCPTool } from "../types.js";
 
 const logger = createLogger("EnhancedMCPManager");
 
@@ -39,12 +40,6 @@ export interface MCPManagerConfig {
     heartbeatInterval: number;
     maxCacheSize: number;
     cacheTTL: number;
-}
-
-export interface MCPTool {
-    name: string;
-    description?: string;
-    inputSchema: Record<string, unknown>;
 }
 
 export class EnhancedMCPManager extends EventEmitter {
@@ -256,10 +251,16 @@ export class EnhancedMCPManager extends EventEmitter {
         connection.lastActivity = new Date();
 
         try {
-            const result = await connection.client.callTool({
+            const toolPromise = connection.client.callTool({
                 name: toolName,
                 arguments: args
             });
+
+            const timeoutPromise = new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error(`MCP Tool call timed out after ${this.config.connectionTimeout}ms`)), this.config.connectionTimeout);
+            });
+
+            const result = await Promise.race([toolPromise, timeoutPromise]) as any;
 
             if (result.isError) {
                 const errorMessage = (result.content as any)?.[0]?.text || 'Tool call failed';

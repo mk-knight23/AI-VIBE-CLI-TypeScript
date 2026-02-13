@@ -76,9 +76,10 @@ export interface LoopState {
 
 export interface LoopResult {
   success: boolean;
-  iterations: number;
+  iterations?: number;
+  iterationsCompleted?: number;
   durationMs: number;
-  reason: string;
-  state: LoopState;
-  errors: string[];
+  reason?: string;
+  state?: LoopState;
+  errors?: string[];
 }

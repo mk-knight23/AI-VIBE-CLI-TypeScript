@@ -2,17 +2,10 @@
  * Loop Primitive
  *
  * Autonomous development loop that iteratively executes tasks until completion.
- * Integrates circuit breaker and response analyzer for safe, reliable operation.
- *
- * Features:
- * - Configurable iteration limits
- * - Circuit breaker for runaway loop protection
- * - Response analysis for intelligent exit detection
- * - Context window management
- * - Progress tracking and reporting
+ * Simplified implementation using consolidated utilities.
  */
 
-import { CircuitBreaker } from './circuit-breaker.js';
+import { CircuitBreaker } from '../../../core/resilience/circuit-breaker.js';
 import { ResponseAnalyzer } from './response-analyzer.js';
 import {
   LoopConfig,
@@ -65,15 +58,15 @@ export class LoopPrimitive {
 
     // Initialize circuit breaker if enabled
     if (this.config.enableCircuitBreaker && this.config.circuitBreaker) {
-      this.circuitBreaker = new CircuitBreaker(this.config.circuitBreaker);
+      this.circuitBreaker = new CircuitBreaker({
+        failureThreshold: this.config.circuitBreaker.failureThreshold ?? 3,
+        resetTimeout: (this.config.circuitBreaker as any).timeoutMs ?? 60000,
+      });
     }
   }
 
   /**
    * Execute the autonomous loop
-   *
-   * @param executor - Function to execute each iteration
-   * @returns Loop result with completion status
    */
   async execute(executor: (iteration: number, context: string) => Promise<string>): Promise<LoopResult> {
     const startTime = Date.now();
@@ -150,7 +143,7 @@ export class LoopPrimitive {
 
     try {
       // Check circuit breaker
-      if (this.circuitBreaker && !this.circuitBreaker.canExecute()) {
+      if (this.circuitBreaker?.isOpen()) {
         throw new Error('Circuit breaker is OPEN, blocking execution');
       }
 
@@ -178,8 +171,8 @@ export class LoopPrimitive {
         success: true,
         response,
         durationMs,
-        shouldExit: analysis.isComplete && analysis.confidence >= this.config.responseAnalyzer!.confidenceThreshold!,
-        isStuck: analysis.stuckIndicators.length >= this.config.responseAnalyzer!.stuckThreshold!,
+        shouldExit: analysis.isComplete && analysis.confidence >= (this.config.responseAnalyzer?.confidenceThreshold ?? 0.7),
+        isStuck: (analysis.stuckIndicators?.length ?? 0) >= (this.config.responseAnalyzer?.stuckThreshold ?? 3),
         confidence: analysis.confidence,
       };
 
@@ -197,28 +190,27 @@ export class LoopPrimitive {
         durationMs,
         shouldExit: false,
         isStuck: false,
-        confidence: 0.0,
+        confidence: 0,
       };
     }
   }
 
   /**
-   * Check if loop should continue
+   * Determine if the loop should continue
    */
   private shouldContinue(): boolean {
-    // Check iteration limit
-    if (this.state.iteration >= this.config.maxIterations) {
+    // Check max iterations
+    if (this.state.iteration >= this.config.maxIterations!) {
       return false;
     }
 
-    // Check if already complete
-    if (this.state.isComplete) {
-      return false;
-    }
-
-    // Check if stuck
-    if (this.state.isStuck) {
-      return false;
+    // Check timeout
+    const timeoutMs = (this.config as any).timeoutMs;
+    if (timeoutMs) {
+      const elapsed = Date.now() - this.state.startTime.getTime();
+      if (elapsed >= timeoutMs) {
+        return false;
+      }
     }
 
     return true;
@@ -228,34 +220,7 @@ export class LoopPrimitive {
    * Build context for iteration
    */
   private buildContext(): string {
-    const parts: string[] = [];
-
-    // Add iteration info
-    parts.push(`Iteration: ${this.state.iteration}/${this.config.maxIterations}`);
-
-    // Add completions summary
-    if (this.state.completions.length > 0) {
-      parts.push(`\nCompleted iterations: ${this.state.completions.length}`);
-    }
-
-    // Add error summary
-    if (this.state.errors.length > 0) {
-      parts.push(`\nErrors encountered: ${this.state.errors.length}`);
-      parts.push('Recent errors:');
-      this.state.errors.slice(-3).forEach(err => {
-        parts.push(`  - ${err.message}`);
-      });
-    }
-
-    // Add recent context if available
-    if (this.state.completions.length > 0) {
-      parts.push('\nRecent work:');
-      this.state.completions.slice(-2).forEach(comp => {
-        parts.push(`  - ${comp.slice(0, 100)}...`);
-      });
-    }
-
-    return parts.join('\n');
+    return `Iteration ${this.state.iteration}`;
   }
 
   /**
@@ -263,18 +228,15 @@ export class LoopPrimitive {
    */
   private getExitReason(): string {
     if (this.state.isComplete) {
-      return 'Task completed successfully';
+      return 'Completed successfully';
     }
-
     if (this.state.isStuck) {
-      return 'Loop appears stuck';
+      return 'Loop detected as stuck';
     }
-
-    if (this.state.iteration >= this.config.maxIterations) {
-      return `Maximum iterations reached (${this.config.maxIterations})`;
+    if (this.state.iteration >= this.config.maxIterations!) {
+      return 'Max iterations reached';
     }
-
-    return 'Loop terminated';
+    return 'Unknown';
   }
 
   /**
@@ -285,33 +247,7 @@ export class LoopPrimitive {
   }
 
   /**
-   * Get configuration
-   */
-  getConfig(): LoopConfig {
-    return { ...this.config };
-  }
-
-  /**
-   * Update configuration
-   */
-  updateConfig(config: Partial<LoopConfig>): void {
-    this.config = { ...this.config, ...config };
-
-    // Update response analyzer
-    if (config.responseAnalyzer?.confidenceThreshold !== undefined) {
-      this.responseAnalyzer.updateConfig({
-        confidenceThreshold: config.responseAnalyzer.confidenceThreshold,
-      });
-    }
-
-    // Reinitialize circuit breaker if config changed
-    if (config.circuitBreaker && this.config.enableCircuitBreaker) {
-      this.circuitBreaker = new CircuitBreaker(this.config.circuitBreaker!);
-    }
-  }
-
-  /**
-   * Reset loop state
+   * Reset the loop state
    */
   reset(): void {
     this.state = {
@@ -323,23 +259,5 @@ export class LoopPrimitive {
       isComplete: false,
       isStuck: false,
     };
-
-    if (this.circuitBreaker) {
-      this.circuitBreaker.reset();
-    }
-  }
-
-  /**
-   * Get circuit breaker stats (if enabled)
-   */
-  getCircuitBreakerStats() {
-    return this.circuitBreaker?.getStats();
-  }
-
-  /**
-   * Get response analyzer config
-   */
-  getResponseAnalyzerConfig() {
-    return this.responseAnalyzer.getConfig();
   }
 }

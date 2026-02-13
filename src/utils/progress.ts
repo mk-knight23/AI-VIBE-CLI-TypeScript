@@ -54,7 +54,8 @@ export class ProgressSpinner {
 
     start(): this {
         this.running = true;
-        this.interval = this.interval || setInterval(() => this.tick(), 80);
+        // Optimized interval: 120ms = ~8 FPS (reduced from 80ms = 12.5 FPS)
+        this.interval = this.interval || setInterval(() => this.tick(), 120);
         this.tick();
         return this;
     }
@@ -157,14 +158,14 @@ export class ProgressBar {
         const complete = this.completeChar.repeat(Math.max(0, completeWidth));
         const incomplete = this.incompleteChar.repeat(Math.max(0, incompleteWidth));
 
-        let output = this.format
+        const output = this.format
             .replace('{bar}', `${chalk.green(complete)}${chalk.gray(incomplete)}`)
             .replace('{current}', this.current.toString())
             .replace('{total}', this.total.toString())
             .replace('{percent}', (percent * 100).toFixed(0))
             .replace('{task}', task || '');
 
-        console.log(`\r${output}`); // eslint-disable-line no-console
+        process.stdout.write(`\r${output}`);
     }
 
     stop(): void {

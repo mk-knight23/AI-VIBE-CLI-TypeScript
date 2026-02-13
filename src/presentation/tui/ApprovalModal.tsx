@@ -18,6 +18,15 @@ export const ApprovalModal: React.FC<ApprovalModalProps> = ({ message, rationale
         if (key.return) {
             selected === 'yes' ? onApprove() : onDeny();
         }
+        if (key.escape) {
+            onDeny();
+        }
+        if (input.toLowerCase() === 'y') {
+            onApprove();
+        }
+        if (input.toLowerCase() === 'n') {
+            onDeny();
+        }
     });
 
     return (
@@ -40,14 +49,15 @@ export const ApprovalModal: React.FC<ApprovalModalProps> = ({ message, rationale
 
             <Box marginTop={2} justifyContent="center">
                 <Box paddingX={2} backgroundColor={selected === 'yes' ? 'green' : undefined}>
-                    <Text color={selected === 'yes' ? 'white' : 'green'} bold> [ YES ] </Text>
+                    <Text color={selected === 'yes' ? 'white' : 'green'} bold> [ (Y)ES ] </Text>
                 </Box>
                 <Box marginLeft={4} paddingX={2} backgroundColor={selected === 'no' ? 'red' : undefined}>
-                    <Text color={selected === 'no' ? 'white' : 'red'} bold> [ NO ] </Text>
+                    <Text color={selected === 'no' ? 'white' : 'red'} bold> [ (N)O ] </Text>
                 </Box>
             </Box>
-            <Box marginTop={1} justifyContent="center">
+            <Box marginTop={1} justifyContent="center" flexDirection="column" alignItems="center">
                 <Text color="gray">Use ← → arrows to select, Enter to confirm</Text>
+                <Text color="gray">Shortcuts: 'y' to approve, 'n' or Esc to deny</Text>
             </Box>
         </Box>
     );

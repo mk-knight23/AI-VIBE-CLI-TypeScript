@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - File Writer Utility
+ * VIBE-CLI v0.0.2 - File Writer Utility
  * Reliable file writing with verification and error handling
  */
 

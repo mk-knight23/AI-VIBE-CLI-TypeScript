@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Configuration Module
+ * VIBE-CLI v0.0.2 - Configuration Module
  *
  * Hierarchical configuration system with:
  * - Global and project-level config resolution

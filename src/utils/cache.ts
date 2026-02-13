@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Cache Utility
+ * VIBE-CLI v0.0.2 - Cache Utility
  * In-memory caching with TTL support
  */
 
@@ -172,39 +172,4 @@ export class Cache<T = any> {
  */
 export function createCache<T = any>(options?: CacheOptions): Cache<T> {
   return new Cache<T>(options);
-}
-
-/**
- * LRU Cache implementation
- */
-export class LRUCache<T = any> extends Cache<T> {
-  private accessOrder: string[] = [];
-
-  set(key: string, value: T, ttl?: number): void {
-    // Remove from access order if exists
-    const idx = this.accessOrder.indexOf(key);
-    if (idx > -1) this.accessOrder.splice(idx, 1);
-
-    // Add to end (most recently used)
-    this.accessOrder.push(key);
-
-    super.set(key, value, ttl);
-  }
-
-  get(key: string): T | undefined {
-    const value = super.get(key);
-    if (value !== undefined) {
-      // Move to end (most recently used)
-      const idx = this.accessOrder.indexOf(key);
-      if (idx > -1) {
-        this.accessOrder.splice(idx, 1);
-        this.accessOrder.push(key);
-      }
-    }
-    return value;
-  }
-
-  protected findOldestKey(): string | undefined {
-    return this.accessOrder[0];
-  }
 }

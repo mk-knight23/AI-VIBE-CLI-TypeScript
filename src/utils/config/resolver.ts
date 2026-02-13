@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Hierarchical Configuration Resolver
+ * VIBE-CLI v0.0.2 - Hierarchical Configuration Resolver
  *
  * Implements global + project-level config resolution with:
  * - Hierarchical config merging (global > project > env > CLI args)

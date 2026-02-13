@@ -1,5 +1,5 @@
 /**
- * VIBE CLI v0.0.1 - Configuration Loader
+ * VIBE CLI v0.0.2 - Configuration Loader
  *
  * Handles loading, validation, and management of VIBE CLI configuration.
  * Supports .vibe/config.json and environment variable overrides.

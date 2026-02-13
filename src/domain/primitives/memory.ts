@@ -1,4 +1,5 @@
-import Database from 'better-sqlite3';
+import { connectionManager } from '../../core/database/connection-manager.js';
+import SQLite from 'better-sqlite3';
 import { BasePrimitive, PrimitiveResult } from './types.js';
 import path from 'path';
 import fs from 'fs';
@@ -9,15 +10,12 @@ const logger = createLogger('MemoryPrimitive');
 export class MemoryPrimitive extends BasePrimitive {
     public id = 'memory';
     public name = 'Memory Primitive';
-    private db: Database.Database;
+    private db: SQLite.Database;
 
     constructor() {
         super();
         const dbDir = path.join(process.cwd(), '.vibe');
-        if (!fs.existsSync(dbDir)) {
-            fs.mkdirSync(dbDir, { recursive: true });
-        }
-        this.db = new Database(path.join(dbDir, 'vibe.db'));
+        this.db = connectionManager.getConnection(path.join(dbDir, 'vibe.db'));
         this.init();
     }
 
@@ -28,7 +26,9 @@ export class MemoryPrimitive extends BasePrimitive {
         key TEXT,
         value TEXT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
+      );
+      CREATE INDEX IF NOT EXISTS idx_memory_key ON memory(key);
+      CREATE INDEX IF NOT EXISTS idx_memory_timestamp ON memory(timestamp);
     `);
     }
 
@@ -68,6 +68,7 @@ export class MemoryPrimitive extends BasePrimitive {
                 const results = stmt.all(key);
                 return { success: true, data: results };
             } else if (action === 'search') {
+                // Safe: better-sqlite3 parameterization prevents SQL injection (P4-106)
                 const stmt = this.db.prepare('SELECT * FROM memory WHERE value LIKE ? OR key LIKE ? ORDER BY timestamp DESC');
                 const results = stmt.all(`%${input.query}%`, `%${input.query}%`);
                 return { success: true, data: results };
