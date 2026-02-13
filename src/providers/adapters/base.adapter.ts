@@ -7,21 +7,10 @@
  * Version: 0.0.1
  */
 
-import type { ChatMessage } from '../../types.js';
+import type { ChatMessage, ModelInfo, ProviderConfig, ProviderResponse } from '../../types.js';
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
-export interface ModelInfo {
-  id: string;
-  name: string;
-  contextWindow: number;
-  maxOutput: number;
-  capabilities: ('completion' | 'reasoning' | 'vision' | 'function-calling')[];
-  freeTier: boolean;
-  tier: 'fast' | 'balanced' | 'reasoning' | 'max';
-}
+// Re-export types for adapter implementations
+export type { ChatMessage, ModelInfo, ProviderConfig, ProviderResponse };
 
 export interface ProviderOptions {
   model?: string;
@@ -32,29 +21,6 @@ export interface ProviderOptions {
 
 export interface StreamCallback {
   (chunk: string, delta?: boolean): void;
-}
-
-export interface ProviderResponse {
-  content: string;
-  reasoning?: string;
-  usage: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-    cost?: number;
-  };
-  model: string;
-  provider: string;
-  latencyMs: number;
-}
-
-export interface ProviderConfig {
-  id: string;
-  name: string;
-  baseUrl: string;
-  apiKeyEnv: string;
-  defaultModel: string;
-  requiresApiKey: boolean;
 }
 
 // ============================================================================

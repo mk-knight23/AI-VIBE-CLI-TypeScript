@@ -1,12 +1,18 @@
 /**
- * VIBE-CLI v0.0.1 - Context Manager
+ * VIBE-CLI v0.0.2 - Context Manager
  * Efficient context management with smart file selection and chunking
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
+import * as crypto from 'crypto';
+import * as zlib from 'zlib';
+import { promisify } from 'util';
 import fastGlob from 'fast-glob';
+
+const gzip = promisify(zlib.gzip);
+const gunzip = promisify(zlib.gunzip);
 
 /**
  * Token estimation result
@@ -104,7 +110,13 @@ export interface SemanticSearchOptions {
 export class ContextManager {
   private readonly cacheDir: string;
   private readonly semanticIndex: Map<string, SemanticIndexEntry> = new Map();
+  private readonly semanticIndexAccessOrder: string[] = []; // LRU tracking for semantic index
   private readonly fileCache: Map<string, { content: string; hash: string; timestamp: number }> = new Map();
+  private readonly cacheAccessOrder: string[] = []; // LRU tracking
+  private readonly maxCacheSize = 1000; // Max 1000 files in cache
+  private readonly maxCacheMemoryMB = 100; // Max 100MB cache memory
+  private readonly maxSemanticIndexSize = 5000; // Max 5000 entries in semantic index
+  private currentCacheMemoryBytes = 0;
   private readonly cacheTTL = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
@@ -217,26 +229,23 @@ export class ContextManager {
     }
 
     // Sort by relevance
-    fileRelevance.sort((a, b) => {
-      // Combine relevance with recency if enabled
-      let scoreA = a.score;
-      let scoreB = b.score;
-
+    const scoredFiles = await Promise.all(fileRelevance.map(async (file) => {
+      let score = file.score;
       if (prioritizeRecent) {
-        const recencyBonus = this.getRecencyBonus(a.filePath);
-        scoreA *= 1 + recencyBonus;
-        scoreB *= 1 + this.getRecencyBonus(b.filePath);
+        const recencyBonus = await this.getRecencyBonus(file.filePath);
+        score *= 1 + recencyBonus;
       }
+      return { ...file, score };
+    }));
 
-      return scoreB - scoreA;
-    });
+    scoredFiles.sort((a, b) => b.score - a.score);
 
     // Select files within token budget
     let totalTokens = 0;
     const selectedFiles: FileRelevance[] = [];
     const skippedFiles: string[] = [];
 
-    for (const file of fileRelevance) {
+    for (const file of scoredFiles) {
       if (totalTokens + file.tokenCount <= maxTokens) {
         selectedFiles.push(file);
         totalTokens += file.tokenCount;
@@ -248,7 +257,7 @@ export class ContextManager {
     return {
       files: selectedFiles,
       totalTokens,
-      truncated: selectedFiles.length < fileRelevance.length,
+      truncated: selectedFiles.length < scoredFiles.length,
       chunkingRequired: totalTokens > maxTokens * 0.8,
       skippedFiles,
     };
@@ -312,11 +321,11 @@ export class ContextManager {
   }
 
   /**
-   * Get recency bonus for a file
+   * Get recency bonus for a file (async)
    */
-  private getRecencyBonus(filePath: string): number {
+  private async getRecencyBonus(filePath: string): Promise<number> {
     try {
-      const stats = fs.statSync(filePath);
+      const stats = await fs.promises.stat(filePath);
       const age = Date.now() - stats.mtimeMs;
       const dayInMs = 24 * 60 * 60 * 1000;
 
@@ -335,22 +344,24 @@ export class ContextManager {
   async buildSemanticIndex(): Promise<void> {
     const indexPath = path.join(this.cacheDir, 'semantic-index.json');
 
-    // Try to load from cache
-    if (fs.existsSync(indexPath)) {
-      try {
-        const content = fs.readFileSync(indexPath, 'utf-8');
+    // Try to load from cache (async)
+    try {
+      if (fs.existsSync(indexPath + '.gz')) {
+        const compressed = await fs.promises.readFile(indexPath + '.gz');
+        const content = (await gunzip(compressed)).toString('utf-8');
         const cached = JSON.parse(content);
 
         // Check if cache is fresh (less than 1 hour old)
         if (Date.now() - cached.timestamp < 60 * 60 * 1000) {
           for (const [key, value] of Object.entries(cached.entries)) {
             this.semanticIndex.set(key, value as SemanticIndexEntry);
+            this.semanticIndexAccessOrder.push(key);
           }
           return;
         }
-      } catch {
-        // Rebuild index
       }
+    } catch {
+      // Rebuild index
     }
 
     // Find all source files
@@ -374,16 +385,19 @@ export class ContextManager {
       const entry = await this.indexFile(filePath);
       if (entry) {
         this.semanticIndex.set(entry.filePath, entry);
+        this.semanticIndexAccessOrder.push(entry.filePath);
+        this.enforceSemanticIndexLimits();
       }
     }
 
-    // Save to cache
+    // Save to cache (async) (P3-067)
     const cacheData = {
       timestamp: Date.now(),
       entries: Object.fromEntries(this.semanticIndex),
     };
 
-    fs.writeFileSync(indexPath, JSON.stringify(cacheData, null, 2));
+    const compressed = await gzip(Buffer.from(JSON.stringify(cacheData)));
+    await fs.promises.writeFile(indexPath + '.gz', compressed);
   }
 
   /**
@@ -546,16 +560,10 @@ export class ContextManager {
   }
 
   /**
-   * Hash content for change detection
+   * Hash content for change detection (P3-062)
    */
   private hashContent(content: string): string {
-    let hash = 0;
-    for (let i = 0; i < content.length; i++) {
-      const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16);
+    return crypto.createHash('md5').update(content).digest('hex').substring(0, 16);
   }
 
   /**
@@ -618,7 +626,8 @@ export class ContextManager {
   }
 
   /**
-   * Read file with caching
+   * Read file with LRU caching
+   * Implements bounded cache with memory limits
    */
   private async readFileCached(filePath: string): Promise<string> {
     const now = Date.now();
@@ -626,12 +635,18 @@ export class ContextManager {
     // Check cache
     const cached = this.fileCache.get(filePath);
     if (cached && now - cached.timestamp < this.cacheTTL) {
+      // Update access order (move to end = most recently used)
+      this.updateLRUOrder(filePath);
       return cached.content;
     }
 
     // Read from disk
     const content = await fs.promises.readFile(filePath, 'utf-8');
     const hash = this.hashContent(content);
+    const contentSize = Buffer.byteLength(content, 'utf8');
+
+    // Enforce cache limits before adding
+    this.enforceCacheLimits(contentSize);
 
     // Update cache
     this.fileCache.set(filePath, {
@@ -639,8 +654,60 @@ export class ContextManager {
       hash,
       timestamp: now,
     });
+    this.currentCacheMemoryBytes += contentSize;
+    this.cacheAccessOrder.push(filePath);
 
     return content;
+  }
+
+  /**
+   * Update LRU order - move accessed item to end (most recent)
+   */
+  private updateLRUOrder(filePath: string): void {
+    const index = this.cacheAccessOrder.indexOf(filePath);
+    if (index > -1) {
+      this.cacheAccessOrder.splice(index, 1);
+      this.cacheAccessOrder.push(filePath);
+    }
+  }
+
+  /**
+   * Enforce cache size and memory limits
+   * Evicts least recently used items until limits are satisfied
+   */
+  private enforceCacheLimits(newContentSize: number): void {
+    const maxMemoryBytes = this.maxCacheMemoryMB * 1024 * 1024;
+
+    // Evict entries until we have room
+    while (
+      this.fileCache.size >= this.maxCacheSize ||
+      (this.currentCacheMemoryBytes + newContentSize > maxMemoryBytes && this.fileCache.size > 0)
+    ) {
+      // Evict least recently used (first in array)
+      const lruPath = this.cacheAccessOrder.shift();
+      if (!lruPath) break;
+
+      const lruEntry = this.fileCache.get(lruPath);
+      if (lruEntry) {
+        this.currentCacheMemoryBytes -= Buffer.byteLength(lruEntry.content, 'utf8');
+        this.fileCache.delete(lruPath);
+      }
+    }
+  }
+
+  /**
+   * Enforce semantic index size limit
+   * Evicts least recently used items until limit is satisfied
+   */
+  private enforceSemanticIndexLimits(): void {
+    // Evict entries until we're under the limit
+    while (this.semanticIndex.size > this.maxSemanticIndexSize && this.semanticIndexAccessOrder.length > 0) {
+      // Evict least recently used (first in array)
+      const lruPath = this.semanticIndexAccessOrder.shift();
+      if (lruPath) {
+        this.semanticIndex.delete(lruPath);
+      }
+    }
   }
 
   /**
@@ -648,11 +715,26 @@ export class ContextManager {
    */
   invalidateCache(filePath?: string): void {
     if (filePath) {
-      this.fileCache.delete(filePath);
+      const entry = this.fileCache.get(filePath);
+      if (entry) {
+        this.currentCacheMemoryBytes -= Buffer.byteLength(entry.content, 'utf8');
+        this.fileCache.delete(filePath);
+      }
+      const index = this.cacheAccessOrder.indexOf(filePath);
+      if (index > -1) {
+        this.cacheAccessOrder.splice(index, 1);
+      }
       this.semanticIndex.delete(filePath);
+      const semIndex = this.semanticIndexAccessOrder.indexOf(filePath);
+      if (semIndex > -1) {
+        this.semanticIndexAccessOrder.splice(semIndex, 1);
+      }
     } else {
       this.fileCache.clear();
+      this.cacheAccessOrder.length = 0;
+      this.currentCacheMemoryBytes = 0;
       this.semanticIndex.clear();
+      this.semanticIndexAccessOrder.length = 0;
     }
   }
 
@@ -759,16 +841,19 @@ export class ContextManager {
   /**
    * Clear all caches
    */
-  clearCache(): void {
+  async clearCache(): Promise<void> {
     this.fileCache.clear();
     this.semanticIndex.clear();
+    this.semanticIndexAccessOrder.length = 0;
 
-    // Delete cache files
-    if (fs.existsSync(this.cacheDir)) {
-      const files = fs.readdirSync(this.cacheDir);
-      for (const file of files) {
-        fs.unlinkSync(path.join(this.cacheDir, file));
-      }
+    // Delete cache files (async)
+    try {
+      const files = await fs.promises.readdir(this.cacheDir);
+      await Promise.all(
+        files.map(file => fs.promises.unlink(path.join(this.cacheDir, file)))
+      );
+    } catch {
+      // Cache directory doesn't exist or other error
     }
   }
 }

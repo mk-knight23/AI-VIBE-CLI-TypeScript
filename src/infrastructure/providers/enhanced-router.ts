@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as os from 'os';
 import type { ProviderConfig, ProviderResponse } from '../adapters/types.js';
 import { PROVIDER_REGISTRY, getProviderById, getProviderByModel } from '../../providers/registry.js';
-import { CircuitBreaker } from '../../utils/circuit-breaker.js';
+import { CircuitBreaker } from '../../core/resilience/circuit-breaker.js';
 import { RateLimiter } from '../../utils/rate-limiter.js';
 import { createLogger } from '../../utils/pino-logger.js';
 

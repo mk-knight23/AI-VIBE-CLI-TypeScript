@@ -1,5 +1,5 @@
 /**
- * VIBE CLI v0.0.1 - Provider Registry
+ * VIBE CLI v0.0.2 - Provider Registry
  * 
  * Unified provider router supporting 20+ LLM providers.
  * Each provider is configured with:
@@ -11,31 +11,7 @@
  * Version: 0.0.1
  */
 
-import type { ProviderResponse } from '../types.js';
-
-// ============================================================================
-// PROVIDER INTERFACES
-// ============================================================================
-
-export interface ModelInfo {
-  id: string;
-  name: string;
-  contextWindow: number;
-  maxOutput: number;
-  capabilities: ('completion' | 'reasoning' | 'vision' | 'function-calling')[];
-  freeTier: boolean;
-  tier: 'fast' | 'balanced' | 'reasoning' | 'max';
-}
-
-export interface ProviderInfo {
-  id: string;
-  name: string;
-  baseUrl: string;
-  apiKeyEnv: string;
-  models: ModelInfo[];
-  defaultModel: string;
-  requiresApiKey: boolean;
-}
+import type { ProviderResponse, ModelInfo, ProviderInfo } from '../types.js';
 
 export interface ProviderCapability {
   complete(prompt: string, options?: ProviderOptions): Promise<ProviderResponse>;

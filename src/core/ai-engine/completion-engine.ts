@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Completion Engine
+ * VIBE-CLI v0.0.2 - Completion Engine
  * Real-time intelligent code completion suggestions
  */
 

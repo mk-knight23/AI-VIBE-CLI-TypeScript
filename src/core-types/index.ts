@@ -1,5 +1,5 @@
 /**
- * VIBE CLI v0.0.1 - Main Types Index
+ * VIBE CLI v0.0.2 - Main Types Index
  * 
  * Central export point for all type definitions.
  * Version: 0.0.1
@@ -14,6 +14,86 @@ export const VIBE_VERSION = '0.0.1';
 
 /** VIBE CLI version type */
 export type VibeVersion = typeof VIBE_VERSION;
+
+// ============================================================================
+// Intent Types
+// ============================================================================
+
+export enum IntentType {
+  ASK = 'ask',
+  CODE = 'code',
+  DEBUG = 'debug',
+  REFACTOR = 'refactor',
+  TEST = 'test',
+  API = 'api',
+  UI = 'ui',
+  DEPLOY = 'deploy',
+  MEMORY = 'memory',
+  PLAN = 'plan',
+  AGENT = 'agent',
+  GIT = 'git',
+  UNKNOWN = 'unknown'
+}
+
+export type IntentCategory =
+  | 'question'
+  | 'code_generation'
+  | 'code_assistant'
+  | 'refactor'
+  | 'debug'
+  | 'testing'
+  | 'security'
+  | 'api'
+  | 'ui'
+  | 'deploy'
+  | 'infra'
+  | 'memory'
+  | 'planning'
+  | 'agent'
+  | 'git'
+  | 'analysis'
+  | 'completion'
+  | 'unknown';
+
+export interface IntentPattern {
+  category: IntentCategory;
+  keywords: string[];
+  phrases: RegExp[];
+  confidence: number;
+}
+
+export interface IntentContext {
+  files?: string[];
+  target?: string;
+  language?: string;
+  framework?: string;
+  stepAction?: string;
+  stepFiles?: string[];
+}
+
+export interface VibeIntent {
+  id: string;
+  type: IntentType;
+  category: IntentCategory;
+  query: string;
+  confidence: number;
+  context: IntentContext;
+  shouldRemember: boolean;
+  shouldApprove: boolean;
+  risk: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface ClarificationOption {
+  label: string;
+  category: IntentCategory;
+  description: string;
+}
+
+export interface IntentClassificationResult {
+  intent: VibeIntent;
+  needsClarification: boolean;
+  suggestedOptions?: ClarificationOption[];
+}
 
 // ============================================================================
 // Agent Types (re-exported from agent.types)
@@ -86,6 +166,16 @@ export interface ExecutionPlan {
   preview?: PlanPreview;
 }
 
+export interface Plan {
+  id: string;
+  intent: VibeIntent;
+  steps: PlanStep[];
+  risks: string[];
+  totalRisk: 'low' | 'medium' | 'high';
+  estimatedDuration: number;
+  createdAt: Date;
+}
+
 export interface PlanStep {
   stepNumber: number;
   description: string;
@@ -117,6 +207,18 @@ export interface PlanPreview {
   commands: string[];
   estimatedTokens: number;
   estimatedCost: number;
+}
+
+export interface PlanningOptions {
+  maxSteps?: number;
+  includeRisks?: boolean;
+  includeDependencies?: boolean;
+}
+
+export interface PlanningResult {
+  plan: Plan;
+  reasoning: string;
+  suggestedModels: string[];
 }
 
 export interface AgentConfig {
@@ -535,9 +637,16 @@ export interface VibeSession {
   projectRoot: string;
   createdAt: Date;
   lastActivity: Date;
-  cwd: string;
+  cwd?: string;
   userId?: string;
   metadata?: Record<string, unknown>;
+}
+
+export interface LegacyVibeConfig {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  providers: string[];
 }
 
 export interface SessionOptions {
@@ -675,10 +784,14 @@ export interface CheckpointOptions {
 
 export interface EditOperation {
   path: string;
-  type: 'create' | 'modify' | 'delete' | 'rename';
+  type: 'create' | 'modify' | 'delete' | 'rename' | 'replace' | 'insert' | 'append';
   oldPath?: string;
   content?: string;
   diff?: { original: string; modified: string; changes: DiffChange[] };
+  file?: string;
+  searchPattern?: string;
+  replacement?: string;
+  lineNumber?: number;
 }
 
 export interface DiffChange {
@@ -690,12 +803,39 @@ export interface DiffChange {
 
 export interface EditResult {
   success: boolean;
-  filesChanged: string[];
-  filesCreated: string[];
-  filesDeleted: string[];
-  filesRenamed: string[];
-  errors: EditError[];
+  path?: string;
+  file?: string;
+  filesChanged?: string[];
+  filesCreated?: string[];
+  filesDeleted?: string[];
+  filesRenamed?: string[];
+  changes: {
+    type: string;
+    lineStart?: number;
+    lineEnd?: number;
+    content?: string;
+    originalLine?: string;
+    newLine?: string;
+  }[];
+  errors?: EditError[];
+  error?: string;
   preview?: EditPreview;
+}
+
+export interface MultiEditResult {
+  success: boolean;
+  totalFiles: number;
+  successfulFiles: number;
+  failedFiles: number;
+  results: EditResult[];
+  checkpointId?: string;
+}
+
+export interface ExecutionResult {
+  success: boolean;
+  output: string;
+  exitCode: number;
+  error?: string;
 }
 
 export interface EditError {
@@ -736,22 +876,86 @@ export interface SearchOptions {
 // Provider Types
 // ============================================================================
 
+export interface ModelInfo {
+  id: string;
+  name: string;
+  provider?: string;
+  tier: 'fast' | 'balanced' | 'reasoning' | 'max' | 'haiku' | 'sonnet' | 'opus';
+  contextWindow: number;
+  maxOutput: number;
+  capabilities: ('completion' | 'reasoning' | 'vision' | 'function-calling' | string)[];
+  freeTier?: boolean;
+  costPer1kTokens?: number;
+  speed?: 'fast' | 'medium' | 'slow';
+}
+
 export interface ProviderInfo {
   id: string;
   name: string;
-  description: string;
-  models: string[];
-  configured: boolean;
-  hasFreeTier: boolean;
-  capabilities: { streaming: boolean; systemPrompts: boolean; functionCalling: boolean; vision: boolean; maxContextWindow: number };
+  baseUrl: string;
+  apiKeyEnv: string;
+  models: ModelInfo[];
+  defaultModel: string;
+  requiresApiKey: boolean;
+  configured?: boolean;
+  hasFreeTier?: boolean;
+  capabilities?: {
+    streaming: boolean;
+    systemPrompts: boolean;
+    functionCalling: boolean;
+    vision: boolean;
+    maxContextWindow: number;
+  };
 }
 
 export interface ProviderResponse {
   provider: string;
   model: string;
   content: string;
-  usage?: { promptTokens: number; completionTokens: number; totalTokens: number };
-  meta?: { responseTime: number; cacheHit: boolean };
+  reasoning?: string;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+    cost?: number;
+  };
+  meta?: {
+    responseTime: number;
+    cacheHit: boolean;
+  };
+  latencyMs?: number;
+}
+
+export interface ProviderConfig {
+  id: string;
+  name: string;
+  baseUrl: string;
+  apiKeyEnv: string;
+  defaultModel: string;
+  requiresApiKey: boolean;
+  model?: string;
+  apiKey?: string;
+  freeTier?: boolean;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface IProviderRouter {
+  chat(messages: Array<{ role: string; content: string }>): Promise<ProviderResponse>;
+  complete(prompt: string): Promise<ProviderResponse>;
+  selectModel(task: string): string;
+}
+
+export interface IVibeProviderRouter {
+  providers: Map<string, ProviderConfig>;
+  defaultProvider: string;
+  currentProvider: string;
+  initializeProviders(): void;
+  selectModel(task: string): string;
+  route(request: { prompt: string; task: string }): Promise<ProviderResponse>;
 }
 
 export interface ProviderError {
@@ -807,6 +1011,25 @@ export type SecurityIssueType =
 // Approval Types
 // ============================================================================
 
+export type ApprovalRisk = 'low' | 'medium' | 'high' | 'critical';
+
+export interface ApprovalDetails {
+  id: string;
+  type: ApprovalType;
+  risk: ApprovalRisk;
+  description: string;
+  operations: string[];
+  status: 'pending' | 'approved' | 'denied';
+  requestedAt: Date;
+  expiresAt?: Date;
+}
+
+export interface IApprovalSystem {
+  requestApproval(details: ApprovalDetails): Promise<boolean>;
+  checkApproval(id: string): ApprovalDetails | undefined;
+  listPending(): ApprovalDetails[];
+}
+
 export interface ApprovalRequest {
   id: string;
   type: ApprovalType;
@@ -847,6 +1070,40 @@ export interface VibeMemory {
 export type VibeMemoryType = 
   | 'project_context' | 'code_pattern' | 'user_preference' | 'team_knowledge'
   | 'error_solution' | 'api_documentation' | 'custom';
+
+/**
+ * Memory entry for the memory system
+ */
+export interface VibeMemoryEntry {
+  id: string;
+  type: MemoryType;
+  content: string;
+  tags: string[];
+  confidence?: number;
+  source?: 'user' | 'session' | 'inference' | 'git';
+  createdAt: Date;
+  lastAccessed?: Date;
+  accessCount: number;
+}
+
+export type MemoryType =
+  | 'project_context'
+  | 'code_pattern'
+  | 'user_preference'
+  | 'team_knowledge'
+  | 'error_solution'
+  | 'api_documentation'
+  | 'action'
+  | 'context'
+  | 'custom';
+
+export interface MemoryQuery {
+  type?: MemoryType;
+  source?: 'user' | 'session' | 'inference' | 'git';
+  keys?: string[];
+  tags?: string[];
+  limit?: number;
+}
 
 // ============================================================================
 // Utility Types

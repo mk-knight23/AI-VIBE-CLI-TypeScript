@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Providers Index
+ * VIBE-CLI v0.0.2 - Providers Index
  */
 
 export { VibeProviderRouter } from './router.js';

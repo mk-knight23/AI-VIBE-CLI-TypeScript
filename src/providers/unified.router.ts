@@ -8,7 +8,7 @@
  * - Provider health monitoring
  * - Task-based model selection
  *
- * Version: 0.0.1
+ * Version: 0.0.2
  */
 
 import * as fs from 'fs';
@@ -16,39 +16,23 @@ import * as path from 'path';
 import * as os from 'os';
 import {
   BaseProviderAdapter,
-  ModelInfo,
-  ProviderConfig,
   ProviderOptions,
-  ProviderResponse,
   StreamCallback,
   selectModelForTask,
   ProviderError,
 } from './adapters/base.adapter.js';
-
+import { OpenAIAdapter, AzureOpenAIAdapter } from './adapters/openai.adapter.js';
+import { AnthropicAdapter, BedrockAnthropicAdapter } from './adapters/anthropic.adapter.js';
+import { GoogleAdapter } from './adapters/google.adapter.js';
+import { OpenRouterAdapter } from './adapters/openrouter.adapter.js';
+import { OllamaAdapter, LMStudioAdapter } from './adapters/ollama.adapter.js';
 import {
-  OpenAIAdapter,
-  AzureOpenAIAdapter,
-} from './adapters/openai.adapter.js';
+  PROVIDER_REGISTRY,
+  getProviderById,
+  getProviderByModel,
+} from './registry.js';
+import type { ChatMessage, ModelInfo, ProviderConfig, ProviderResponse } from '../types.js';
 
-import {
-  AnthropicAdapter,
-  BedrockAnthropicAdapter,
-} from './adapters/anthropic.adapter.js';
-
-import {
-  GoogleAdapter,
-} from './adapters/google.adapter.js';
-
-import {
-  OllamaAdapter,
-  LMStudioAdapter,
-} from './adapters/ollama.adapter.js';
-
-import {
-  OpenRouterAdapter,
-} from './adapters/openrouter.adapter.js';
-
-import type { ChatMessage } from '../types.js';
 
 // ============================================================================
 // TYPES
@@ -120,34 +104,66 @@ export class UnifiedProviderRouter {
   // ============================================================================
 
   /**
-   * Register all provider adapters
+   * Get an adapter by ID, instantiating it lazily if needed
    */
-  private initializeAdapters(): void {
-    // Cloud providers
-    this.registerAdapter('openai', new OpenAIAdapter());
-    this.registerAdapter('azure', new AzureOpenAIAdapter());
-    this.registerAdapter('anthropic', new AnthropicAdapter());
-    this.registerAdapter('bedrock', new BedrockAnthropicAdapter());
-    this.registerAdapter('google', new GoogleAdapter());
-    this.registerAdapter('openrouter', new OpenRouterAdapter());
+  getAdapter(id: string): BaseProviderAdapter | undefined {
+    if (!this.adapters.has(id)) {
+      this.instantiateAdapter(id);
+    }
+    return this.getAdapter(id);
+  }
 
-    // Local providers
-    this.registerAdapter('ollama', new OllamaAdapter());
-    this.registerAdapter('lmstudio', new LMStudioAdapter());
+  /**
+   * Instantiate an adapter by ID
+   */
+  private instantiateAdapter(id: string): void {
+    switch (id) {
+      case 'openai':
+        this.registerAdapter(id, new OpenAIAdapter());
+        break;
+      case 'azure':
+        this.registerAdapter(id, new AzureOpenAIAdapter());
+        break;
+      case 'anthropic':
+        this.registerAdapter(id, new AnthropicAdapter());
+        break;
+      case 'bedrock':
+        this.registerAdapter(id, new BedrockAnthropicAdapter());
+        break;
+      case 'google':
+        this.registerAdapter(id, new GoogleAdapter());
+        break;
+      case 'openrouter':
+        this.registerAdapter(id, new OpenRouterAdapter());
+        break;
+      case 'ollama':
+        this.registerAdapter(id, new OllamaAdapter());
+        break;
+      case 'lmstudio':
+        this.registerAdapter(id, new LMStudioAdapter());
+        break;
+    }
   }
 
   /**
    * Register a provider adapter
    */
-  registerAdapter(id: string, adapter: BaseProviderAdapter): void {
+  private registerAdapter(id: string, adapter: BaseProviderAdapter): void {
     this.adapters.set(id, adapter);
   }
 
   /**
-   * Get an adapter by ID
+   * Register all provider IDs for discovery
    */
-  getAdapter(id: string): BaseProviderAdapter | undefined {
-    return this.adapters.get(id);
+  private initializeAdapters(): void {
+    // Only pre-register the IDs, don't instantiate yet (P2-035)
+    const providerIds = [
+      'openai', 'azure', 'anthropic', 'bedrock', 
+      'google', 'openrouter', 'ollama', 'lmstudio'
+    ];
+    
+    // We can't really list providers without instantiating them if we need their metadata
+    // But for lazy loading, we'll instantiate only when needed for actual chat/stream
   }
 
   /**
@@ -162,33 +178,26 @@ export class UnifiedProviderRouter {
     defaultModel: string;
     freeTier: boolean;
   }> {
-    const providers: Array<{
-      id: string;
-      name: string;
-      configured: boolean;
-      available: boolean;
-      models: number;
-      defaultModel: string;
-      freeTier: boolean;
-    }> = [];
+    return PROVIDER_REGISTRY.map(config => {
+      // Check if instantiated to get more accurate info, otherwise use registry
+      const adapter = this.adapters.get(config.id);
+      const isConfigured = adapter ? adapter.isConfigured() : this.checkApiKeyEnv(config.apiKeyEnv, config.requiresApiKey);
 
-    for (const [id, adapter] of this.adapters) {
-      const config = adapter.getConfig();
-      const models = adapter.getModels();
-      const freeModels = models.filter(m => m.freeTier);
-
-      providers.push({
-        id,
+      return {
+        id: config.id,
         name: config.name,
-        configured: adapter.isConfigured(),
-        available: true, // Would need async check
-        models: models.length,
-        defaultModel: adapter.getDefaultModel(),
-        freeTier: freeModels.length > 0,
-      });
-    }
+        configured: isConfigured,
+        available: true,
+        models: config.models.length,
+        defaultModel: config.defaultModel,
+        freeTier: config.models.some(m => m.freeTier),
+      };
+    });
+  }
 
-    return providers;
+  private checkApiKeyEnv(envVar: string, required: boolean): boolean {
+    if (!required) return true;
+    return !!process.env[envVar];
   }
 
   // ============================================================================
@@ -205,7 +214,7 @@ export class UnifiedProviderRouter {
     const providerId = options?.model?.split('/')[0] || this.userConfig.provider || this.defaultProvider;
     const model = options?.model || this.userConfig.model;
 
-    const adapter = this.adapters.get(providerId);
+    const adapter = this.getAdapter(providerId);
     if (!adapter) {
       throw new Error(`Provider not found: ${providerId}`);
     }
@@ -238,7 +247,7 @@ export class UnifiedProviderRouter {
     let lastError: Error | null = null;
 
     for (const providerId of fallbackProviders) {
-      const adapter = this.adapters.get(providerId);
+      const adapter = this.getAdapter(providerId);
       if (!adapter || !adapter.isConfigured()) continue;
 
       for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
@@ -272,7 +281,7 @@ export class UnifiedProviderRouter {
     options?: ProviderOptions
   ): AsyncGenerator<void> {
     const providerId = this.userConfig.provider || this.defaultProvider;
-    const adapter = this.adapters.get(providerId);
+    const adapter = this.getAdapter(providerId);
 
     if (!adapter) {
       throw new Error(`Provider not found: ${providerId}`);
@@ -296,7 +305,7 @@ export class UnifiedProviderRouter {
    * Select model for a task
    */
   selectModelForTask(task: string): string {
-    const adapter = this.adapters.get(this.defaultProvider);
+    const adapter = this.getAdapter(this.defaultProvider);
     if (!adapter) return this.defaultModel;
 
     const modelInfo = selectModelForTask(task, adapter.getModels());
@@ -327,13 +336,17 @@ export class UnifiedProviderRouter {
 
     const providerId = providerMap[normalized] || provider;
 
-    if (this.adapters.has(providerId)) {
+    if (this.isKnownProvider(providerId)) {
       this.userConfig.provider = providerId;
-      this.userConfig.model = this.adapters.get(providerId)!.getDefaultModel();
+      this.userConfig.model = this.getAdapter(providerId)!.getDefaultModel();
       this.saveUserConfig();
       return true;
     }
     return false;
+  }
+
+  private isKnownProvider(id: string): boolean {
+    return PROVIDER_REGISTRY.some(p => p.id === id);
   }
 
   /**
@@ -357,7 +370,7 @@ export class UnifiedProviderRouter {
    * Get current provider info
    */
   getCurrentProvider(): { id: string; name: string; model: string } | null {
-    const adapter = this.adapters.get(this.userConfig.provider || this.defaultProvider);
+    const adapter = this.getAdapter(this.userConfig.provider || this.defaultProvider);
     if (!adapter) return null;
 
     const config = adapter.getConfig();
@@ -402,40 +415,40 @@ export class UnifiedProviderRouter {
 
   private sortByFreeTier(providers: string[]): string[] {
     return providers.sort((a, b) => {
-      const aFree = this.adapters.get(a)!.getModels().some(m => m.freeTier);
-      const bFree = this.adapters.get(b)!.getModels().some(m => m.freeTier);
+      const aFree = this.getAdapter(a)!.getModels().some(m => m.freeTier);
+      const bFree = this.getAdapter(b)!.getModels().some(m => m.freeTier);
       return bFree ? 1 : -1;
     });
   }
 
   private sortByLocal(providers: string[]): string[] {
     return providers.sort((a, b) => {
-      const aLocal = !this.adapters.get(a)!.getConfig().requiresApiKey;
-      const bLocal = !this.adapters.get(b)!.getConfig().requiresApiKey;
+      const aLocal = !this.getAdapter(a)!.getConfig().requiresApiKey;
+      const bLocal = !this.getAdapter(b)!.getConfig().requiresApiKey;
       return bLocal ? 1 : -1;
     });
   }
 
   private sortBySpeed(providers: string[]): string[] {
     return providers.sort((a, b) => {
-      const aFast = this.adapters.get(a)!.getModels().some(m => m.tier === 'fast');
-      const bFast = this.adapters.get(b)!.getModels().some(m => m.tier === 'fast');
+      const aFast = this.getAdapter(a)!.getModels().some(m => m.tier === 'fast');
+      const bFast = this.getAdapter(b)!.getModels().some(m => m.tier === 'fast');
       return bFast ? 1 : -1;
     });
   }
 
   private sortByQuality(providers: string[]): string[] {
     return providers.sort((a, b) => {
-      const aMax = this.adapters.get(a)!.getModels().some(m => m.tier === 'max');
-      const bMax = this.adapters.get(b)!.getModels().some(m => m.tier === 'max');
+      const aMax = this.getAdapter(a)!.getModels().some(m => m.tier === 'max');
+      const bMax = this.getAdapter(b)!.getModels().some(m => m.tier === 'max');
       return bMax ? 1 : -1;
     });
   }
 
   private sortByPaid(providers: string[]): string[] {
     return providers.sort((a, b) => {
-      const aPaid = this.adapters.get(a)!.getConfig().requiresApiKey;
-      const bPaid = this.adapters.get(b)!.getConfig().requiresApiKey;
+      const aPaid = this.getAdapter(a)!.getConfig().requiresApiKey;
+      const bPaid = this.getAdapter(b)!.getConfig().requiresApiKey;
       return bPaid ? 1 : -1;
     });
   }
@@ -443,8 +456,8 @@ export class UnifiedProviderRouter {
   private sortByBalanced(providers: string[]): string[] {
     // Prefer configured providers, then balanced tier
     return providers.sort((a, b) => {
-      const aAdapter = this.adapters.get(a)!;
-      const bAdapter = this.adapters.get(b)!;
+      const aAdapter = this.getAdapter(a)!;
+      const bAdapter = this.getAdapter(b)!;
 
       // Prefer configured
       const aConfigured = aAdapter.isConfigured();
@@ -487,7 +500,7 @@ export class UnifiedProviderRouter {
    * Set API key for a provider
    */
   setApiKey(provider: string, apiKey: string): boolean {
-    if (!this.adapters.has(provider)) return false;
+    if (!this.isKnownProvider(provider)) return false;
 
     if (!this.userConfig.apiKeys) {
       this.userConfig.apiKeys = {};
@@ -501,7 +514,7 @@ export class UnifiedProviderRouter {
    * Check if provider is configured
    */
   isProviderConfigured(provider: string): boolean {
-    const adapter = this.adapters.get(provider);
+    const adapter = this.getAdapter(provider);
     if (!adapter) return false;
 
     // Check user config first
@@ -530,7 +543,7 @@ export class UnifiedProviderRouter {
 
     // Update average latency
     const totalLatency = this.stats.averageLatencyMs * (this.stats.successfulRequests - 1);
-    this.stats.averageLatencyMs = (totalLatency + response.latencyMs) / this.stats.successfulRequests;
+    this.stats.averageLatencyMs = (totalLatency + (response.latencyMs || 0)) / this.stats.successfulRequests;
   }
 
   private recordFailure(): void {
@@ -569,10 +582,10 @@ export class UnifiedProviderRouter {
   getFreeTierModels(): Array<{ provider: string; model: ModelInfo }> {
     const freeModels: Array<{ provider: string; model: ModelInfo }> = [];
 
-    for (const [providerId, adapter] of this.adapters) {
-      for (const model of adapter.getModels()) {
+    for (const provider of PROVIDER_REGISTRY) {
+      for (const model of provider.models) {
         if (model.freeTier) {
-          freeModels.push({ provider: providerId, model });
+          freeModels.push({ provider: provider.id, model });
         }
       }
     }
@@ -584,26 +597,18 @@ export class UnifiedProviderRouter {
    * Get local providers (no API key required)
    */
   getLocalProviders(): string[] {
-    const local: string[] = [];
-    for (const [providerId, adapter] of this.adapters) {
-      if (!adapter.getConfig().requiresApiKey) {
-        local.push(providerId);
-      }
-    }
-    return local;
+    return PROVIDER_REGISTRY
+      .filter(p => !p.requiresApiKey)
+      .map(p => p.id);
   }
 
   /**
    * Get configured providers (have API keys)
    */
   getConfiguredProviders(): string[] {
-    const configured: string[] = [];
-    for (const [providerId, adapter] of this.adapters) {
-      if (this.isProviderConfigured(providerId)) {
-        configured.push(providerId);
-      }
-    }
-    return configured;
+    return PROVIDER_REGISTRY
+      .filter(p => this.isProviderConfigured(p.id))
+      .map(p => p.id);
   }
 }
 
