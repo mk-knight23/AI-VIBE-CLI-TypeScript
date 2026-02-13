@@ -1,6 +1,6 @@
 import { createLogger } from '../../utils/pino-logger.js';
 import { toolRegistry } from '../../tools/registry/index.js';
-import { mcpManager } from '../../mcp/index.js';
+import { enhancedMCPManager } from '../../mcp/enhanced-manager.js';
 
 const logger = createLogger('plugin-manager');
 
@@ -29,7 +29,7 @@ export class PluginManager {
         const tools = toolRegistry.list();
 
         // 2. Get active MCP server status
-        const mcpServers = mcpManager.getStatus();
+        const mcpServers = enhancedMCPManager.getServerStatus();
 
         // 3. Get loaded plugins
         const loadedPlugins = Array.from(this.plugins.values()).map(p => ({

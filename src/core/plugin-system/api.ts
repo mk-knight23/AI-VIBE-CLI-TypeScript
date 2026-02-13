@@ -10,6 +10,7 @@ import { createLogger } from '../../utils/pino-logger.js';
 import { progressManager } from '../../ui/progress-manager.js';
 import { configManager } from '../config-system.js';
 import { PluginAPI, PluginCommand, PluginManifest } from '../../types/plugin.js';
+import { checkFileAccess } from './security.js';
 
 const logger = createLogger('plugin-api');
 
@@ -21,6 +22,7 @@ export function createPluginAPI(
   program: Command
 ): PluginAPI {
   const pluginLogger = createLogger(`plugin:${manifest.name}`);
+  const pluginDir = path.dirname(path.resolve(manifest.main));
 
   return {
     // Command registration
@@ -86,20 +88,49 @@ export function createPluginAPI(
       },
     },
 
-    // File system (sandboxed to plugin directory)
+    // File system (sandboxed to plugin directory with permission checks)
     fs: {
       readFile: async (filepath) => {
+        // Check permissions first
+        const hasAccess = checkFileAccess(filepath, manifest.permissions?.filesystem, pluginDir);
+        if (!hasAccess) {
+          throw new Error(`Permission denied: Cannot read ${filepath}`);
+        }
         // Ensure path is within plugin directory
-        const resolved = path.resolve(filepath);
+        const resolved = path.resolve(pluginDir, filepath);
+        if (!resolved.startsWith(pluginDir)) {
+          throw new Error(`Security: Path traversal detected for ${filepath}`);
+        }
         return fs.promises.readFile(resolved, 'utf-8');
       },
       writeFile: async (filepath, content) => {
-        const resolved = path.resolve(filepath);
+        // Check write permissions
+        const writePerms = manifest.permissions?.filesystem?.write || [];
+        if (writePerms.length === 0) {
+          throw new Error(`Permission denied: No write permissions granted`);
+        }
+        const hasAccess = checkFileAccess(filepath, manifest.permissions?.filesystem, pluginDir);
+        if (!hasAccess) {
+          throw new Error(`Permission denied: Cannot write ${filepath}`);
+        }
+        // Ensure path is within plugin directory
+        const resolved = path.resolve(pluginDir, filepath);
+        if (!resolved.startsWith(pluginDir)) {
+          throw new Error(`Security: Path traversal detected for ${filepath}`);
+        }
         await fs.promises.writeFile(resolved, content, 'utf-8');
       },
       exists: async (filepath) => {
-        const resolved = path.resolve(filepath);
-        return fs.existsSync(resolved);
+        // Check permissions first
+        const hasAccess = checkFileAccess(filepath, manifest.permissions?.filesystem, pluginDir);
+        if (!hasAccess) {
+          return false; // Don't reveal path existence
+        }
+        const resolved = path.resolve(pluginDir, filepath);
+        if (!resolved.startsWith(pluginDir)) {
+          return false;
+        }
+        return fs.promises.access(resolved).then(() => true, () => false);
       },
     },
 

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Secrets Manager
+ * VIBE-CLI v0.0.2 - Secrets Manager
  *
  * Handles secure storage and retrieval of sensitive data:
  * - Environment variable integration

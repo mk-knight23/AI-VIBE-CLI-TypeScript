@@ -11,6 +11,11 @@ import { errors } from '../../utils/errors.js';
 import { VibePlugin, PluginManifest, InstalledPlugin } from '../../types/plugin.js';
 import { validatePluginDirectory } from './validator.js';
 import { createPluginAPI } from './api.js';
+import {
+  validatePermissions,
+  verifySignature,
+  SECURITY_POLICY
+} from './security.js';
 
 const logger = createLogger('plugin-loader');
 
@@ -39,6 +44,45 @@ export async function loadPlugin(
   }
 
   const { manifest } = validation;
+
+  // Security: Validate permissions
+  if (SECURITY_POLICY.requireExplicitPermissions && !manifest.permissions) {
+    throw errors.validationError(
+      'plugin',
+      'Plugin must declare permissions for security. See plugin documentation for details.'
+    );
+  }
+
+  if (manifest.permissions) {
+    const permValidation = validatePermissions(manifest);
+    if (!permValidation.valid) {
+      throw errors.validationError(
+        'plugin',
+        `Invalid permissions: ${permValidation.errors.join(', ')}`
+      );
+    }
+  }
+
+  // Security: Verify signature
+  if (SECURITY_POLICY.requireSignature) {
+    const signatureCheck = await verifySignature(pluginPath, manifest);
+    if (!signatureCheck.valid) {
+      logger.error(
+        { plugin: manifest.name, error: signatureCheck.error },
+        'Plugin signature verification failed'
+      );
+      throw errors.validationError(
+        'plugin',
+        `Signature verification failed: ${signatureCheck.error}`
+      );
+    }
+    logger.info({ plugin: manifest.name, signer: signatureCheck.signer }, 'Plugin signature verified');
+  } else {
+    logger.warn(
+      { plugin: manifest.name },
+      'Loading unsigned plugin (signature verification disabled - not recommended for production)'
+    );
+  }
 
   // Check compatibility
   const vibeVersion = '0.0.2'; // TODO: Get from package.json

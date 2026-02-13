@@ -5,11 +5,19 @@ const logger = createLogger('api-auth');
 
 // Simple API Key middleware
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+    const apiKey = req.headers['x-api-key'];
 
-    // TODO: In a real production app, this would check against a DB or secure secret store
-    // For now, we'll use a placeholder or check against an environment variable
-    const validApiKey = process.env.VIBE_API_KEY || 'vibe-secret-key';
+    // Require explicit API key configuration - fail closed for security
+    const validApiKey = process.env.VIBE_API_KEY;
+
+    if (!validApiKey) {
+        logger.error('VIBE_API_KEY environment variable is not set. API access is disabled.');
+        res.status(500).json({
+            error: 'Server Configuration Error',
+            message: 'API key not configured. Please set VIBE_API_KEY environment variable.'
+        });
+        return;
+    }
 
     if (!apiKey || apiKey !== validApiKey) {
         logger.warn({ ip: req.ip, url: req.url }, 'Unauthorized API access attempt');

@@ -8,7 +8,8 @@ import * as path from 'path';
 import { z } from 'zod';
 import { createLogger } from '../../utils/pino-logger.js';
 import { errors } from '../../utils/errors.js';
-import { PluginManifest, PluginPermission } from '../../types/plugin.js';
+import { PluginManifest } from '../../types/plugin.js';
+import { PluginPermissions } from './security.js';
 
 const logger = createLogger('plugin-validator');
 
@@ -139,10 +140,21 @@ export async function validatePluginDirectory(pluginPath: string): Promise<Valid
 }
 
 /**
+ * Valid plugin permission strings
+ */
+type PluginPermissionString =
+  | 'filesystem:read'
+  | 'filesystem:write'
+  | 'network'
+  | 'shell'
+  | 'git'
+  | 'config:read';
+
+/**
  * Check if permission is valid
  */
-export function isValidPermission(permission: string): permission is PluginPermission {
-  const valid: PluginPermission[] = [
+export function isValidPermission(permission: string): permission is PluginPermissionString {
+  const valid: PluginPermissionString[] = [
     'filesystem:read',
     'filesystem:write',
     'network',
@@ -150,5 +162,5 @@ export function isValidPermission(permission: string): permission is PluginPermi
     'git',
     'config:read'
   ];
-  return valid.includes(permission as PluginPermission);
+  return valid.includes(permission as PluginPermissionString);
 }
