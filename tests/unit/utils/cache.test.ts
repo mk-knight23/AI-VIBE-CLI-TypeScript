@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { Cache, LRUCache } from '../../../src/utils/cache';
+import { Cache } from '../../../src/utils/cache';
 
 describe('Cache', () => {
   let cache: Cache<string>;
@@ -154,11 +154,11 @@ describe('Cache', () => {
   });
 });
 
-describe('LRUCache', () => {
-  let cache: LRUCache<string>;
+describe('LRU Eviction', () => {
+  let cache: Cache<string>;
 
   beforeEach(() => {
-    cache = new LRUCache<string>({ ttl: 1000, maxSize: 3 });
+    cache = new Cache<string>({ ttl: 1000, maxSize: 3 });
   });
 
   it('should move accessed item to most recently used', () => {

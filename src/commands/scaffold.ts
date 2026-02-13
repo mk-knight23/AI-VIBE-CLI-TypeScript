@@ -183,7 +183,7 @@ export default router;
     extension: 'test.ts',
     template: `import { describe, it, expect } from 'vitest';
 
-describe('{{targetName}}', () => {
+describe('{{testName}}', () => {
   it('should work correctly', () => {
     // Add your test here
     expect(true).toBe(true);
@@ -378,6 +378,7 @@ async function scaffoldComponent(
   // Convert target name to proper format
   const componentName = toPascalCase(targetName);
   const componentFileName = toKebabCase(targetName);
+  const testName = toCamelCase(targetName); // For test files, use camelCase
 
   // Determine file path
   let filePath: string;
@@ -412,7 +413,8 @@ async function scaffoldComponent(
     .replace(/\{\{ComponentName\}\}/g, componentName)
     .replace(/\{\{component-name\}\}/g, componentFileName)
     .replace(/\{\{routeName\}\}/g, componentFileName)
-    .replace(/\{\{targetName\}\}/g, componentName);
+    .replace(/\{\{targetName\}\}/g, componentName) // For backwards compatibility
+    .replace(/\{\{testName\}\}/g, testName); // For test files, use camelCase
 
   // Create directory if needed
   const dir = path.dirname(filePath);
@@ -499,6 +501,16 @@ function toKebabCase(str: string): string {
     .replace(/([a-z])([A-Z])/g, '$1-$2')
     .replace(/[_\s]+/g, '-')
     .toLowerCase();
+}
+
+/**
+ * Convert string to camelCase
+ */
+function toCamelCase(str: string): string {
+  // Handle kebab-case, snake_case, and space separated
+  return str
+    .replace(/[-_\s]+(.)?/g, (_, c) => c ? c.toUpperCase() : '')
+    .replace(/^(.)/, (c) => c.toLowerCase()); // lowercase first letter
 }
 
 /**
