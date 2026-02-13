@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Task Planner
+ * VIBE-CLI v0.0.2 - Task Planner
  * Auto-decompose complex tasks into step-by-step plans
  */
 

@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Progress Tracker
+ * VIBE-CLI v0.0.2 - Progress Tracker
  * Track milestones and progress for task execution
  */
 

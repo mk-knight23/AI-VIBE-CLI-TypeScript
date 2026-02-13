@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Agent Audit Logger
+ * VIBE-CLI v0.0.2 - Agent Audit Logger
  * Records actions and tool calls for traceability.
  */
 
