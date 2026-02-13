@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Error Analyzer
+ * VIBE-CLI v0.0.2 - Error Analyzer
  * Stack trace parsing, error pattern recognition, and debugging assistance
  */
 

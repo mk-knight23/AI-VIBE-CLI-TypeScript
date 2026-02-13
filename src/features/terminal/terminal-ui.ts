@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Terminal UI
+ * VIBE-CLI v0.0.2 - Terminal UI
  * Interactive command preview with syntax highlighting
  */
 

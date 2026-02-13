@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Terminal Command Generator
+ * VIBE-CLI v0.0.2 - Terminal Command Generator
  * Convert natural language to shell commands
  */
 

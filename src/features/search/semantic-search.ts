@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Semantic Search
+ * VIBE-CLI v0.0.2 - Semantic Search
  * Intelligent code search with semantic understanding
  */
 
@@ -461,34 +461,33 @@ export class SemanticSearchEngine {
   }
 
   /**
-   * Levenshtein distance
+   * Levenshtein distance (P3-065)
+   * Space-optimized version using two rows only: O(min(n,m)) space
    */
   private levenshteinDistance(str1: string, str2: string): number {
-    const matrix: number[][] = [];
-
-    for (let i = 0; i <= str2.length; i++) {
-      matrix[i] = [i];
+    if (str1.length < str2.length) {
+      [str1, str2] = [str2, str1];
     }
 
-    for (let j = 0; j <= str1.length; j++) {
-      matrix[0][j] = j;
-    }
+    const n = str1.length;
+    const m = str2.length;
+    let prevRow = Array.from({ length: m + 1 }, (_, i) => i);
+    let currentRow = new Array(m + 1);
 
-    for (let i = 1; i <= str2.length; i++) {
-      for (let j = 1; j <= str1.length; j++) {
-        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
+    for (let i = 1; i <= n; i++) {
+      currentRow[0] = i;
+      for (let j = 1; j <= m; j++) {
+        const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        currentRow[j] = Math.min(
+          currentRow[j - 1] + 1,
+          prevRow[j] + 1,
+          prevRow[j - 1] + cost
+        );
       }
+      [prevRow, currentRow] = [currentRow, prevRow];
     }
 
-    return matrix[str2.length][str1.length];
+    return prevRow[m];
   }
 
   /**

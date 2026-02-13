@@ -1,5 +1,5 @@
 /**
- * VIBE-CLI v0.0.1 - Debug Manager
+ * VIBE-CLI v0.0.2 - Debug Manager
  * Stack trace analysis, error pattern detection, and debugging assistance
  */
 
