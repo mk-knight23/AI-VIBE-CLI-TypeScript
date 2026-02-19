@@ -2,117 +2,135 @@
  * Unit tests for error utilities
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   VibeError,
-  ModuleError,
-  RouteError,
-  ProviderError,
-  ConfigurationError,
-  ValidationError,
-  createErrorResponse,
-  withErrorHandling,
-} from '../../../src/utils/error';
+  ErrorCode,
+  errors,
+  wrapError,
+  isVibeError,
+} from '../../../src/utils/errors';
 
 describe('Error Classes', () => {
   describe('VibeError', () => {
-    it('should create error with message and code', () => {
-      const error = new VibeError('Test error', 'TEST_CODE');
+    it('should create error with ErrorDetails', () => {
+      const error = new VibeError({
+        code: ErrorCode.UNKNOWN_ERROR,
+        message: 'Test error',
+        userMessage: 'Something went wrong',
+      });
       expect(error.message).toBe('Test error');
-      expect(error.code).toBe('TEST_CODE');
+      expect(error.code).toBe(ErrorCode.UNKNOWN_ERROR);
       expect(error.name).toBe('VibeError');
+      expect(error.userMessage).toBe('Something went wrong');
+      expect(error.timestamp).toBeInstanceOf(Date);
     });
 
-    it('should create error with details', () => {
-      const error = new VibeError('Test error', 'TEST_CODE', { key: 'value' });
-      expect(error.details).toEqual({ key: 'value' });
+    it('should create error with suggestion and context', () => {
+      const error = new VibeError({
+        code: ErrorCode.CONFIG_NOT_FOUND,
+        message: 'Config missing',
+        userMessage: 'No config found',
+        suggestion: 'Run vibe config init',
+        context: { key: 'value' },
+      });
+      expect(error.suggestion).toBe('Run vibe config init');
+      expect(error.context).toEqual({ key: 'value' });
     });
-  });
 
-  describe('ModuleError', () => {
-    it('should create module error with module name', () => {
-      const error = new ModuleError('Module failed', 'test_module', 'execute');
-      expect(error.message).toBe('Module failed');
-      expect(error.moduleName).toBe('test_module');
-      expect(error.action).toBe('execute');
-      expect(error.code).toBe('MODULE_ERROR');
+    it('should format for display', () => {
+      const error = new VibeError({
+        code: ErrorCode.API_KEY_MISSING,
+        message: 'API key missing',
+        userMessage: 'No API key configured',
+        suggestion: 'Set the API key',
+      });
+      const display = error.formatForDisplay();
+      expect(display).toContain('No API key configured');
+      expect(display).toContain('Set the API key');
     });
-  });
 
-  describe('RouteError', () => {
-    it('should create route error with route info', () => {
-      const error = new RouteError('Route not found', '/api/users', 'invalid input');
-      expect(error.message).toBe('Route not found');
-      expect(error.route).toBe('/api/users');
-      expect(error.input).toBe('invalid input');
-      expect(error.code).toBe('ROUTE_ERROR');
-    });
-  });
-
-  describe('ProviderError', () => {
-    it('should create provider error with provider info', () => {
-      const error = new ProviderError('API failed', 'openai', 'gpt-4o', 401);
-      expect(error.message).toBe('API failed');
-      expect(error.provider).toBe('openai');
-      expect(error.model).toBe('gpt-4o');
-      expect(error.statusCode).toBe(401);
-      expect(error.code).toBe('PROVIDER_ERROR');
-    });
-  });
-
-  describe('ConfigurationError', () => {
-    it('should create configuration error', () => {
-      const error = new ConfigurationError('Invalid config', 'API_KEY');
-      expect(error.message).toBe('Invalid config');
-      expect(error.configKey).toBe('API_KEY');
-      expect(error.code).toBe('CONFIGURATION_ERROR');
-    });
-  });
-
-  describe('ValidationError', () => {
-    it('should create validation error with field info', () => {
-      const error = new ValidationError('Invalid email', 'email', 'not-an-email');
-      expect(error.message).toBe('Invalid email');
-      expect(error.field).toBe('email');
-      expect(error.value).toBe('not-an-email');
-      expect(error.code).toBe('VALIDATION_ERROR');
+    it('should serialize to JSON', () => {
+      const error = new VibeError({
+        code: ErrorCode.VALIDATION_ERROR,
+        message: 'Invalid input',
+        userMessage: 'Bad input',
+      });
+      const json = error.toJSON();
+      expect(json.code).toBe(ErrorCode.VALIDATION_ERROR);
+      expect(json.message).toBe('Invalid input');
+      expect(json.timestamp).toBeDefined();
     });
   });
 });
 
-describe('createErrorResponse', () => {
-  it('should create error response from VibeError', () => {
-    const error = new VibeError('Test error', 'TEST_CODE', { extra: 'data' });
-    const response = createErrorResponse(error, { context: 'test' });
-
-    expect(response.success).toBe(false);
-    expect(response.error).toBe('Test error');
-    expect(response.code).toBe('TEST_CODE');
-    expect(response.context).toEqual({ context: 'test', extra: 'data' });
+describe('errors helper', () => {
+  it('should create configNotFound error', () => {
+    const error = errors.configNotFound('/path/to/config');
+    expect(error.code).toBe(ErrorCode.CONFIG_NOT_FOUND);
+    expect(error.message).toContain('/path/to/config');
   });
 
-  it('should create error response from generic Error', () => {
-    const error = new Error('Generic error');
-    const response = createErrorResponse(error);
+  it('should create apiKeyMissing error', () => {
+    const error = errors.apiKeyMissing('openai');
+    expect(error.code).toBe(ErrorCode.API_KEY_MISSING);
+    expect(error.message).toContain('openai');
+  });
 
-    expect(response.success).toBe(false);
-    expect(response.error).toBe('Generic error');
-    expect(response.code).toBe('UNKNOWN_ERROR');
+  it('should create validationError', () => {
+    const error = errors.validationError('email', 'invalid format');
+    expect(error.code).toBe(ErrorCode.VALIDATION_ERROR);
+    expect(error.message).toContain('email');
+  });
+
+  it('should create timeoutError', () => {
+    const error = errors.timeoutError('fetch', 5000);
+    expect(error.code).toBe(ErrorCode.TIMEOUT_ERROR);
+    expect(error.message).toContain('5000');
+  });
+
+  it('should create unknownError', () => {
+    const cause = new Error('root cause');
+    const error = errors.unknownError(cause);
+    expect(error.code).toBe(ErrorCode.UNKNOWN_ERROR);
+    expect(error.message).toContain('root cause');
   });
 });
 
-describe('withErrorHandling', () => {
-  it('should return result on success', async () => {
-    const fn = async () => 'success';
-    const result = await withErrorHandling(fn, () => 'error');
-    expect(result).toBe('success');
+describe('wrapError', () => {
+  it('should pass through VibeError unchanged', () => {
+    const original = errors.apiKeyMissing('test');
+    const wrapped = wrapError(original);
+    expect(wrapped).toBe(original);
   });
 
-  it('should return error handler result on failure', async () => {
-    const fn = async () => {
-      throw new Error('fail');
-    };
-    const result = await withErrorHandling(fn, (e) => `handled: ${e.message}`);
-    expect(result).toBe('handled: fail');
+  it('should wrap generic Error in VibeError', () => {
+    const generic = new Error('generic failure');
+    const wrapped = wrapError(generic);
+    expect(wrapped).toBeInstanceOf(VibeError);
+    expect(wrapped.code).toBe(ErrorCode.UNKNOWN_ERROR);
+    expect(wrapped.message).toBe('generic failure');
+  });
+
+  it('should wrap string errors', () => {
+    const wrapped = wrapError('something broke');
+    expect(wrapped).toBeInstanceOf(VibeError);
+    expect(wrapped.message).toBe('something broke');
+  });
+});
+
+describe('isVibeError', () => {
+  it('should return true for VibeError', () => {
+    const error = errors.unknownError();
+    expect(isVibeError(error)).toBe(true);
+  });
+
+  it('should return false for generic Error', () => {
+    expect(isVibeError(new Error('test'))).toBe(false);
+  });
+
+  it('should return false for non-errors', () => {
+    expect(isVibeError('string')).toBe(false);
+    expect(isVibeError(null)).toBe(false);
   });
 });

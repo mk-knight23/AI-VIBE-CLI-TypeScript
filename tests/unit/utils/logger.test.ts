@@ -2,89 +2,56 @@
  * Unit tests for logger utility
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Logger, LogLevel, logger, createLogger } from '../../../src/utils/logger';
-
-describe('Logger', () => {
-  let testLogger: Logger;
-
-  beforeEach(() => {
-    testLogger = Logger.getInstance();
-    testLogger.setLevel(LogLevel.DEBUG);
-    testLogger.setModuleName('Test');
-    testLogger.enable();
-  });
-
-  describe('setLevel', () => {
-    it('should set level from LogLevel enum', () => {
-      testLogger.setLevel(LogLevel.INFO);
-      expect(testLogger).toBeDefined();
-    });
-
-    it('should set level from string', () => {
-      testLogger.setLevel('WARN');
-      expect(testLogger).toBeDefined();
-    });
-  });
-
-  describe('setModuleName', () => {
-    it('should set module name', () => {
-      testLogger.setModuleName('MyModule');
-      expect(testLogger).toBeDefined();
-    });
-  });
-
-  describe('enable/disable', () => {
-    it('should enable logging', () => {
-      testLogger.disable();
-      testLogger.enable();
-      expect(testLogger).toBeDefined();
-    });
-
-    it('should disable logging', () => {
-      testLogger.disable();
-      // Silent - no output expected
-    });
-  });
-
-  describe('child logger', () => {
-    it('should create child logger', () => {
-      const child = testLogger.child('ChildModule');
-      expect(child).toBeDefined();
-    });
-  });
-
-  describe('time/timeSync', () => {
-    it('should time async function', async () => {
-      const result = await testLogger.time('test', async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
-        return 'done';
-      });
-      expect(result).toBe('done');
-    });
-
-    it('should time sync function', () => {
-      const result = testLogger.timeSync('test', () => {
-        return 'done';
-      });
-      expect(result).toBe('done');
-    });
-  });
-});
-
-describe('LogLevel enum', () => {
-  it('should have correct values', () => {
-    expect(LogLevel.DEBUG).toBe(0);
-    expect(LogLevel.INFO).toBe(1);
-    expect(LogLevel.WARN).toBe(2);
-    expect(LogLevel.ERROR).toBe(3);
-    expect(LogLevel.NONE).toBe(4);
-  });
-});
+import { describe, it, expect, vi } from 'vitest';
+import {
+  createLogger,
+  getRootLogger,
+  createTimer,
+  cliLogger,
+  commandLogger,
+} from '../../../src/utils/pino-logger';
 
 describe('createLogger', () => {
-  it('should create logger with module name', () => {
-    const log = createLogger('TestModule');
-    expect(log).toBeDefined();
+  it('should create a child logger with component name', () => {
+    const logger = createLogger('TestModule');
+    expect(logger).toBeDefined();
+    expect(typeof logger.info).toBe('function');
+    expect(typeof logger.error).toBe('function');
+    expect(typeof logger.warn).toBe('function');
+    expect(typeof logger.debug).toBe('function');
+  });
+
+  it('should create a child logger with additional meta', () => {
+    const logger = createLogger('TestModule', { version: '1.0.0' });
+    expect(logger).toBeDefined();
+  });
+});
+
+describe('getRootLogger', () => {
+  it('should return the root logger', () => {
+    const root = getRootLogger();
+    expect(root).toBeDefined();
+    expect(typeof root.info).toBe('function');
+  });
+});
+
+describe('createTimer', () => {
+  it('should measure elapsed time', async () => {
+    const timer = createTimer();
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const elapsed = timer.elapsedMs();
+    expect(elapsed).toBeGreaterThan(0);
+  });
+});
+
+describe('Convenience loggers', () => {
+  it('should export cliLogger', () => {
+    expect(cliLogger).toBeDefined();
+    expect(typeof cliLogger.info).toBe('function');
+  });
+
+  it('should export commandLogger', () => {
+    expect(commandLogger).toBeDefined();
+    expect(typeof commandLogger.info).toBe('function');
   });
 });
