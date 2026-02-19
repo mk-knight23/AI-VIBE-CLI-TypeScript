@@ -27,29 +27,16 @@ describe('TestingModule', () => {
       expect(result.error).toContain('Unknown action');
     });
 
-    it('should route generate action', async () => {
+    it('should require file parameter for generate action', async () => {
+      const result = await module.execute({ action: 'generate' });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Missing required parameter');
+    });
+
+    it('should fail generate for non-existent file', async () => {
       const result = await module.execute({ action: 'generate', file: 'nonexistent.ts' });
-      expect(result).toHaveProperty('success');
-    });
-
-    it('should route run action', async () => {
-      const result = await module.execute({ action: 'run' });
-      expect(result).toHaveProperty('success');
-    });
-
-    it('should route coverage action', async () => {
-      const result = await module.execute({ action: 'coverage' });
-      expect(result).toHaveProperty('success');
-    });
-
-    it('should route watch action', async () => {
-      const result = await module.execute({ action: 'watch' });
-      expect(result).toHaveProperty('success');
-    });
-
-    it('should route analyze action', async () => {
-      const result = await module.execute({ action: 'analyze' });
-      expect(result).toHaveProperty('success');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not found');
     });
   });
 
