@@ -7,6 +7,7 @@ interface CacheEntry<T> {
   value: T;
   expiresAt: number;
   createdAt: number;
+  lastAccessedAt: number;
 }
 
 interface CacheOptions {
@@ -20,6 +21,7 @@ export class Cache<T = any> {
   private maxSize: number;
   private hits: number = 0;
   private misses: number = 0;
+  private accessCounter: number = 0;
 
   constructor(options: CacheOptions = {}) {
     this.defaultTTL = options.ttl ?? 5 * 60 * 1000; // 5 minutes default
@@ -43,6 +45,8 @@ export class Cache<T = any> {
     }
 
     this.hits++;
+    // Update last accessed time for LRU eviction
+    entry.lastAccessedAt = ++this.accessCounter;
     return entry.value;
   }
 
@@ -74,11 +78,13 @@ export class Cache<T = any> {
       if (oldestKey) this.store.delete(oldestKey);
     }
 
-    const expiresAt = Date.now() + (ttl ?? this.defaultTTL);
+    const now = Date.now();
+    const expiresAt = now + (ttl ?? this.defaultTTL);
     this.store.set(key, {
       value,
       expiresAt,
-      createdAt: Date.now(),
+      createdAt: now,
+      lastAccessedAt: ++this.accessCounter,
     });
   }
 
@@ -157,8 +163,8 @@ export class Cache<T = any> {
     let oldestTime = Infinity;
 
     for (const [key, entry] of this.store) {
-      if (entry.createdAt < oldestTime) {
-        oldestTime = entry.createdAt;
+      if (entry.lastAccessedAt < oldestTime) {
+        oldestTime = entry.lastAccessedAt;
         oldest = key;
       }
     }

@@ -138,8 +138,10 @@ export function getFirstChar(str: string): string {
         error: 'test error',
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('analyze error');
+      // fix() returns success: true with individual fix failures in fixes array
+      expect(result.success).toBe(true);
+      expect(result.fixes?.[0].success).toBe(false);
+      expect(result.fixes?.[0].error).toContain('analyze error');
     });
   });
 
@@ -169,7 +171,9 @@ export function getFirstChar(str: string): string {
       const originalContent = 'export function original() {}';
       fs.writeFileSync(testFile, originalContent);
 
-      await fix(['backup-test.ts'], mockPrimitives);
+      await fix(['backup-test.ts'], mockPrimitives, {
+        test: false, // Disable testing so backup is not cleaned up
+      });
 
       // Backup should exist
       const backupFile = testFile + '.backup';
@@ -247,6 +251,10 @@ export function getFirstChar(str: string): string {
       const testFile = path.join(testDir, 'rollback-test.ts');
       const originalContent = 'export function original() {}';
       fs.writeFileSync(testFile, originalContent);
+
+      // Create corresponding test file so testFix uses the execution mock
+      const correspondingTestFile = path.join(testDir, 'rollback-test.test.ts');
+      fs.writeFileSync(correspondingTestFile, 'test("placeholder", () => {});');
 
       // Mock test failure
       mockPrimitives.execution.execute.mockResolvedValue({

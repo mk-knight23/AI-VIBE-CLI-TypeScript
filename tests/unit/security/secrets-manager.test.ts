@@ -11,6 +11,16 @@ describe('SecretsManager', () => {
 
   beforeEach(() => {
     originalEnv = { ...process.env };
+    // Remove env vars that would be auto-detected as secrets
+    const envPrefixes = ['VIBE_', 'OPENAI_', 'ANTHROPIC_', 'GOOGLE_', 'GITHUB_'];
+    for (const key of Object.keys(process.env)) {
+      for (const prefix of envPrefixes) {
+        if (key.startsWith(prefix) && (key.includes('KEY') || key.includes('TOKEN') || key.includes('SECRET'))) {
+          delete process.env[key];
+          break;
+        }
+      }
+    }
     manager = new SecretsManager({ storage: 'memory' });
   });
 
