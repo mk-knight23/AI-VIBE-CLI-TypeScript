@@ -1,7 +1,7 @@
 {
   "name": "vibe-ai-teammate",
   "version": "0.0.2",
-  "description": "VIBE CLI - AI Developer Teammate. One command, infinite capability.",
+  "description": "Opinionated AI development tool using an 8-primitives architecture and MCP for context-aware coding assistance.",
   "main": "dist/index.js",
   "bin": {
     "vibe": "bin/vibe.js"
