@@ -2,7 +2,7 @@
  * Unit tests for PII Scrubber
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { PIIScrubber, piiScrubber, ScrubberConfig, RedactionPattern } from '../../../src/security/pii-scrubber';
 
 describe('PIIScrubber', () => {

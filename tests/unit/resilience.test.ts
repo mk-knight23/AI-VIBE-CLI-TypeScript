@@ -1,15 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
-import { CircuitBreaker, CircuitState } from '../../src/core/resilience/circuit-breaker';
+import { CircuitBreaker, CircuitBreakerState } from '../../src/core/resilience/circuit-breaker';
 import { ResilienceManager } from '../../src/core/resilience/resilience-manager';
-import { VibeError, ErrorCode } from '../../src/utils/errors';
+import { ErrorCode } from '../../src/utils/errors';
 
 describe('Resilience Framework', () => {
     describe('CircuitBreaker', () => {
         it('should transition to OPEN after failures', async () => {
             const cb = new CircuitBreaker({
-                name: 'test-cb',
                 failureThreshold: 2,
-                resetTimeoutMs: 100
+                resetTimeout: 100
             });
 
             const fail = async () => { throw new Error('fail'); };
@@ -17,19 +16,18 @@ describe('Resilience Framework', () => {
             await expect(cb.execute(fail)).rejects.toThrow();
             await expect(cb.execute(fail)).rejects.toThrow();
 
-            expect(cb.getState()).toBe(CircuitState.OPEN);
-            await expect(cb.execute(fail)).rejects.toThrow('is OPEN');
+            expect(cb.getState()).toBe('open' as CircuitBreakerState);
+            await expect(cb.execute(fail)).rejects.toThrow('Circuit breaker is open');
         });
 
         it('should transition to HALF_OPEN after reset timeout', async () => {
             const cb = new CircuitBreaker({
-                name: 'test-cb',
                 failureThreshold: 1,
-                resetTimeoutMs: 50
+                resetTimeout: 50
             });
 
             await expect(cb.execute(async () => { throw new Error('fail'); })).rejects.toThrow();
-            expect(cb.getState()).toBe(CircuitState.OPEN);
+            expect(cb.getState()).toBe('open' as CircuitBreakerState);
 
             await new Promise(resolve => setTimeout(resolve, 60));
 
@@ -37,7 +35,7 @@ describe('Resilience Framework', () => {
             const success = async () => 'ok';
             const result = await cb.execute(success);
             expect(result).toBe('ok');
-            expect(cb.getState()).toBe(CircuitState.CLOSED);
+            expect(cb.getState()).toBe('closed' as CircuitBreakerState);
         });
     });
 
@@ -76,9 +74,8 @@ describe('Resilience Framework', () => {
 
         it('should integrate with CircuitBreaker', async () => {
             const cb = new CircuitBreaker({
-                name: 'integrated-cb',
                 failureThreshold: 1,
-                resetTimeoutMs: 1000
+                resetTimeout: 1000
             });
 
             const fail = async () => { throw new Error('fail'); };
@@ -88,7 +85,7 @@ describe('Resilience Framework', () => {
                 circuitBreaker: cb
             })).rejects.toThrow();
 
-            expect(cb.getState()).toBe(CircuitState.OPEN);
+            expect(cb.getState()).toBe('open' as CircuitBreakerState);
         });
     });
 });

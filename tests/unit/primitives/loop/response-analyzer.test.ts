@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ResponseAnalyzer, AnalysisResult, AnalyzerConfig } from '../../../../src/primitives/loop/response-analyzer';
+import { ResponseAnalyzer, AnalysisResult, AnalyzerConfig } from '../../../../src/domain/primitives/loop/response-analyzer';
 
 describe('ResponseAnalyzer', () => {
   let analyzer: ResponseAnalyzer;
