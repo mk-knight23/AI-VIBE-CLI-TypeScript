@@ -110,7 +110,7 @@ export class UnifiedProviderRouter {
     if (!this.adapters.has(id)) {
       this.instantiateAdapter(id);
     }
-    return this.getAdapter(id);
+    return this.adapters.get(id);
   }
 
   /**

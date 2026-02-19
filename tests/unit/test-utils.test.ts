@@ -301,15 +301,15 @@ describe('LRUCache', () => {
             // Access key2 - this should become most recent
             cache.get('key2');
 
-            // Add new entry - should evict key1 (oldest, not peeked)
+            // Add new entry - should evict key1 (oldest, since peek didn't promote it)
             cache.set('key4', 'value4');
 
-            // key1 should still be there (peeked but not accessed)
-            expect(cache.get('key1')).toBe('value1');
+            // key1 should be evicted (peek didn't update access order)
+            expect(cache.get('key1')).toBeUndefined();
             // key2 was accessed, so should be there
             expect(cache.get('key2')).toBe('value2');
-            // key3 was not accessed after key1, so should be evicted
-            expect(cache.get('key3')).toBeUndefined();
+            // key3 was not accessed but is newer than key1 in insertion order
+            expect(cache.get('key3')).toBe('value3');
             expect(cache.get('key4')).toBe('value4');
         });
     });

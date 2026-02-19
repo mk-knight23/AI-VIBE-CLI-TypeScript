@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mcpManager } from '../../src/mcp';
+import { enhancedMCPManager } from '../../src/mcp/enhanced-manager';
 import { pluginManager, VibePlugin } from '../../src/core/plugins/plugin-manager';
 
 describe('Plugin & MCP Productionization', () => {
-    describe('VibeMCPManager', () => {
-        it('should return connection status', () => {
-            const status = mcpManager.getStatus();
+    describe('EnhancedMCPManager', () => {
+        it('should return server status', () => {
+            const status = enhancedMCPManager.getServerStatus();
             expect(Array.isArray(status)).toBe(true);
         });
 
         it('should handle shutdown cleanly', async () => {
-            await expect(mcpManager.shutdown()).resolves.not.toThrow();
+            await expect(enhancedMCPManager.shutdown()).resolves.not.toThrow();
         });
     });
 

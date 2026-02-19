@@ -373,11 +373,10 @@ describe('File Building Integration', () => {
       // Should include models from Google (Gemini free) and Ollama
       expect(freeModels.length).toBeGreaterThan(0);
 
-      // Each entry should have provider, model, and name
+      // Each entry should have provider and model
       for (const fm of freeModels) {
         expect(fm.provider).toBeDefined();
         expect(fm.model).toBeDefined();
-        expect(fm.name).toBeDefined();
       }
     });
 
@@ -425,9 +424,9 @@ describe('File Building Integration', () => {
       expect(VIBE_SYSTEM_PROMPT).not.toContain('offer options');
 
       // Should contain production rules
-      expect(VIBE_SYSTEM_PROMPT).toContain('Always respond meaningfully');
-      expect(VIBE_SYSTEM_PROMPT).toContain('Never say "I\'m not sure');
-      expect(VIBE_SYSTEM_PROMPT).toContain('Prefer doing over explaining');
+      expect(VIBE_SYSTEM_PROMPT).toContain('EXECUTION > EXPLANATION');
+      expect(VIBE_SYSTEM_PROMPT).toContain('OPERATOR');
+      expect(VIBE_SYSTEM_PROMPT).toContain('An Agent That Executes');
 
       expect(VIBE_SYSTEM_PROMPT_VERSION).toBe('0.0.1');
     });

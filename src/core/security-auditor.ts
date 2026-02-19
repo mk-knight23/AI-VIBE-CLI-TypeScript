@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { PIIScrubber } from '../security/pii-scrubber.js';
+import { piiScrubber } from '../security/pii-scrubber.js';
 import { createLogger } from '../utils/pino-logger.js';
 
 const logger = createLogger('SecurityAuditor');
@@ -43,8 +43,8 @@ export class SecurityAuditor {
             }
         }
 
-        const scrubbed = PIIScrubber.scrub(content);
-        if (scrubbed !== content) {
+        const result = piiScrubber.scrub(content);
+        if (result.hadRedactions) {
             issues.push('Possible PII detected in source code.');
         }
 

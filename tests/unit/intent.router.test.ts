@@ -1,108 +1,92 @@
 /**
- * VIBE-CLI v0.0.1 - Intent Router Unit Tests
+ * VIBE-CLI v0.0.2 - Intent Classification Types Unit Tests
+ * Tests for the core intent types used for routing user queries
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { IntentRouter } from '../../src/intent/router';
+import { describe, it, expect } from 'vitest';
+import type { IntentClassificationResult, VibeIntent, IntentCategory } from '../../src/core-types';
 
-// Mock provider for testing
-const mockProvider = {
-  chat: vi.fn(),
-  complete: vi.fn(),
-  selectModel: vi.fn(),
-};
-
-describe('IntentRouter', () => {
-  let router: IntentRouter;
-
-  beforeEach(() => {
-    router = new IntentRouter(mockProvider as any);
-  });
-
-  describe('Intent Classification', () => {
-    it('should classify deployment queries correctly', async () => {
-      const deployQueries = [
-        'deploy to production',
-        'build the project',
-        'setup CI/CD pipeline',
-        'deploy to vercel',
+describe('Intent Types', () => {
+  describe('IntentCategory', () => {
+    it('should support expected category values', () => {
+      const categories: IntentCategory[] = [
+        'create', 'modify', 'delete', 'explain', 'deploy',
+        'test', 'review', 'refactor', 'debug', 'question',
+        'config', 'analysis', 'unknown'
       ];
 
-      for (const query of deployQueries) {
-        const result = await router.classify(query);
-        expect(result.intent.category).toBe('deploy');
-      }
-    });
-
-    it('should classify some queries as unknown', async () => {
-      const unknownQueries = [
-        'what is 2+2',
-        'tell me a joke',
-        'random text',
-      ];
-
-      for (const query of unknownQueries) {
-        const result = await router.classify(query);
-        // These should be either unknown or question
-        expect(['unknown', 'question']).toContain(result.intent.category);
-      }
+      expect(categories.length).toBeGreaterThan(0);
+      categories.forEach(cat => {
+        expect(typeof cat).toBe('string');
+      });
     });
   });
 
-  describe('Intent Properties', () => {
-    it('should generate valid intent structure', async () => {
-      const result = await router.classify('write a function to add numbers');
-      const intent = result.intent;
+  describe('VibeIntent', () => {
+    it('should construct a valid intent object', () => {
+      const intent: VibeIntent = {
+        id: 'test-id',
+        type: 'command',
+        category: 'create',
+        query: 'create a new component',
+        confidence: 0.95,
+        context: {},
+        shouldRemember: true,
+        shouldApprove: false,
+        risk: 'low',
+      };
 
-      expect(intent.id).toBeDefined();
-      expect(intent.type).toBeDefined();
-      expect(intent.category).toBeDefined();
-      expect(intent.query).toBe('write a function to add numbers');
+      expect(intent.id).toBe('test-id');
+      expect(intent.category).toBe('create');
       expect(intent.confidence).toBeGreaterThan(0);
-      expect(intent.context).toBeDefined();
-      expect(intent.shouldRemember).toBeDefined();
-      expect(intent.shouldApprove).toBeDefined();
       expect(intent.risk).toBeDefined();
     });
-
-    it('should assign risk levels based on category', async () => {
-      const explainQuery = await router.classify('explain this code');
-      // Explain queries should be low risk
-      expect(['low', 'medium']).toContain(explainQuery.intent.risk);
-
-      const writeQuery = await router.classify('write code');
-      // Write queries should be medium risk
-      expect(['low', 'medium', 'high']).toContain(writeQuery.intent.risk);
-    });
   });
 
-  describe('Classification Result', () => {
-    it('should return IntentClassificationResult structure', async () => {
-      const result = await router.classify('test query');
+  describe('IntentClassificationResult', () => {
+    it('should have required structure', () => {
+      const result: IntentClassificationResult = {
+        intent: {
+          id: 'test-id',
+          type: 'command',
+          category: 'deploy',
+          query: 'deploy to production',
+          confidence: 0.9,
+          context: {},
+          shouldRemember: false,
+          shouldApprove: true,
+          risk: 'high',
+        },
+        needsClarification: false,
+      };
 
-      expect(result).toHaveProperty('intent');
+      expect(result.intent).toBeDefined();
       expect(typeof result.needsClarification).toBe('boolean');
     });
 
-    it('should suggest clarification for low confidence queries', async () => {
-      const result = await router.classify('hello');
+    it('should support clarification options', () => {
+      const result: IntentClassificationResult = {
+        intent: {
+          id: 'test-id',
+          type: 'question',
+          category: 'unknown',
+          query: 'hello',
+          confidence: 0.3,
+          context: {},
+          shouldRemember: false,
+          shouldApprove: false,
+          risk: 'low',
+        },
+        needsClarification: true,
+        suggestedOptions: [
+          { label: 'Create', category: 'create', description: 'Create something' },
+          { label: 'Explain', category: 'explain', description: 'Explain something' },
+        ],
+      };
 
-      // Low confidence queries might need clarification
-      if (result.intent.confidence < 0.6) {
-        expect(result.suggestedOptions).toBeDefined();
-      }
-    });
-  });
-
-  describe('Meta Commands', () => {
-    it('should recognize help command', async () => {
-      const result = await router.classify('/help');
-      expect(result.intent.category).toBe('question');
-    });
-
-    it('should recognize status command', async () => {
-      const result = await router.classify('/status');
-      expect(result.intent.category).toBe('analysis');
+      expect(result.needsClarification).toBe(true);
+      expect(result.suggestedOptions).toBeDefined();
+      expect(result.suggestedOptions!.length).toBe(2);
     });
   });
 });

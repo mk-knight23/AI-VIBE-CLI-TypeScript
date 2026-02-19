@@ -220,7 +220,7 @@ export class LoopPrimitive {
    * Build context for iteration
    */
   private buildContext(): string {
-    return `Iteration ${this.state.iteration}`;
+    return `Iteration: ${this.state.iteration}`;
   }
 
   /**
@@ -228,13 +228,13 @@ export class LoopPrimitive {
    */
   private getExitReason(): string {
     if (this.state.isComplete) {
-      return 'Completed successfully';
+      return 'completed successfully';
     }
     if (this.state.isStuck) {
       return 'Loop detected as stuck';
     }
     if (this.state.iteration >= this.config.maxIterations!) {
-      return 'Max iterations reached';
+      return 'Maximum iterations reached';
     }
     return 'Unknown';
   }
@@ -244,6 +244,20 @@ export class LoopPrimitive {
    */
   getState(): LoopState {
     return { ...this.state };
+  }
+
+  /**
+   * Get current configuration
+   */
+  getConfig(): LoopConfig {
+    return { ...this.config };
+  }
+
+  /**
+   * Update configuration
+   */
+  updateConfig(updates: Partial<LoopConfig>): void {
+    this.config = { ...this.config, ...updates };
   }
 
   /**

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { CreateProjectSchema, MarketplaceInstallSchema } from '../../src/core/api/api-schemas';
 import { authMiddleware } from '../../src/core/api/middlewares/auth-middleware';
 import { validateRequest } from '../../src/core/api/middlewares/validate-request';
@@ -23,7 +23,18 @@ describe('API Hardening', () => {
     });
 
     describe('Auth Middleware', () => {
+        const originalApiKey = process.env.VIBE_API_KEY;
+
+        afterEach(() => {
+            if (originalApiKey !== undefined) {
+                process.env.VIBE_API_KEY = originalApiKey;
+            } else {
+                delete process.env.VIBE_API_KEY;
+            }
+        });
+
         it('should allow valid API key', () => {
+            process.env.VIBE_API_KEY = 'vibe-secret-key';
             const req = { headers: { 'x-api-key': 'vibe-secret-key' } } as any;
             const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
             const next = vi.fn();
@@ -33,6 +44,7 @@ describe('API Hardening', () => {
         });
 
         it('should block missing API key', () => {
+            process.env.VIBE_API_KEY = 'vibe-secret-key';
             const req = { headers: {}, query: {} } as any;
             const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
             const next = vi.fn();

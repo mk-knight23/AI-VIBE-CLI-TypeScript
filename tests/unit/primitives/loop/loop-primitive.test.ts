@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LoopPrimitive } from '../../../../src/primitives/loop/loop-primitive';
+import { LoopPrimitive } from '../../../../src/domain/primitives/loop/loop-primitive';
 
 describe('LoopPrimitive', () => {
   let loop: LoopPrimitive;

@@ -100,7 +100,7 @@ export async function generateTests(
     // Check if it's a file or directory
     if (fs.statSync(targetPath).isFile()) {
       // Generate tests for single file
-      const result = await generateTestsForFile(targetPath, framework, primitives);
+      const result = await generateTestsForFile(targetPath, framework, primitives, options.update);
       if (result.success && result.testFile) {
         filesCreated.push(result.testFile);
       }
