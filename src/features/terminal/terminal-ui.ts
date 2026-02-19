@@ -188,17 +188,31 @@ export class TerminalUI {
 
   /**
    * Copy command to clipboard
+   * SECURITY: Use spawn with escaped arguments to prevent command injection
    */
   async copyToClipboard(command: string): Promise<boolean> {
     try {
       const platform = process.platform;
 
       if (platform === 'darwin') {
-        child_process.execSync(`echo '${command}' | pbcopy`);
+        // Use spawn with separate arguments to prevent injection
+        child_process.spawnSync('pbcopy', [], {
+          input: command,
+          stdio: ['pipe', 'inherit', 'inherit']
+        });
       } else if (platform === 'linux') {
-        child_process.execSync(`echo '${command}' | xclip -selection clipboard`);
+        // Use spawn with separate arguments to prevent injection
+        child_process.spawnSync('xclip', ['-selection', 'clipboard'], {
+          input: command,
+          stdio: ['pipe', 'inherit', 'inherit']
+        });
       } else if (platform === 'win32') {
-        child_process.execSync(`echo ${command} | clip`);
+        // Use spawn with separate arguments to prevent injection
+        child_process.spawnSync('clip', [], {
+          input: command,
+          stdio: ['pipe', 'inherit', 'inherit'],
+          shell: true
+        });
       }
 
       console.log(chalk.green('\n✓ Copied to clipboard'));
@@ -212,10 +226,33 @@ export class TerminalUI {
 
   /**
    * Execute command
+   * SECURITY: Validate command before execution to prevent injection
    */
   async executeCommand(command: string): Promise<boolean> {
     try {
       console.log(chalk.cyan('\n⚡ Executing...\n'));
+
+      // Security validation: block dangerous patterns
+      const dangerousPatterns = [
+        /rm\s+-rf?\s+/,          // Dangerous rm commands
+        /rm\s+-r\s+[^/]*\//,     // rm targeting root or system
+        /mkfs\./,                // Filesystem destruction
+        /dd\s+if=/,               // Direct disk writes
+        /:>\s*\//,                // Overwriting files
+        /chmod\s+000/,            // Removing permissions
+        /shutdown/,               // System shutdown
+        /reboot/,                 // System reboot
+        /format\s+[A-Z]:/,        // Windows format
+        /del\s+\/[FQ]\s+[A-Z]:/, // Windows delete system
+      ];
+
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(command)) {
+          console.log(chalk.red('\n✗ Command blocked: Potentially dangerous command detected'));
+          console.log(chalk.yellow('For safety, this command requires manual execution in your terminal.'));
+          return false;
+        }
+      }
 
       const result = child_process.execSync(command, {
         encoding: 'utf-8',

@@ -2,14 +2,75 @@
  * Unit tests for security module
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { SecurityModule } from '../../../src/modules/security';
+
+// Mock child_process to avoid actual command execution during tests
+const mockExecSync = vi.fn();
+const mockExec = vi.fn();
+
+vi.mock('child_process', () => ({
+  execSync: (...args: any[]) => mockExecSync(...args),
+  exec: (...args: any[]) => mockExec(...args),
+}));
+
+// Mock fs to avoid actual file system operations
+const mockExistsSync = vi.fn(() => true);
+const mockReadFileSync = vi.fn(() => '{"scripts": {"test": "jest"}}');
+const mockWriteFileSync = vi.fn();
+const mockMkdirSync = vi.fn();
+const mockReaddirSync = vi.fn(() => []);
+
+vi.mock('fs', () => ({
+  existsSync: (...args: any[]) => mockExistsSync(...args),
+  readFileSync: (...args: any[]) => mockReadFileSync(...args),
+  writeFileSync: (...args: any[]) => mockWriteFileSync(...args),
+  mkdirSync: (...args: any[]) => mockMkdirSync(...args),
+  readdirSync: (...args: any[]) => mockReaddirSync(...args),
+}));
+
+// Mock the provider router to avoid actual API calls
+const mockChat = vi.fn().mockResolvedValue({
+  content: 'Security scan complete',
+  usage: { totalTokens: 50 },
+  model: 'claude-sonnet-4-20250514',
+});
+
+vi.mock('../../../src/providers/router.js', () => ({
+  VibeProviderRouter: vi.fn().mockImplementation(() => ({
+    chat: (...args: any[]) => mockChat(...args),
+  })),
+}));
 
 describe('SecurityModule', () => {
   let module: SecurityModule;
 
   beforeEach(() => {
+    // Reset all mocks
+    mockExecSync.mockReset();
+    mockExec.mockReset();
+    mockExistsSync.mockReset();
+    mockReadFileSync.mockReset();
+    mockWriteFileSync.mockReset();
+    mockMkdirSync.mockReset();
+    mockReaddirSync.mockReset();
+    mockChat.mockReset();
+
+    // Set default mock behaviors
+    mockExecSync.mockReturnValue('Security scan complete');
+    mockExistsSync.mockReturnValue(true);
+    mockReaddirSync.mockReturnValue([]);
+    mockChat.mockResolvedValue({
+      content: 'Security scan complete',
+      usage: { totalTokens: 50 },
+      model: 'claude-sonnet-4-20250514',
+    });
+
     module = new SecurityModule();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   describe('constructor', () => {
@@ -29,7 +90,6 @@ describe('SecurityModule', () => {
 
     it('should route scan action', async () => {
       const result = await module.execute({ action: 'scan' });
-      // May succeed or fail depending on environment
       expect(result).toHaveProperty('success');
     });
 

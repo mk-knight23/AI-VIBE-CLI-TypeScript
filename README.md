@@ -1,9 +1,45 @@
+# ⚡ VIBE CLI
 
+<p align="center">
+  <img src="https://img.shields.io/badge/AI--VIBE-CLI--TypeScript-blue?style=for-the-badge&logo=typescript&logoColor=white" alt="AI Vibe Project">
+  <br>
+  <b>AI Developer Teammate - One command, infinite capability.</b>
+</p>
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/vibe-ai-teammate"><img src="https://img.shields.io/npm/v/vibe-ai-teammate.svg" alt="NPM version"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D20.0.0-green.svg" alt="Node.js"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Supported-orange.svg" alt="MCP Supported"></a>
+</p>
 
-# VIBE CLI
+---
 
-> **AI Developer Teammate** - One command, infinite capability.
+## 🗺️ Quick Navigation
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+- [📦 Installation](#-installation)
+- [⚙️ Configuration](#%EF%B8%8F-configuration)
+- [💻 Usage](#-usage)
+- [📚 Commands](#-commands)
+- [🏗️ Architecture](#%EF%B8%8F-architecture)
+- [🛠️ Development](#%EF%B8%8F-development)
+- [🤝 Contributing](#-contributing)
+
+---
+
+## 🛠️ Engineered With
+
+<p align="left">
+  <a href="https://typescriptlang.org"><img src="https://skillicons.dev/icons?i=ts" alt="TypeScript"></a>
+  <a href="https://nodejs.org"><img src="https://skillicons.dev/icons?i=nodejs" alt="Node.js"></a>
+  <a href="https://sqlite.org"><img src="https://skillicons.dev/icons?i=sqlite" alt="SQLite"></a>
+  <a href="https://expressjs.com"><img src="https://skillicons.dev/icons?i=express" alt="Express"></a>
+  <a href="https://react.dev"><img src="https://skillicons.dev/icons?i=react" alt="React"></a>
+</p>
+
+---
 
 VIBE CLI is an opinionated AI development tool that uses an 8-primitives architecture and Model Context Protocol (MCP) to provide intelligent, context-aware assistance for software development tasks.
 
@@ -17,16 +53,7 @@ VIBE CLI is an opinionated AI development tool that uses an 8-primitives archite
 - **⚡ Lightning Fast** - Async file operations, LRU caching, smart context management
 - **🔧 Extensible Plugin System** - Build and share custom plugins with the community
 
-## 📋 Table of Contents
-
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Commands](#commands)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
+---
 
 ## 🚀 Quick Start
 
@@ -47,21 +74,20 @@ vibe "Add user authentication to the API"
 3. Execute changes with your approval
 4. Test and verify the result
 
+---
+
 ## 📦 Installation
 
 ### Prerequisites
-
 - **Node.js** >= 20.0.0
 - **npm** or **yarn** or **pnpm**
 
 ### Install via npm
-
 ```bash
 npm install -g vibe-ai-teammate
 ```
 
 ### Install via GitHub
-
 ```bash
 git clone https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript.git
 cd AI-VIBE-CLI-TypeScript
@@ -71,33 +97,30 @@ npm link
 ```
 
 ### Verify Installation
-
 ```bash
 vibe --version
 vibe --help
 ```
 
+---
+
 ## ⚙️ Configuration
 
 ### Environment Variables
-
 Copy `.env.example` to `.env` and configure:
-
 ```bash
 cp .env.example .env
 ```
 
 **Required Variables:**
-
 ```bash
 # AI Provider API Keys
-ANTHROPIC_API_KEY=sk-ant-xxx          # For Claude models
-OPENAI_API_KEY=sk-openai-xxx          # For GPT models (optional)
-MINIMAX_API_KEY=xxx                     # For MiniMax (optional)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here          # For Claude models
+OPENAI_API_KEY=your_openai_api_key_here          # For GPT models (optional)
+MINIMAX_API_KEY=your_minimax_api_key_here                     # For MiniMax (optional)
 ```
 
 **Optional Variables:**
-
 ```bash
 # VIBE API Server
 VIBE_API_KEY=your_secret_key            # REST API authentication
@@ -109,13 +132,10 @@ VIBE_PROVIDER=anthropic                 # anthropic | openai | minimax
 # Debug Mode
 DEBUG=true                            # Enable verbose logging
 ```
-
 See [`.env.example`](./.env.example) for all options.
 
 ### VIBE Config File
-
 VIBE also supports a `vibe.config.json` file in your project root:
-
 ```json
 {
   "provider": "anthropic",
@@ -125,14 +145,14 @@ VIBE also supports a `vibe.config.json` file in your project root:
 }
 ```
 
+---
+
 ## 💻 Usage
 
 ### Interactive Mode (Default)
-
 ```bash
 vibe
 ```
-
 VIBE will start an interactive session where you can:
 - Describe tasks in natural language
 - Review and approve plans
@@ -140,7 +160,6 @@ VIBE will start an interactive session where you can:
 - Ask follow-up questions
 
 ### Direct Task Mode
-
 ```bash
 vibe "Add error handling to the user service"
 vibe "Refactor: Extract validation logic"
@@ -148,9 +167,7 @@ vibe "Test: Add unit tests for AuthManager"
 ```
 
 ### Command Mode
-
 VIBE also provides traditional CLI commands:
-
 ```bash
 vibe scaffold react-component LoginForm
 vibe test src/services/AuthService.ts
@@ -159,12 +176,11 @@ vibe commit "Add user authentication"
 vibe pr
 ```
 
-See [Commands](#commands) below for full list.
+---
 
 ## 📚 Commands
 
 ### Core Commands
-
 | Command | Description | Example |
 |---------|-------------|---------|
 | `vibe [task]` | Main AI assistant (interactive) | `vibe "Add user login"` |
@@ -173,7 +189,6 @@ See [Commands](#commands) below for full list.
 | `vibe fix [target]` | Fix bugs and issues | `vibe fix src/api/` |
 
 ### Git Integration
-
 | Command | Description | Example |
 |---------|-------------|---------|
 | `vibe commit` | AI-powered semantic commits | `vibe commit` |
@@ -181,7 +196,6 @@ See [Commands](#commands) below for full list.
 | `vibe review` | AI code review | `vibe review` |
 
 ### Project Management
-
 | Command | Description | Example |
 |---------|-------------|---------|
 | `vibe plan <task>` | Generate execution plan | `vibe plan "Add API endpoints"` |
@@ -189,7 +203,6 @@ See [Commands](#commands) below for full list.
 | `vibe batch <cmd>` | Batch process files | `vibe test **/*.test.ts` |
 
 ### System Commands
-
 | Command | Description |
 |---------|-------------|
 | `vibe doctor` | System health check |
@@ -197,19 +210,15 @@ See [Commands](#commands) below for full list.
 | `vibe server` | Start REST API server |
 | `vibe plugin` | Manage plugins |
 
-For complete command reference:
-
-```bash
-vibe --help
-vibe <command> --help
-```
+---
 
 ## 🏗️ Architecture
 
+<details>
+<summary>Show 8-Primitives Architecture Details</summary>
+
 ### 8 Primitives
-
 VIBE is built on 8 core primitives:
-
 1. **Planning** - Task decomposition and strategy
 2. **Completion** - LLM text generation
 3. **Execution** - Command/tool execution
@@ -221,18 +230,20 @@ VIBE is built on 8 core primitives:
 9. **Orchestration** - Primitive coordination
 
 ### MCP Integration
-
 VIBE uses [Model Context Protocol](https://modelcontextprotocol.io) for:
 - Flexible context providers
 - Server-side tool integration
 - Extensible architecture
 
 See `src/mcp/` for MCP implementation.
+</details>
+
+
+---
 
 ## 🛠️ Development
 
 ### Setup Development Environment
-
 ```bash
 # Clone repository
 git clone https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript.git
@@ -255,7 +266,6 @@ npm run type-check
 ```
 
 ### Project Structure
-
 ```
 vibe/
 ├── src/
@@ -270,116 +280,58 @@ vibe/
 │   ├── mcp/              # Model Context Protocol
 │   └── tools/            # Tool implementations
 ├── tests/                # Test suites
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
 └── docs/                  # Documentation
 ```
 
 ### Testing
-
 ```bash
 # Run all tests
 npm test
-
 # Unit tests only
 npm run test:unit
-
 # Integration tests
 npm run test:integration
-
 # E2E tests with Playwright
 npm run test:e2e
-
 # Coverage report
 npm run test:coverage
 ```
 
-**Target Coverage:** 80%+ (enforced by CI)
-
-### Code Quality
-
-```bash
-# Lint
-npm run lint
-
-# Type check
-npm run type-check
-
-# Format (Prettier)
-npm run format
-```
+---
 
 ## 🔌 Plugin Development
-
 Create custom plugins to extend VIBE:
-
 ```bash
 # Create plugin scaffold
 vibe plugin create my-plugin
-
-# Plugin structure
-my-plugin/
-├── vibe.json          # Manifest with permissions
-├── index.js           # Plugin entry point
-└── signature.json     # Security signature
 ```
+See [PLUGIN-SECURITY.md](./.claude/PLUGIN-SECURITY.md) for security and API reference.
 
-See [PLUGIN-SECURITY.md](./.claude/PLUGIN-SECURITY.md) for:
-- Permission system
-- Code signing
-- Security best practices
-- API reference
+---
 
 ## 🤝 Contributing
-
 We welcome contributions! Please see:
-
 1. [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 2. [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System design
 3. [PLUGINS.md](./docs/PLUGINS.md) - Plugin development
 
-### Development Workflow
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Write tests first (TDD)
-4. Implement feature
-5. Ensure tests pass (`npm test`)
-6. Ensure linting passes (`npm run lint`)
-7. Submit pull request
-
-### Coding Standards
-
-- **TypeScript** for all code
-- **Immutability** - no mutations
-- **TDD** - tests first, 80%+ coverage
-- **Small files** - max 800 lines, target 200-400
-- **No console.log** - use structured logger
+---
 
 ## 📄 License
-
 MIT © KAZI
 
 ## 🙏 Acknowledgments
-
-Built with:
-- [Anthropic Claude](https://www.anthropic.com/)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Commander.js](https://commander.js.org/)
-- [Express](https://expressjs.com/)
-- [Better SQLite3](https://github.com/WiseLibs/better-sqlite3)
+Built with Anthropic Claude, Model Context Protocol, Commander.js, Express, and Better SQLite3.
 
 ## 📞 Support
-
 - **Issues:** [GitHub Issues](https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript/discussions)
-- **Security:** security@vibe-cli.dev
 
 ## 🗺️ Roadmap
-
-See [ROADMAP.md](./ROADMAP.md) for planned features and release timeline.
+See [ROADMAP.md](./ROADMAP.md) for planned features.
 
 ---
 
-**Made with ❤️ by [KAZI](https://github.com/mk-knight23)**
+<p align="center">
+  <b>Made with ❤️ by <a href="https://github.com/mk-knight23">KAZI</a></b>
+</p>

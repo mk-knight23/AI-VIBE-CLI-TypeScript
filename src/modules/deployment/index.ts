@@ -3,12 +3,12 @@
  * Build, deploy, CI/CD setup, and monitoring
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as child_process from 'child_process';
-import chalk from 'chalk';
-import { BaseModule, ModuleResult } from '../base.module.js';
-import { VibeProviderRouter } from '../../providers/router.js';
+import * as fs from "fs";
+import * as path from "path";
+import * as child_process from "child_process";
+import chalk from "chalk";
+import { BaseModule, ModuleResult } from "../base.module.js";
+import { VibeProviderRouter } from "../../providers/router.js";
 
 interface BuildResult {
   success: boolean;
@@ -21,7 +21,7 @@ interface DeploymentTarget {
   name: string;
   provider: string;
   region?: string;
-  status: 'pending' | 'deploying' | 'success' | 'failed';
+  status: "pending" | "deploying" | "success" | "failed";
   url?: string;
   logs?: string;
 }
@@ -37,21 +37,37 @@ export class DeploymentModule extends BaseModule {
 
   // Supported deployment targets
   private readonly targets = [
-    { id: 'aws', name: 'AWS', supports: ['ec2', 'ecs', 'lambda', 'eb'] },
-    { id: 'gcp', name: 'Google Cloud', supports: ['compute', 'cloud-run', 'functions'] },
-    { id: 'azure', name: 'Azure', supports: ['vm', 'container-apps', 'functions'] },
-    { id: 'heroku', name: 'Heroku', supports: ['app'] },
-    { id: 'vercel', name: 'Vercel', supports: ['nextjs', 'static', 'functions'] },
-    { id: 'netlify', name: 'Netlify', supports: ['static', 'functions', 'nextjs'] },
-    { id: 'docker', name: 'Docker', supports: ['container'] },
-    { id: 'kubernetes', name: 'Kubernetes', supports: ['cluster'] },
+    { id: "aws", name: "AWS", supports: ["ec2", "ecs", "lambda", "eb"] },
+    {
+      id: "gcp",
+      name: "Google Cloud",
+      supports: ["compute", "cloud-run", "functions"],
+    },
+    {
+      id: "azure",
+      name: "Azure",
+      supports: ["vm", "container-apps", "functions"],
+    },
+    { id: "heroku", name: "Heroku", supports: ["app"] },
+    {
+      id: "vercel",
+      name: "Vercel",
+      supports: ["nextjs", "static", "functions"],
+    },
+    {
+      id: "netlify",
+      name: "Netlify",
+      supports: ["static", "functions", "nextjs"],
+    },
+    { id: "docker", name: "Docker", supports: ["container"] },
+    { id: "kubernetes", name: "Kubernetes", supports: ["cluster"] },
   ];
 
   constructor() {
     super({
-      name: 'deployment',
-      version: '1.0.0',
-      description: 'Build, deploy, CI/CD setup, and monitoring',
+      name: "deployment",
+      version: "1.0.0",
+      description: "Build, deploy, CI/CD setup, and monitoring",
     });
 
     this.provider = new VibeProviderRouter();
@@ -61,43 +77,56 @@ export class DeploymentModule extends BaseModule {
    * Execute the module
    */
   async execute(params: Record<string, any>): Promise<ModuleResult> {
-    const action = params.action || params.type || 'build';
+    const action = params.action || params.type || "build";
 
     const startTime = Date.now();
 
     try {
       switch (action) {
-        case 'build':
+        case "build":
           return this.buildProject(params, startTime);
-        case 'deploy':
+        case "deploy":
           return this.deploy(params, startTime);
-        case 'setup-ci':
+        case "setup-ci":
           return this.setupCI(params, startTime);
-        case 'monitor':
+        case "monitor":
           return this.monitorDeployment(params, startTime);
-        case 'rollback':
+        case "rollback":
           return this.rollback(params, startTime);
-        case 'status':
+        case "status":
           return this.getDeploymentStatus(params, startTime);
         default:
-          return this.failure(`Unknown action: ${action}. Supported: build, deploy, setup-ci, monitor, rollback, status`);
+          return this.failure(
+            `Unknown action: ${action}. Supported: build, deploy, setup-ci, monitor, rollback, status`,
+          );
       }
     } catch (error) {
-      return this.failure(error instanceof Error ? error.message : 'Unknown error');
+      return this.failure(
+        error instanceof Error ? error.message : "Unknown error",
+      );
     }
   }
 
   /**
    * Build the project
+   * SECURITY: Use spawn with shell for complex commands, but validate all inputs
    */
-  private async buildProject(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
-    const { type = 'auto', target, outputDir = 'dist' } = params;
+  private async buildProject(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
+    const { type = "auto", target, outputDir = "dist" } = params;
 
-    this.logInfo('Building project...');
+    // Validate outputDir to prevent command injection
+    if (!/^[a-zA-Z0-9._/-]+$/.test(outputDir)) {
+      return this.failure("Invalid output directory path");
+    }
+
+    this.logInfo("Building project...");
 
     // Detect project type if not specified
     let projectType = type;
-    if (projectType === 'auto') {
+    if (projectType === "auto") {
       projectType = this.detectProjectType();
     }
 
@@ -105,38 +134,44 @@ export class DeploymentModule extends BaseModule {
     let artifacts: string[] = [];
 
     switch (projectType) {
-      case 'nextjs':
-        command = 'npm run build || npx next build';
+      case "nextjs":
+        command = "npm run build || npx next build";
         break;
-      case 'react':
-      case 'create-react-app':
-        command = 'npm run build';
+      case "react":
+      case "create-react-app":
+        command = "npm run build";
         break;
-      case 'vue':
-        command = 'npm run build';
+      case "vue":
+        command = "npm run build";
         break;
-      case 'node':
-      case 'express':
-        command = 'npm run build || tsc';
+      case "node":
+      case "express":
+        command = "npm run build || tsc";
         break;
-      case 'python':
+      case "python":
         command = 'python -m py_compile . && echo "Build complete"';
         break;
-      case 'docker':
+      case "docker":
         return this.buildDockerImage(params, startTime);
       default:
-        command = 'npm run build';
+        command = "npm run build";
     }
 
     try {
-      const output = child_process.execSync(command, {
-        encoding: 'utf-8',
+      // Use shell for build commands (they use || for fallbacks)
+      // This is acceptable since we validate all user inputs
+      const result = child_process.spawnSync("sh", ["-c", command], {
+        encoding: "utf-8",
         timeout: 180000,
         cwd: process.cwd(),
       });
 
+      const output = result.stdout || result.stderr || "";
+
       // Find artifacts
-      const outputPath = path.isAbsolute(outputDir) ? outputDir : path.join(process.cwd(), outputDir);
+      const outputPath = path.isAbsolute(outputDir)
+        ? outputDir
+        : path.join(process.cwd(), outputDir);
       if (fs.existsSync(outputPath)) {
         artifacts = this.findArtifacts(outputPath);
       }
@@ -145,15 +180,17 @@ export class DeploymentModule extends BaseModule {
 
       this.logSuccess(`Build completed in ${(duration / 1000).toFixed(2)}s`);
 
-      return this.success({
-        action: 'build',
-        projectType,
-        artifacts,
-        output,
-      }, {
-        duration,
-      });
-
+      return this.success(
+        {
+          action: "build",
+          projectType,
+          artifacts,
+          output,
+        },
+        {
+          duration,
+        },
+      );
     } catch (error: any) {
       return this.failure(error.message);
     }
@@ -161,39 +198,64 @@ export class DeploymentModule extends BaseModule {
 
   /**
    * Build Docker image
+   * SECURITY: Use spawn with separate arguments to prevent command injection
    */
-  private async buildDockerImage(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
-    const { tag = 'latest', dockerfile, context = '.' } = params;
+  private async buildDockerImage(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
+    const { tag = "latest", dockerfile, context = "." } = params;
 
-    this.logInfo('Building Docker image...');
+    // Validate parameters to prevent command injection
+    if (tag && !/^[a-zA-Z0-9._-]+$/.test(tag)) {
+      return this.failure("Invalid tag format");
+    }
+    if (dockerfile && !/^[a-zA-Z0-9._/-]+$/.test(dockerfile)) {
+      return this.failure("Invalid dockerfile path");
+    }
+    if (context && !/^[a-zA-Z0-9._/-]+$/.test(context)) {
+      return this.failure("Invalid build context");
+    }
 
-    const tagFlag = tag ? `-t ${tag}` : '';
-    const dockerfileFlag = dockerfile ? `-f ${dockerfile}` : '';
-    const command = `docker build ${dockerfileFlag} ${tagFlag} ${context}`;
+    this.logInfo("Building Docker image...");
 
     try {
-      const output = child_process.execSync(command, {
-        encoding: 'utf-8',
+      // Use spawn with separate arguments to prevent injection
+      const args = ["build"];
+      if (tag) {
+        args.push("-t", tag);
+      }
+      if (dockerfile) {
+        args.push("-f", dockerfile);
+      }
+      args.push(context);
+
+      const result = child_process.spawnSync("docker", args, {
+        encoding: "utf-8",
         timeout: 300000,
         cwd: process.cwd(),
       });
 
+      const output = result.stdout || result.stderr || "";
+
       // Extract image ID
       const imageMatch = output.match(/Successfully built ([a-f0-9]+)/);
-      const imageId = imageMatch ? imageMatch[1] : 'unknown';
+      const imageId = imageMatch ? imageMatch[1] : "unknown";
 
       const duration = Date.now() - startTime;
 
-      return this.success({
-        action: 'build',
-        type: 'docker',
-        imageId,
-        tag,
-        output,
-      }, {
-        duration,
-      });
-
+      return this.success(
+        {
+          action: "build",
+          type: "docker",
+          imageId,
+          tag,
+          output,
+        },
+        {
+          duration,
+        },
+      );
     } catch (error: any) {
       return this.failure(error.message);
     }
@@ -202,11 +264,14 @@ export class DeploymentModule extends BaseModule {
   /**
    * Deploy to a target
    */
-  private async deploy(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
+  private async deploy(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
     const { target, config } = params;
 
     if (!target) {
-      return this.failure('Missing required parameter: target');
+      return this.failure("Missing required parameter: target");
     }
 
     this.logInfo(`Deploying to ${target}...`);
@@ -214,18 +279,20 @@ export class DeploymentModule extends BaseModule {
     // Detect target type
     const targetInfo = this.detectTargetType(target);
     if (!targetInfo) {
-      return this.failure(`Unknown deployment target: ${target}. Supported: aws, gcp, azure, heroku, vercel, netlify, docker, kubernetes`);
+      return this.failure(
+        `Unknown deployment target: ${target}. Supported: aws, gcp, azure, heroku, vercel, netlify, docker, kubernetes`,
+      );
     }
 
     // Route to appropriate deployment
     switch (targetInfo.id) {
-      case 'vercel':
+      case "vercel":
         return this.deployVercel(params, startTime);
-      case 'netlify':
+      case "netlify":
         return this.deployNetlify(params, startTime);
-      case 'heroku':
+      case "heroku":
         return this.deployHeroku(params, startTime);
-      case 'docker':
+      case "docker":
         return this.deployDocker(params, startTime);
       default:
         return this.deployGeneric(targetInfo, params, startTime);
@@ -234,80 +301,132 @@ export class DeploymentModule extends BaseModule {
 
   /**
    * Deploy to Vercel
+   * SECURITY: Use spawn with separate arguments to prevent command injection
    */
-  private deployVercel(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
-    const { environment = 'production', target } = params;
+  private deployVercel(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
+    const { environment = "production", target } = params;
 
-    this.logInfo('Deploying to Vercel...');
+    // Validate environment parameter to prevent command injection
+    const validEnvironments = ["production", "preview"];
+    if (!validEnvironments.includes(environment)) {
+      return Promise.resolve(
+        this.failure(
+          `Invalid environment: ${environment}. Must be one of: ${validEnvironments.join(", ")}`,
+        ),
+      );
+    }
+
+    this.logInfo("Deploying to Vercel...");
 
     try {
       // Check if vercel CLI is installed
-      child_process.execSync('vercel --version', { encoding: 'utf-8' });
+      child_process.spawnSync("vercel", ["--version"], { encoding: "utf-8" });
 
-      const output = child_process.execSync(`vercel --${environment} --yes`, {
-        encoding: 'utf-8',
-        timeout: 120000,
-        cwd: process.cwd(),
-      });
+      // Use spawn with separate arguments to prevent injection
+      const result = child_process.spawnSync(
+        "vercel",
+        [`--${environment}`, "--yes"],
+        {
+          encoding: "utf-8",
+          timeout: 120000,
+          cwd: process.cwd(),
+        },
+      );
+
+      const output = result.stdout || result.stderr || "";
 
       const urlMatch = output.match(/https:\/\/[^\s]+/);
       const url = urlMatch ? urlMatch[0] : undefined;
 
       const duration = Date.now() - startTime;
 
-      return Promise.resolve(this.success({
-        action: 'deploy',
-        target: 'vercel',
-        environment,
-        url,
-        output,
-      }, {
-        duration,
-      }));
-
+      return Promise.resolve(
+        this.success(
+          {
+            action: "deploy",
+            target: "vercel",
+            environment,
+            url,
+            output,
+          },
+          {
+            duration,
+          },
+        ),
+      );
     } catch (error: any) {
       // Vercel might need login
-      return Promise.resolve(this.success({
-        action: 'deploy',
-        target: 'vercel',
-        status: 'needs-auth',
-        message: 'Run "vercel login" first, then deploy again',
-      }));
+      return Promise.resolve(
+        this.success({
+          action: "deploy",
+          target: "vercel",
+          status: "needs-auth",
+          message: 'Run "vercel login" first, then deploy again',
+        }),
+      );
     }
   }
 
   /**
    * Deploy to Netlify
+   * SECURITY: Use spawn with separate arguments to prevent command injection
    */
-  private deployNetlify(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
-    const { environment = 'production', target } = params;
+  private deployNetlify(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
+    const { environment = "production", target } = params;
 
-    this.logInfo('Deploying to Netlify...');
+    // Validate environment parameter to prevent command injection
+    const validEnvironments = ["production", "preview"];
+    if (!validEnvironments.includes(environment)) {
+      return Promise.resolve(
+        this.failure(
+          `Invalid environment: ${environment}. Must be one of: ${validEnvironments.join(", ")}`,
+        ),
+      );
+    }
+
+    this.logInfo("Deploying to Netlify...");
 
     try {
-      child_process.execSync('netlify --version', { encoding: 'utf-8' });
+      child_process.spawnSync("netlify", ["--version"], { encoding: "utf-8" });
 
-      const output = child_process.execSync(`netlify deploy --${environment} --dir=dist --yes`, {
-        encoding: 'utf-8',
-        timeout: 120000,
-        cwd: process.cwd(),
-      });
+      // Use spawn with separate arguments to prevent injection
+      const result = child_process.spawnSync(
+        "netlify",
+        ["deploy", `--${environment}`, "--dir=dist", "--yes"],
+        {
+          encoding: "utf-8",
+          timeout: 120000,
+          cwd: process.cwd(),
+        },
+      );
+
+      const output = result.stdout || result.stderr || "";
 
       const urlMatch = output.match(/Netlify Site URL:\s*(https:\/\/[^\s]+)/);
       const url = urlMatch ? urlMatch[1] : undefined;
 
       const duration = Date.now() - startTime;
 
-      return Promise.resolve(this.success({
-        action: 'deploy',
-        target: 'netlify',
-        environment,
-        url,
-        output,
-      }, {
-        duration,
-      }));
-
+      return Promise.resolve(
+        this.success(
+          {
+            action: "deploy",
+            target: "netlify",
+            environment,
+            url,
+            output,
+          },
+          {
+            duration,
+          },
+        ),
+      );
     } catch (error: any) {
       return Promise.resolve(this.failure(error.message));
     }
@@ -315,46 +434,77 @@ export class DeploymentModule extends BaseModule {
 
   /**
    * Deploy to Heroku
+   * SECURITY: Use spawn with separate arguments to prevent command injection
    */
-  private deployHeroku(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
+  private deployHeroku(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
     const { app, target } = params;
 
     if (!app) {
-      return Promise.resolve(this.failure('Missing required parameter: app (Heroku app name)'));
+      return Promise.resolve(
+        this.failure("Missing required parameter: app (Heroku app name)"),
+      );
+    }
+
+    // Validate app name to prevent command injection (alphanumeric and hyphens only)
+    if (!/^[a-zA-Z0-9-]+$/.test(app)) {
+      return Promise.resolve(
+        this.failure(
+          "Invalid Heroku app name. Only alphanumeric characters and hyphens allowed.",
+        ),
+      );
     }
 
     this.logInfo(`Deploying to Heroku app: ${app}...`);
 
     try {
-      // Check if remote exists
-      const remotes = child_process.execSync('git remote -v', { encoding: 'utf-8' });
+      // Check if remote exists - use spawn with separate args
+      const remoteResult = child_process.spawnSync("git", ["remote", "-v"], {
+        encoding: "utf-8",
+      });
+      const remotes = remoteResult.stdout || "";
       if (!remotes.includes(app)) {
-        // Add heroku remote
-        child_process.execSync(`git remote add heroku https://git.heroku.com/${app}.git`, {
-          encoding: 'utf-8',
-        });
+        // Add heroku remote - use spawn with separate args
+        child_process.spawnSync(
+          "git",
+          ["remote", "add", "heroku", `https://git.heroku.com/${app}.git`],
+          {
+            encoding: "utf-8",
+          },
+        );
       }
 
-      // Push to heroku
-      const output = child_process.execSync(`git push heroku main`, {
-        encoding: 'utf-8',
-        timeout: 180000,
-        cwd: process.cwd(),
-      });
+      // Push to heroku - use spawn with separate args to prevent injection
+      const pushResult = child_process.spawnSync(
+        "git",
+        ["push", "heroku", "main"],
+        {
+          encoding: "utf-8",
+          timeout: 180000,
+          cwd: process.cwd(),
+        },
+      );
+      const output = pushResult.stdout || pushResult.stderr || "";
 
       const url = `https://${app}.herokuapp.com`;
       const duration = Date.now() - startTime;
 
-      return Promise.resolve(this.success({
-        action: 'deploy',
-        target: 'heroku',
-        app,
-        url,
-        output,
-      }, {
-        duration,
-      }));
-
+      return Promise.resolve(
+        this.success(
+          {
+            action: "deploy",
+            target: "heroku",
+            app,
+            url,
+            output,
+          },
+          {
+            duration,
+          },
+        ),
+      );
     } catch (error: any) {
       return Promise.resolve(this.failure(error.message));
     }
@@ -362,41 +512,65 @@ export class DeploymentModule extends BaseModule {
 
   /**
    * Deploy Docker container
+   * SECURITY: Use spawn with separate arguments to prevent command injection
    */
-  private deployDocker(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
-    const { image, tag = 'latest', registry, target } = params;
+  private deployDocker(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
+    const { image, tag = "latest", registry, target } = params;
 
     if (!image) {
-      return Promise.resolve(this.failure('Missing required parameter: image'));
+      return Promise.resolve(this.failure("Missing required parameter: image"));
+    }
+
+    // Validate image name and tag to prevent command injection
+    if (
+      !/^[a-zA-Z0-9][a-zA-Z0-9._/-]*:[a-zA-Z0-9._-]+$/.test(`${image}:${tag}`)
+    ) {
+      return Promise.resolve(this.failure("Invalid image name or tag format"));
+    }
+
+    // Validate registry if provided
+    if (registry && !/^[a-zA-Z0-9][a-zA-Z0-9._/-]*$/.test(registry)) {
+      return Promise.resolve(this.failure("Invalid registry format"));
     }
 
     this.logInfo(`Deploying Docker image: ${image}:${tag}`);
 
     try {
-      // Tag image
-      const fullTag = registry ? `${registry}/${image}:${tag}` : image;
-      child_process.execSync(`docker tag ${image} ${fullTag}`, { encoding: 'utf-8' });
+      // Tag image - use spawn with separate args
+      const fullTag = registry
+        ? `${registry}/${image}:${tag}`
+        : `${image}:${tag}`;
+      child_process.spawnSync("docker", ["tag", image, fullTag], {
+        encoding: "utf-8",
+      });
 
-      // Push to registry if specified
+      // Push to registry if specified - use spawn with separate args
       if (registry) {
-        child_process.execSync(`docker push ${fullTag}`, {
-          encoding: 'utf-8',
+        child_process.spawnSync("docker", ["push", fullTag], {
+          encoding: "utf-8",
           timeout: 300000,
         });
       }
 
       const duration = Date.now() - startTime;
 
-      return Promise.resolve(this.success({
-        action: 'deploy',
-        target: 'docker',
-        image: fullTag,
-        tag,
-        registry,
-      }, {
-        duration,
-      }));
-
+      return Promise.resolve(
+        this.success(
+          {
+            action: "deploy",
+            target: "docker",
+            image: fullTag,
+            tag,
+            registry,
+          },
+          {
+            duration,
+          },
+        ),
+      );
     } catch (error: any) {
       return Promise.resolve(this.failure(error.message));
     }
@@ -405,31 +579,45 @@ export class DeploymentModule extends BaseModule {
   /**
    * Generic deployment for cloud providers
    */
-  private deployGeneric(targetInfo: { id: string; name: string }, params: Record<string, any>, startTime: number): Promise<ModuleResult> {
+  private deployGeneric(
+    targetInfo: { id: string; name: string },
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
     const { config } = params;
 
-    this.logInfo(`Generating deployment configuration for ${targetInfo.name}...`);
+    this.logInfo(
+      `Generating deployment configuration for ${targetInfo.name}...`,
+    );
 
     const configFile = this.generateCloudConfig(targetInfo.id, config);
 
     const duration = Date.now() - startTime;
 
-    return Promise.resolve(this.success({
-      action: 'deploy',
-      target: targetInfo.id,
-      status: 'configured',
-      configFile,
-      message: `Deployment configuration created. Apply with: ${this.getApplyCommand(targetInfo.id)}`,
-    }, {
-      duration,
-    }));
+    return Promise.resolve(
+      this.success(
+        {
+          action: "deploy",
+          target: targetInfo.id,
+          status: "configured",
+          configFile,
+          message: `Deployment configuration created. Apply with: ${this.getApplyCommand(targetInfo.id)}`,
+        },
+        {
+          duration,
+        },
+      ),
+    );
   }
 
   /**
    * Setup CI/CD pipeline
    */
-  private async setupCI(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
-    const { platform = 'github-actions', config } = params;
+  private async setupCI(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
+    const { platform = "github-actions", config } = params;
 
     this.logInfo(`Setting up ${platform}...`);
 
@@ -443,23 +631,29 @@ export class DeploymentModule extends BaseModule {
 
     const duration = Date.now() - startTime;
 
-    return this.success({
-      action: 'setup-ci',
-      platform,
-      file: ciConfig.file,
-      content: ciConfig.content,
-    }, {
-      duration,
-    });
+    return this.success(
+      {
+        action: "setup-ci",
+        platform,
+        file: ciConfig.file,
+        content: ciConfig.content,
+      },
+      {
+        duration,
+      },
+    );
   }
 
   /**
    * Monitor deployment
    */
-  private async monitorDeployment(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
+  private async monitorDeployment(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
     const { target, timeout = 60 } = params;
 
-    this.logInfo(`Monitoring deployment${target ? ` to ${target}` : ''}...`);
+    this.logInfo(`Monitoring deployment${target ? ` to ${target}` : ""}...`);
 
     // In a real implementation, this would:
     // - Check deployment status
@@ -469,23 +663,31 @@ export class DeploymentModule extends BaseModule {
 
     const duration = Date.now() - startTime;
 
-    return this.success({
-      action: 'monitor',
-      target,
-      status: 'active',
-      message: 'Deployment monitoring active. Press Ctrl+C to stop.',
-    }, {
-      duration,
-    });
+    return this.success(
+      {
+        action: "monitor",
+        target,
+        status: "active",
+        message: "Deployment monitoring active. Press Ctrl+C to stop.",
+      },
+      {
+        duration,
+      },
+    );
   }
 
   /**
    * Rollback deployment
    */
-  private async rollback(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
+  private async rollback(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
     const { target, to } = params;
 
-    this.logInfo(`Rolling back deployment${target ? ` from ${target}` : ''}...`);
+    this.logInfo(
+      `Rolling back deployment${target ? ` from ${target}` : ""}...`,
+    );
 
     // In a real implementation, this would:
     // - List previous deployments
@@ -494,84 +696,103 @@ export class DeploymentModule extends BaseModule {
 
     const duration = Date.now() - startTime;
 
-    return this.success({
-      action: 'rollback',
-      target,
-      previousVersion: to || 'previous',
-      message: 'Rollback initiated. Verifying deployment...',
-    }, {
-      duration,
-    });
+    return this.success(
+      {
+        action: "rollback",
+        target,
+        previousVersion: to || "previous",
+        message: "Rollback initiated. Verifying deployment...",
+      },
+      {
+        duration,
+      },
+    );
   }
 
   /**
    * Get deployment status
    */
-  private async getDeploymentStatus(params: Record<string, any>, startTime: number): Promise<ModuleResult> {
+  private async getDeploymentStatus(
+    params: Record<string, any>,
+    startTime: number,
+  ): Promise<ModuleResult> {
     const { target } = params;
 
-    this.logInfo(`Getting deployment status${target ? ` for ${target}` : ''}...`);
+    this.logInfo(
+      `Getting deployment status${target ? ` for ${target}` : ""}...`,
+    );
 
     // Check for common deployment markers
     const status = {
-      hasBuildArtifact: fs.existsSync(path.join(process.cwd(), 'dist')) ||
-                       fs.existsSync(path.join(process.cwd(), 'build')),
-      hasDockerfile: fs.existsSync(path.join(process.cwd(), 'Dockerfile')),
-      hasCI: fs.existsSync(path.join(process.cwd(), '.github/workflows')) ||
-             fs.existsSync(path.join(process.cwd(), '.gitlab-ci.yml')),
-      hasPackageJson: fs.existsSync(path.join(process.cwd(), 'package.json')),
+      hasBuildArtifact:
+        fs.existsSync(path.join(process.cwd(), "dist")) ||
+        fs.existsSync(path.join(process.cwd(), "build")),
+      hasDockerfile: fs.existsSync(path.join(process.cwd(), "Dockerfile")),
+      hasCI:
+        fs.existsSync(path.join(process.cwd(), ".github/workflows")) ||
+        fs.existsSync(path.join(process.cwd(), ".gitlab-ci.yml")),
+      hasPackageJson: fs.existsSync(path.join(process.cwd(), "package.json")),
     };
 
     const projectType = this.detectProjectType();
 
     const duration = Date.now() - startTime;
 
-    return this.success({
-      action: 'status',
-      projectType,
-      status,
-      readyToDeploy: status.hasBuildArtifact || status.hasDockerfile || status.hasPackageJson,
-    }, {
-      duration,
-    });
+    return this.success(
+      {
+        action: "status",
+        projectType,
+        status,
+        readyToDeploy:
+          status.hasBuildArtifact ||
+          status.hasDockerfile ||
+          status.hasPackageJson,
+      },
+      {
+        duration,
+      },
+    );
   }
 
   /**
    * Detect project type
    */
   private detectProjectType(): string {
-    const packageJsonPath = path.join(process.cwd(), 'package.json');
+    const packageJsonPath = path.join(process.cwd(), "package.json");
 
     if (fs.existsSync(packageJsonPath)) {
       try {
-        const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
         const deps = { ...pkg.dependencies, ...pkg.devDependencies };
 
-        if (deps.next) return 'nextjs';
+        if (deps.next) return "nextjs";
         if (deps.react) {
-          if (pkg.scripts?.build?.includes('react-scripts')) return 'create-react-app';
-          if (deps['@vitejs/plugin-react']) return 'vite';
-          return 'react';
+          if (pkg.scripts?.build?.includes("react-scripts"))
+            return "create-react-app";
+          if (deps["@vitejs/plugin-react"]) return "vite";
+          return "react";
         }
-        if (deps.vue) return 'vue';
-        if (deps.express || deps.fastify) return 'express';
-        if (deps.pytest) return 'python';
+        if (deps.vue) return "vue";
+        if (deps.express || deps.fastify) return "express";
+        if (deps.pytest) return "python";
       } catch {
         // Ignore
       }
     }
 
-    if (fs.existsSync(path.join(process.cwd(), 'Dockerfile'))) {
-      return 'docker';
+    if (fs.existsSync(path.join(process.cwd(), "Dockerfile"))) {
+      return "docker";
     }
 
-    return 'node';
+    return "node";
   }
 
   /**
    * Detect deployment target type
    */
-  private detectTargetType(target: string): { id: string; name: string } | null {
+  private detectTargetType(
+    target: string,
+  ): { id: string; name: string } | null {
     const lower = target.toLowerCase();
 
     for (const t of this.targets) {
@@ -581,9 +802,12 @@ export class DeploymentModule extends BaseModule {
     }
 
     // Check for specific patterns
-    if (lower.includes('vercel')) return this.targets.find(t => t.id === 'vercel')!;
-    if (lower.includes('netlify')) return this.targets.find(t => t.id === 'netlify')!;
-    if (lower.includes('heroku')) return this.targets.find(t => t.id === 'heroku')!;
+    if (lower.includes("vercel"))
+      return this.targets.find((t) => t.id === "vercel")!;
+    if (lower.includes("netlify"))
+      return this.targets.find((t) => t.id === "netlify")!;
+    if (lower.includes("heroku"))
+      return this.targets.find((t) => t.id === "heroku")!;
 
     return null;
   }
@@ -601,7 +825,7 @@ export class DeploymentModule extends BaseModule {
         const fullPath = path.join(currentDir, entry.name);
         if (entry.isDirectory()) {
           // Skip common non-artifact directories
-          if (!['node_modules', '.git', '.cache'].includes(entry.name)) {
+          if (!["node_modules", ".git", ".cache"].includes(entry.name)) {
             walk(fullPath);
           }
         } else if (entry.isFile()) {
@@ -618,11 +842,14 @@ export class DeploymentModule extends BaseModule {
   /**
    * Generate CI configuration
    */
-  private generateCIConfig(platform: string, config?: Record<string, any>): CIConfig {
+  private generateCIConfig(
+    platform: string,
+    config?: Record<string, any>,
+  ): CIConfig {
     const templates: Record<string, CIConfig> = {
-      'github-actions': {
-        platform: 'github-actions',
-        file: '.github/workflows/deploy.yml',
+      "github-actions": {
+        platform: "github-actions",
+        file: ".github/workflows/deploy.yml",
         content: `name: Deploy
 
 on:
@@ -661,9 +888,9 @@ jobs:
           vercel-args: '--prod'
 `,
       },
-      'gitlab-ci': {
-        platform: 'gitlab-ci',
-        file: '.gitlab-ci.yml',
+      "gitlab-ci": {
+        platform: "gitlab-ci",
+        file: ".gitlab-ci.yml",
         content: `stages:
   - test
   - build
@@ -693,9 +920,9 @@ deploy:
     - if: $CI_COMMIT_BRANCH == "main"
 `,
       },
-      'github-actions-docker': {
-        platform: 'github-actions',
-        file: '.github/workflows/docker.yml',
+      "github-actions-docker": {
+        platform: "github-actions",
+        file: ".github/workflows/docker.yml",
         content: `name: Docker Build and Push
 
 on:
@@ -730,18 +957,21 @@ jobs:
       },
     };
 
-    return templates[platform] || templates['github-actions'];
+    return templates[platform] || templates["github-actions"];
   }
 
   /**
    * Generate cloud deployment config
    */
-  private generateCloudConfig(target: string, config?: Record<string, any>): string {
+  private generateCloudConfig(
+    target: string,
+    config?: Record<string, any>,
+  ): string {
     const configs: Record<string, { file: string; content: string }> = {
       aws: {
-        file: 'deployment/aws/main.tf',
+        file: "deployment/aws/main.tf",
         content: `provider "aws" {
-  region = "${config?.region || 'us-east-1'}"
+  region = "${config?.region || "us-east-1"}"
 }
 
 resource "aws_ecr_repository" "app" {
@@ -761,7 +991,7 @@ resource "aws_ecs_service" "app" {
 `,
       },
       kubernetes: {
-        file: 'deployment/k8s/deployment.yaml',
+        file: "deployment/k8s/deployment.yaml",
         content: `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -797,7 +1027,7 @@ spec:
       },
     };
 
-    return configs[target]?.file || 'deployment/config.yaml';
+    return configs[target]?.file || "deployment/config.yaml";
   }
 
   /**
@@ -805,12 +1035,12 @@ spec:
    */
   private getApplyCommand(target: string): string {
     const commands: Record<string, string> = {
-      aws: 'terraform init && terraform apply',
-      kubernetes: 'kubectl apply -f deployment/k8s/',
-      gcp: 'gcloud builds submit --config cloudbuild.yaml .',
-      azure: 'az deployment group create --template-file main.bicep',
+      aws: "terraform init && terraform apply",
+      kubernetes: "kubectl apply -f deployment/k8s/",
+      gcp: "gcloud builds submit --config cloudbuild.yaml .",
+      azure: "az deployment group create --template-file main.bicep",
     };
 
-    return commands[target] || 'Apply configuration manually';
+    return commands[target] || "Apply configuration manually";
   }
 }

@@ -6,7 +6,7 @@
 interface CacheEntry<T> {
   value: T;
   expiresAt: number;
-  createdAt: number;
+  lastAccessedAt: number; // For LRU eviction - tracks last access time
 }
 
 interface CacheOptions {
@@ -42,6 +42,10 @@ export class Cache<T = any> {
       return undefined;
     }
 
+    // Update last accessed time for LRU
+    entry.lastAccessedAt = Date.now();
+    this.store.set(key, entry);
+
     this.hits++;
     return entry.value;
   }
@@ -68,17 +72,18 @@ export class Cache<T = any> {
    * Set a value in cache
    */
   set(key: string, value: T, ttl?: number): void {
-    // Evict oldest entry if at capacity
+    // Evict least recently used entry if at capacity
     if (this.store.size >= this.maxSize) {
-      const oldestKey = this.findOldestKey();
-      if (oldestKey) this.store.delete(oldestKey);
+      const lruKey = this.findLRUKey();
+      if (lruKey) this.store.delete(lruKey);
     }
 
-    const expiresAt = Date.now() + (ttl ?? this.defaultTTL);
+    const now = Date.now();
+    const expiresAt = now + (ttl ?? this.defaultTTL);
     this.store.set(key, {
       value,
       expiresAt,
-      createdAt: Date.now(),
+      lastAccessedAt: now,
     });
   }
 
@@ -150,20 +155,20 @@ export class Cache<T = any> {
   }
 
   /**
-   * Find the oldest key for eviction - can be overridden by subclasses
+   * Find the least recently used key for eviction
    */
-  protected findOldestKey(): string | undefined {
-    let oldest: string | undefined;
-    let oldestTime = Infinity;
+  protected findLRUKey(): string | undefined {
+    let lruKey: string | undefined;
+    let oldestAccess = Infinity;
 
     for (const [key, entry] of this.store) {
-      if (entry.createdAt < oldestTime) {
-        oldestTime = entry.createdAt;
-        oldest = key;
+      if (entry.lastAccessedAt < oldestAccess) {
+        oldestAccess = entry.lastAccessedAt;
+        lruKey = key;
       }
     }
 
-    return oldest;
+    return lruKey;
   }
 }
 
