@@ -17,6 +17,7 @@ export class ExecutionPrimitive extends BasePrimitive {
         task?: string;
         step?: number;
         primitive?: string;
+        dryRun?: boolean;
     }): Promise<PrimitiveResult> {
         const config = configManager.getConfig();
         const dangerousCommands = config.approval.dangerousCommands || [];
@@ -42,7 +43,7 @@ export class ExecutionPrimitive extends BasePrimitive {
         }
 
         // Dry-run check
-        if (config.dryRun) {
+        if (config.dryRun || input.dryRun) {
             logger.info(`[DRY-RUN] Would execute: ${command}`);
             return {
                 success: true,

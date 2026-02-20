@@ -34,18 +34,34 @@ OUTPUT FORMAT: JSON array only, no extra text
 
         try {
             let fullText = '';
-            const stream = providerRouter.stream(userPrompt, {
-                systemPrompt,
-            });
+            const stream = providerRouter.streamChat(
+                [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ],
+                (chunk: string) => {
+                    fullText += chunk;
+                    if (onChunk) onChunk(chunk);
+                }
+            );
 
-            for await (const chunk of stream) {
-                fullText += chunk;
-                if (onChunk) onChunk(chunk);
+            for await (const _ of stream) {
+                // Just consume the generator
             }
 
             // Extract JSON array from response
-            const jsonMatch = fullText.match(/\[[\s\S]*\]/);
+            let jsonMatch = fullText.match(/\[[\s\S]*\]/);
+
+            // If no top-level array, try to find one inside code blocks
             if (!jsonMatch) {
+                const codeBlockMatch = fullText.match(/```(?:json)?\s*([\s\S]*?)```/);
+                if (codeBlockMatch) {
+                    jsonMatch = codeBlockMatch[1].match(/\[[\s\S]*\]/);
+                }
+            }
+
+            if (!jsonMatch) {
+                console.error('Raw LLM Response:', fullText);
                 return {
                     success: false,
                     error: 'Failed to parse plan from LLM response',

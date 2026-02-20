@@ -31,6 +31,7 @@ import {
 } from "./adapters/anthropic.adapter.js";
 import { GoogleAdapter } from "./adapters/google.adapter.js";
 import { OpenRouterAdapter } from "./adapters/openrouter.adapter.js";
+import { MiniMaxAdapter } from "./adapters/minimax.adapter.js";
 import { OllamaAdapter, LMStudioAdapter } from "./adapters/ollama.adapter.js";
 import {
   PROVIDER_REGISTRY,
@@ -120,7 +121,7 @@ export class UnifiedProviderRouter {
     if (!this.adapters.has(id)) {
       this.instantiateAdapter(id);
     }
-    return this.getAdapter(id);
+    return this.adapters.get(id);
   }
 
   /**
@@ -151,6 +152,9 @@ export class UnifiedProviderRouter {
         break;
       case "lmstudio":
         this.registerAdapter(id, new LMStudioAdapter());
+        break;
+      case "minimax":
+        this.registerAdapter(id, new MiniMaxAdapter());
         break;
     }
   }

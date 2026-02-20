@@ -33,8 +33,8 @@ export abstract class BaseProviderAdapter {
   protected models: ModelInfo[];
 
   constructor(config: ProviderConfig, models: ModelInfo[]) {
-    this.config = config;
-    this.models = models;
+    this.config = { ...config };
+    this.models = [...models];
   }
 
   /**

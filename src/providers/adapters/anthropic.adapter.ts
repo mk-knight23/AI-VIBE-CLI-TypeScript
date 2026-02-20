@@ -95,7 +95,7 @@ export class AnthropicAdapter extends BaseProviderAdapter {
 
   constructor() {
     super(ANTHROPIC_CONFIG, ANTHROPIC_MODELS);
-    this.baseUrl = ANTHROPIC_CONFIG.baseUrl;
+    this.baseUrl = (process.env.ANTHROPIC_BASE_URL || ANTHROPIC_CONFIG.baseUrl).replace(/\/+$/, '');
   }
 
   /**
@@ -124,7 +124,6 @@ export class AnthropicAdapter extends BaseProviderAdapter {
           'x-api-key': apiKey,
           'Content-Type': 'application/json',
           'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
           model,
@@ -160,6 +159,7 @@ export class AnthropicAdapter extends BaseProviderAdapter {
       }
 
       const data = await response.json();
+      console.log('[DEBUG] Anthropic Raw Response:', JSON.stringify(data, null, 2));
       return this.parseResponse(data, model, Date.now() - startTime);
 
     } catch (error) {
@@ -199,7 +199,6 @@ export class AnthropicAdapter extends BaseProviderAdapter {
         'x-api-key': apiKey,
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01',
-        'x-stream': 'true',
       },
       body: JSON.stringify({
         model,
@@ -235,19 +234,20 @@ export class AnthropicAdapter extends BaseProviderAdapter {
       buffer = lines.pop() || '';
 
       for (const line of lines) {
+        if (line.trim() === '') continue;
+        console.log(`[DEBUG] Anthropic Stream Line: ${line}`);
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
           try {
             const parsed = JSON.parse(data);
-
             // Handle different event types
             if (parsed.type === 'content_block_delta' && parsed.delta.type === 'text_delta') {
               callback(parsed.delta.text, true);
             } else if (parsed.type === 'message_delta' && parsed.delta?.reasoning_content) {
               callback(parsed.delta.reasoning_content, true);
             }
-          } catch {
-            // Skip parse errors
+          } catch (e) {
+            console.error(`[DEBUG] JSON Parse Error: ${(e as Error).message} for line: ${line}`);
           }
         }
       }

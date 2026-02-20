@@ -13,6 +13,8 @@ import { ApprovalPrimitive } from '../domain/primitives/approval.js';
 import { MemoryPrimitive } from '../domain/primitives/memory.js';
 import { DeterminismPrimitive } from '../domain/primitives/determinism.js';
 import { SearchPrimitive } from '../domain/primitives/search.js';
+import { ScanningPrimitive } from '../domain/primitives/scanning.js';
+import { MissionPrimitive } from '../domain/primitives/mission.js';
 import { OrchestrationPrimitive } from '../domain/primitives/orchestration.js';
 import { IPrimitive } from '../domain/primitives/types.js';
 import chalk from 'chalk';
@@ -75,6 +77,8 @@ export async function run() {
     primitiveMap.set('memory', new MemoryPrimitive());
     primitiveMap.set('determinism', new DeterminismPrimitive());
     primitiveMap.set('search', new SearchPrimitive());
+    primitiveMap.set('scanning', new ScanningPrimitive());
+    primitiveMap.set('mission', new MissionPrimitive(primitiveMap));
 
     const orchestrator = new OrchestrationPrimitive(primitiveMap);
     primitiveMap.set('orchestration', orchestrator);
@@ -150,8 +154,9 @@ export async function run() {
 
     // Start
     program
-        .argument('[task]', 'Task to perform')
+        .argument('[task...]', 'Task to perform')
         .option('--tui', 'Start in interactive TUI mode', false)
+        .option('--dry-run', 'Simulation mode (no changes applied)', false)
         .action(async (taskArgs, options) => {
             if (options.tui) {
                 await initMCP();
@@ -173,7 +178,7 @@ export async function run() {
             }
 
             // Track CLI usage (if enabled)
-            telemetry.trackEvent('cli_start', { command: taskArgs[0] || 'interactive' });
+            telemetry.trackEvent('cli_start', { command: Array.isArray(taskArgs) ? taskArgs[0] : (taskArgs || 'interactive') });
 
             const task = taskArgs.join(' ');
             if (!task) {
@@ -227,7 +232,7 @@ export async function run() {
 
             // 3. Orchestration
             progressManager.startSpinner({ text: 'Executing plan...', color: 'blue' });
-            const orchResult = await orchestrator.execute({ plan });
+            const orchResult = await orchestrator.execute({ plan, dryRun: options.dryRun });
 
             if (orchResult.success) {
                 console.log(chalk.green('\n✅ Task completed successfully!'));
@@ -318,6 +323,57 @@ export async function run() {
             await reviewCode([], primitives, options);
         });
 
+    program
+        .command('scan')
+        .description('Generate a structural map of the repository')
+        .argument('[directory]', 'Directory to scan (default: current)')
+        .action(async (directory) => {
+            const scanner = primitiveMap.get('scanning') as ScanningPrimitive;
+            progressManager.startSpinner({ text: 'Scanning repository...', color: 'blue' });
+            const result = await scanner.execute({ directory });
+            if (result.success) {
+                progressManager.succeedSpinner('Scan complete');
+                console.log(chalk.cyan('\n📂 Repository Structure:\n'));
+                console.log(result.data.map);
+            } else {
+                progressManager.failSpinner('Scan failed');
+                console.log(chalk.red(`Error: ${result.error}`));
+            }
+        });
+
+    program
+        .command('mission')
+        .description('Execute an end-to-end task mission')
+        .argument('<task>', 'The task or goal to accomplish')
+        .option('--auto-commit', 'Automatically commit changes on success', true)
+        .option('--run-tests', 'Run tests as part of verification', true)
+        .action(async (task, options) => {
+            const mission = primitiveMap.get('mission') as MissionPrimitive;
+            progressManager.startSpinner({ text: 'Starting mission...', color: 'blue' });
+            const result = await mission.execute({
+                task,
+                autoCommit: options.autoCommit,
+                runTests: options.runTests
+            });
+
+            if (result.success) {
+                progressManager.succeedSpinner('Mission successful');
+                console.log(chalk.green('\n🏁 Mission Accomplished!\n'));
+                console.log(chalk.cyan('Summary:'));
+                console.log(`- Steps executed: ${result.data.plan.length}`);
+                if (result.data.testResult) {
+                    console.log(chalk.yellow('\nTest Results:'));
+                    console.log(result.data.testResult);
+                }
+            } else {
+                progressManager.failSpinner('Mission failed');
+                console.log(chalk.red(`\n❌ Error: ${result.error}`));
+                if (result.data?.plan) {
+                    console.log(chalk.gray(`Failed after ${result.data.plan.length} steps.`));
+                }
+            }
+        });
+
     // Batch & Maintenance
     program
         .command('batch')
@@ -400,7 +456,14 @@ export async function run() {
         .command('server')
         .description('Start the VIBE REST API server')
         .option('-p, --port <number>', 'Port to run on', '3000')
-        .action((options) => {
+        .option('--mcp', 'Start as an MCP server using stdio transport', false)
+        .action(async (options) => {
+            if (options.mcp) {
+                const { VibeMCPServer } = await import('../mcp/server.js');
+                const mcpServer = new VibeMCPServer(primitiveMap);
+                await mcpServer.run();
+                return;
+            }
             const server = new VibeApiServer(parseInt(options.port));
             server.start();
         });

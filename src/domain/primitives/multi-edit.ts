@@ -16,6 +16,7 @@ export class MultiEditPrimitive extends BasePrimitive {
         task?: string;
         step?: number;
         primitive?: string;
+        dryRun?: boolean;
     }): Promise<PrimitiveResult> {
         // Use task as description if description is not provided (for orchestration)
         const description = input.description || input.task;
@@ -109,6 +110,13 @@ RULES:
 
             for (const [filePath, newContent] of Object.entries(updates)) {
                 const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
+
+                if (input.dryRun) {
+                    logger.info(`[DRY-RUN] Would write to: ${filePath} (${(newContent as string).length} bytes)`);
+                    appliedFiles.push(filePath);
+                    continue;
+                }
+
                 await fs.mkdirp(path.dirname(absolutePath));
                 await fs.writeFile(absolutePath, newContent as string);
                 appliedFiles.push(filePath);

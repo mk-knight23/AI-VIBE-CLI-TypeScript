@@ -39,7 +39,7 @@ export class OrchestrationPrimitive extends EventEmitter implements IPrimitive {
         return this.circuitBreakers.get(primitiveName)!;
     }
 
-    public async execute(input: { plan: any[]; parallel?: boolean; proactive?: boolean }): Promise<PrimitiveResult> {
+    public async execute(input: { plan: any[]; parallel?: boolean; proactive?: boolean; dryRun?: boolean }): Promise<PrimitiveResult> {
         const results = [];
         logger.info(`Starting execution of plan with ${input.plan.length} steps. Mode: ${input.parallel ? 'Parallel' : 'Sequential'} ${input.proactive ? '(Proactive)' : ''}`);
 
@@ -67,7 +67,7 @@ export class OrchestrationPrimitive extends EventEmitter implements IPrimitive {
             try {
                 const result = await ResilienceManager.wrap(
                     `step-${step.step}-${step.primitive}`,
-                    () => primitive.execute(step.data || step.input || step),
+                    () => primitive.execute({ ...(step.data || step.input || step), dryRun: input.dryRun || step.dryRun }),
                     {
                         retries: step.retryPolicy?.maxRetries ?? 2,
                         timeoutMs: step.timeoutMs ?? 60000,
