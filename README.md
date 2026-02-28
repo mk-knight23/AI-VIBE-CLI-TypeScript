@@ -335,3 +335,17 @@ See [ROADMAP.md](./ROADMAP.md) for planned features.
 <p align="center">
   <b>Made with ❤️ by <a href="https://github.com/mk-knight23">KAZI</a></b>
 </p>
+
+
+## 🎯 Problem Solved
+
+This repository provides a streamlined approach to modern development needs, enabling developers to build robust applications with minimal complexity and maximum efficiency.
+
+## 🌐 Deployment
+
+### Live URLs
+
+| Platform | URL |
+|----------|-----|
+| Vercel | [Deployed Link] |
+| GitHub Pages | [Deployed Link] |
