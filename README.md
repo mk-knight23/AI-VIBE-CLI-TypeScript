@@ -1,351 +1,196 @@
-# ⚡ VIBE CLI
+<div align="center">
 
-<p align="center">
-  <img src="https://img.shields.io/badge/AI--VIBE-CLI--TypeScript-blue?style=for-the-badge&logo=typescript&logoColor=white" alt="AI Vibe Project">
-  <br>
-  <b>AI Developer Teammate - One command, infinite capability.</b>
-</p>
+# 🔷 AI-VIBE-CLI-TypeScript
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/vibe-ai-teammate"><img src="https://img.shields.io/npm/v/vibe-ai-teammate.svg" alt="NPM version"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D20.0.0-green.svg" alt="Node.js"></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Supported-orange.svg" alt="MCP Supported"></a>
-</p>
+### **Vibe — The 8-Primitive AI Development Tool**
+*TypeScript · Node.js · MCP · Commander · Better SQLite3*
 
----
+[![npm](https://img.shields.io/npm/v/vibe-ai-teammate?style=for-the-badge&color=CB3837&logo=npm)](https://npmjs.com/package/vibe-ai-teammate)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![MCP](https://img.shields.io/badge/MCP-Native-8B5CF6?style=for-the-badge)](https://modelcontextprotocol.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-## 🗺️ Quick Navigation
+**[📦 npm](https://npmjs.com/package/vibe-ai-teammate)** · **[📖 Docs](#documentation)** · **[⭐ Star](https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript)**
 
-- [✨ Features](#-features)
-- [🚀 Quick Start](#-quick-start)
-- [📦 Installation](#-installation)
-- [⚙️ Configuration](#%EF%B8%8F-configuration)
-- [💻 Usage](#-usage)
-- [📚 Commands](#-commands)
-- [🏗️ Architecture](#%EF%B8%8F-architecture)
-- [🛠️ Development](#%EF%B8%8F-development)
-- [🤝 Contributing](#-contributing)
+</div>
 
 ---
 
-## 🛠️ Engineered With
+## 🎯 The 8-Primitive Architecture
 
-<p align="left">
-  <a href="https://typescriptlang.org"><img src="https://skillicons.dev/icons?i=ts" alt="TypeScript"></a>
-  <a href="https://nodejs.org"><img src="https://skillicons.dev/icons?i=nodejs" alt="Node.js"></a>
-  <a href="https://sqlite.org"><img src="https://skillicons.dev/icons?i=sqlite" alt="SQLite"></a>
-  <a href="https://expressjs.com"><img src="https://skillicons.dev/icons?i=express" alt="Express"></a>
-  <a href="https://react.dev"><img src="https://skillicons.dev/icons?i=react" alt="React"></a>
-</p>
+Unlike other AI CLIs that add features randomly, **Vibe** is built around exactly 8 core primitives that compose into any workflow:
 
----
+| Primitive | Purpose | Example |
+|-----------|---------|---------|
+| **1. Context** | Load project context | Read files, git history, config |
+| **2. Plan** | Create execution plan | Break task into steps |
+| **3. Execute** | Run code/commands | Bash, Node, Python |
+| **4. Observe** | Read results | Parse output, check errors |
+| **5. Decide** | Branch on conditions | If tests pass → deploy |
+| **6. Remember** | Persist state | Save to SQLite, config |
+| **7. Communicate** | Output results | Rich terminal, notifications |
+| **8. Adapt** | Learn from feedback | Update plan based on results |
 
-VIBE CLI is an opinionated AI development tool that uses an 8-primitives architecture and Model Context Protocol (MCP) to provide intelligent, context-aware assistance for software development tasks.
-
-## ✨ Features
-
-- **🎯 Single Command Interface** - Just run `vibe` and describe what you need
-- **🧠 8-Primitives Architecture** - Planning, Completion, Execution, MultiEdit, Approval, Memory, Determinism, Search, Orchestration
-- **🔌 MCP-First** - Built on Model Context Protocol for extensible context integration
-- **🤖 Multi-Provider Support** - Anthropic Claude, OpenAI GPT, MiniMax, and more
-- **🔒 Secure by Default** - API key authentication, sandboxed plugin system, permission controls
-- **⚡ Lightning Fast** - Async file operations, LRU caching, smart context management
-- **🔧 Extensible Plugin System** - Build and share custom plugins with the community
+Every feature in Vibe is built from combinations of these 8 primitives.
 
 ---
 
-## 🚀 Quick Start
+## ⚡ Installation
 
-```bash
-# Install VIBE CLI
-npm install -g vibe-ai-teammate
-
-# Run VIBE (interactive mode)
-vibe
-
-# Give it a task
-vibe "Add user authentication to the API"
-```
-
-**That's it!** VIBE will:
-1. Analyze your codebase
-2. Plan the implementation
-3. Execute changes with your approval
-4. Test and verify the result
-
----
-
-## 📦 Installation
-
-### Prerequisites
-- **Node.js** >= 20.0.0
-- **npm** or **yarn** or **pnpm**
-
-### Install via npm
 ```bash
 npm install -g vibe-ai-teammate
+vibe init                    # Initialize in current project
+vibe config set key sk-ant-... # Set Anthropic API key
+vibe start                   # Launch interactive session
 ```
-
-### Install via GitHub
-```bash
-git clone https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript.git
-cd AI-VIBE-CLI-TypeScript
-npm install
-npm run build
-npm link
-```
-
-### Verify Installation
-```bash
-vibe --version
-vibe --help
-```
-
----
-
-## ⚙️ Configuration
-
-### Environment Variables
-Copy `.env.example` to `.env` and configure:
-```bash
-cp .env.example .env
-```
-
-**Required Variables:**
-```bash
-# AI Provider API Keys
-ANTHROPIC_API_KEY=your_anthropic_api_key_here          # For Claude models
-OPENAI_API_KEY=your_openai_api_key_here          # For GPT models (optional)
-MINIMAX_API_KEY=your_minimax_api_key_here                     # For MiniMax (optional)
-```
-
-**Optional Variables:**
-```bash
-# VIBE API Server
-VIBE_API_KEY=your_secret_key            # REST API authentication
-VIBE_ALLOWED_ORIGINS=http://localhost:3000  # CORS allowed origins
-
-# Default Provider
-VIBE_PROVIDER=anthropic                 # anthropic | openai | minimax
-
-# Debug Mode
-DEBUG=true                            # Enable verbose logging
-```
-See [`.env.example`](./.env.example) for all options.
-
-### VIBE Config File
-VIBE also supports a `vibe.config.json` file in your project root:
-```json
-{
-  "provider": "anthropic",
-  "tier": "balanced",
-  "mcpServers": ["./mcp/servers/*.json"],
-  "plugins": ["@vibe/eslint", "@vibe/prettier"]
-}
-```
-
----
-
-## 💻 Usage
-
-### Interactive Mode (Default)
-```bash
-vibe
-```
-VIBE will start an interactive session where you can:
-- Describe tasks in natural language
-- Review and approve plans
-- See real-time progress
-- Ask follow-up questions
-
-### Direct Task Mode
-```bash
-vibe "Add error handling to the user service"
-vibe "Refactor: Extract validation logic"
-vibe "Test: Add unit tests for AuthManager"
-```
-
-### Command Mode
-VIBE also provides traditional CLI commands:
-```bash
-vibe scaffold react-component LoginForm
-vibe test src/services/AuthService.ts
-vibe fix src/utils/helpers.js
-vibe commit "Add user authentication"
-vibe pr
-```
-
----
-
-## 📚 Commands
-
-### Core Commands
-| Command | Description | Example |
-|---------|-------------|---------|
-| `vibe [task]` | Main AI assistant (interactive) | `vibe "Add user login"` |
-| `vibe scaffold <template>` | Generate projects/components | `vcaffold react-component Button` |
-| `vibe test [target]` | Generate and run tests | `vibe test src/utils/` |
-| `vibe fix [target]` | Fix bugs and issues | `vibe fix src/api/` |
-
-### Git Integration
-| Command | Description | Example |
-|---------|-------------|---------|
-| `vibe commit` | AI-powered semantic commits | `vibe commit` |
-| `vibe pr` | Generate PR descriptions | `vibe pr` |
-| `vibe review` | AI code review | `vibe review` |
-
-### Project Management
-| Command | Description | Example |
-|---------|-------------|---------|
-| `vibe plan <task>` | Generate execution plan | `vibe plan "Add API endpoints"` |
-| `vibe checkpoint` | Save/restore system state | `vibe checkpoint save` |
-| `vibe batch <cmd>` | Batch process files | `vibe test **/*.test.ts` |
-
-### System Commands
-| Command | Description |
-|---------|-------------|
-| `vibe doctor` | System health check |
-| `vibe config` | Interactive setup wizard |
-| `vibe server` | Start REST API server |
-| `vibe plugin` | Manage plugins |
 
 ---
 
 ## 🏗️ Architecture
 
-<details>
-<summary>Show 8-Primitives Architecture Details</summary>
-
-### 8 Primitives
-VIBE is built on 8 core primitives:
-1. **Planning** - Task decomposition and strategy
-2. **Completion** - LLM text generation
-3. **Execution** - Command/tool execution
-4. **MultiEdit** - File modifications
-5. **Approval** - User confirmation flows
-6. **Memory** - Context persistence
-7. **Determinism** - Reproducible results
-8. **Search** - Codebase analysis
-9. **Orchestration** - Primitive coordination
-
-### MCP Integration
-VIBE uses [Model Context Protocol](https://modelcontextprotocol.io) for:
-- Flexible context providers
-- Server-side tool integration
-- Extensible architecture
-
-See `src/mcp/` for MCP implementation.
-</details>
-
+```
+src/
+├── core/
+│   ├── primitives/
+│   │   ├── context.ts       # Primitive 1: Context loading
+│   │   ├── plan.ts          # Primitive 2: Task planning
+│   │   ├── execute.ts       # Primitive 3: Code execution
+│   │   ├── observe.ts       # Primitive 4: Output observation
+│   │   ├── decide.ts        # Primitive 5: Decision branching
+│   │   ├── remember.ts      # Primitive 6: State persistence
+│   │   ├── communicate.ts   # Primitive 7: Rich output
+│   │   └── adapt.ts         # Primitive 8: Learning/adaptation
+│   ├── agent.ts             # Agent loop orchestrating primitives
+│   └── session.ts           # Session management (SQLite)
+├── modules/
+│   ├── code-assistant/      # Code writing, review, refactor
+│   ├── debugging/           # Error analysis, stack traces
+│   ├── deployment/          # CI/CD, Docker, cloud deploys
+│   ├── testing/             # Test generation, coverage
+│   ├── security/            # Vulnerability scanning (NEW v2.0)
+│   └── analytics/           # Code metrics, complexity (NEW v2.0)
+├── mcp/
+│   ├── client.ts            # MCP client (connects to servers)
+│   ├── server.ts            # Vibe as MCP server (expose tools)
+│   └── registry.ts          # MCP server discovery
+└── vibe-home/               # React dashboard (browser UI)
+```
 
 ---
 
-## 🛠️ Development
+## 🔌 MCP — Native Integration
 
-### Setup Development Environment
+Vibe is MCP-native — both as a **client** (uses MCP tools) and a **server** (exposes its tools):
+
+```typescript
+// vibe as MCP server — expose Vibe tools to Claude Desktop, etc.
+vibe mcp serve --port 3100
+
+// vibe as MCP client — use any MCP server
+vibe mcp connect github://ghcr.io/github/mcp-server
+vibe mcp connect postgresql://localhost/mydb
+vibe mcp connect filesystem:///path/to/project
+
+// List all connected tools
+vibe mcp tools
+```
+
+---
+
+## 🧩 Module System
+
 ```bash
-# Clone repository
-git clone https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript.git
-cd AI-VIBE-CLI-TypeScript
+# Code Assistant Module
+vibe code review src/api/auth.ts
+vibe code refactor --pattern "callback to async/await" src/
+vibe code generate "REST API endpoint for user authentication"
 
-# Install dependencies
-npm install
+# Debugging Module
+vibe debug --stack-trace error.log
+vibe debug --reproduce "TypeError: Cannot read property 'id' of undefined"
 
-# Build TypeScript
-npm run build
+# Testing Module
+vibe test generate src/services/userService.ts
+vibe test run --coverage --watch
+vibe test audit  # Analyze test quality and gaps
 
-# Run tests
-npm test
+# Deployment Module
+vibe deploy --provider vercel
+vibe deploy --provider aws-ecs --image myapp:latest
+vibe deploy status
 
-# Run linter
-npm run lint
+# Security Module (v2.0)
+vibe security scan  # Full codebase security audit
+vibe security deps  # Dependency vulnerability check
+vibe security secrets  # Detect hardcoded secrets
 
-# Type check
-npm run type-check
+# Analytics Module (v2.0)
+vibe analytics complexity  # Cyclomatic complexity report
+vibe analytics coverage    # Test coverage gaps
+vibe analytics duplication # Code duplication detection
 ```
 
-### Project Structure
-```
-vibe/
-├── src/
-│   ├── cli/              # CLI entry points
-│   ├── commands/         # Command implementations
-│   ├── primitives/       # 8 primitives
-│   ├── core/             # Core infrastructure
-│   │   ├── ai-engine/   # LLM integration
-│   │   ├── api/        # REST API
-│   │   └── database/   # SQLite persistence
-│   ├── adapters/         # LLM provider adapters
-│   ├── mcp/              # Model Context Protocol
-│   └── tools/            # Tool implementations
-├── tests/                # Test suites
-└── docs/                  # Documentation
-```
+---
 
-### Testing
+## 🖥️ Web Dashboard
+
 ```bash
-# Run all tests
-npm test
-# Unit tests only
-npm run test:unit
-# Integration tests
-npm run test:integration
-# E2E tests with Playwright
-npm run test:e2e
-# Coverage report
-npm run test:coverage
+vibe dashboard  # Opens browser dashboard at http://localhost:4000
+```
+
+The built-in React dashboard (in `vibe-home/`) provides:
+- Real-time session monitoring
+- Tool call history visualization
+- Code metrics dashboard
+- MCP server connection manager
+- API key management
+
+---
+
+## 💾 SQLite-Powered Sessions
+
+All sessions are stored in a local SQLite database:
+
+```typescript
+// Automatic session management
+vibe session list              # All previous sessions
+vibe session resume <id>       # Resume from any point
+vibe session export <id>       # Export session as markdown
+vibe session search "auth bug" # Semantic search through sessions
 ```
 
 ---
 
-## 🔌 Plugin Development
-Create custom plugins to extend VIBE:
+## 📦 Commands
+
 ```bash
-# Create plugin scaffold
-vibe plugin create my-plugin
+vibe start                  # Interactive REPL
+vibe run "<task>"           # Autonomous task execution
+vibe init                   # Initialize project
+vibe config                 # Configuration management
+vibe mcp                    # MCP server management
+vibe module list            # Available modules
+vibe session                # Session management
+vibe dashboard              # Web dashboard
 ```
-See [PLUGIN-SECURITY.md](./.claude/PLUGIN-SECURITY.md) for security and API reference.
 
 ---
 
-## 🤝 Contributing
-We welcome contributions! Please see:
-1. [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
-2. [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System design
-3. [PLUGINS.md](./docs/PLUGINS.md) - Plugin development
+## 🔗 AI-VIBE Ecosystem
+
+> Part of **[AI-VIBE-ECOSYSTEM](https://github.com/mk-knight23/AI-VIBE-ECOSYSTEM)** — 11 production AI projects by [Kazi Musharraf](https://mkazi.live)
 
 ---
 
-## 📄 License
-MIT © KAZI
+<div align="center">
 
-## 🙏 Acknowledgments
-Built with Anthropic Claude, Model Context Protocol, Commander.js, Express, and Better SQLite3.
+**Built with 🔷 by [Kazi Musharraf](https://mkazi.live)**
 
-## 📞 Support
-- **Issues:** [GitHub Issues](https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/mk-knight23/AI-VIBE-CLI-TypeScript/discussions)
+[![GitHub](https://img.shields.io/badge/GitHub-mk--knight23-181717?style=flat&logo=github)](https://github.com/mk-knight23)
+[![npm](https://img.shields.io/badge/npm-vibe--ai--teammate-CB3837?style=flat&logo=npm)](https://npmjs.com/package/vibe-ai-teammate)
+[![Twitter](https://img.shields.io/badge/Twitter-@mk__knight__23-1DA1F2?style=flat&logo=twitter)](https://twitter.com/mk_knight_23)
 
-## 🗺️ Roadmap
-See [ROADMAP.md](./ROADMAP.md) for planned features.
+*Part of the [AI-VIBE Ecosystem](https://github.com/mk-knight23/AI-VIBE-ECOSYSTEM) · Built in India 🇮🇳*
 
----
-
-<p align="center">
-  <b>Made with ❤️ by <a href="https://github.com/mk-knight23">KAZI</a></b>
-</p>
-
-
-## 🎯 Problem Solved
-
-This repository provides a streamlined approach to modern development needs, enabling developers to build robust applications with minimal complexity and maximum efficiency.
-
-## 🌐 Deployment
-
-### Live URLs
-
-| Platform | URL |
-|----------|-----|
-| Vercel | [Deployed Link] |
-| GitHub Pages | [Deployed Link] |
+</div>
